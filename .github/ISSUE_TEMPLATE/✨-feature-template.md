@@ -1,7 +1,7 @@
 ---
-name: FEATURE TEMPLATE
+name: "✨ FEATURE TEMPLATE"
 about: FEATURE TEMPLATE
-title: "[feat]"
+title: ''
 labels: "✨ feature"
 assignees: ''
 
