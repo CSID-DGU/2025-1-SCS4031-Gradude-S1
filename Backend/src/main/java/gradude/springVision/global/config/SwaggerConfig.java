@@ -22,8 +22,8 @@ public class SwaggerConfig {
 
     private Info getInfo() {
         return new Info()
-                .title("R2R API Document")
-                .description("R2R document 입니다.")
+                .title("다시 봄 API Document")
+                .description("다시 봄 API document 입니다.")
                 .version("1.0.0");
     }
 
