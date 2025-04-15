@@ -15,6 +15,12 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "COMMON413", "파일 최대 크기를 초과하였습니다."),
 
+    // Unauthorized Error
+    INVALID_TOKEN_SIGNATURE(HttpStatus.UNAUTHORIZED, "TOKEN401", "유효하지 않은 토큰 서명입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN402", "만료된 토큰입니다."),
+    UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN403", "지원되지 않는 형식의 토큰입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN404", "토큰 형식이 잘못되었습니다."),
+
     // User Error
     USER_ALREADY_EXIST(HttpStatus.CONFLICT, "USER4000", "사용자가 이미 존재합니다.");
 
