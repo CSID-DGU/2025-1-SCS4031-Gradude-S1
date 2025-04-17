@@ -7,13 +7,13 @@ import lombok.*;
 @AllArgsConstructor
 public class KakaoUserInfoResponseDTO {
 
-    private String nickname;
-    private String imageUrl;
+    private Long kakaoId;
+    private String profileImageUrl;
 
-    public static KakaoUserInfoResponseDTO of(String nickname, String imageUrl) {
+    public static KakaoUserInfoResponseDTO of(Long kakaoId, String profileImageUrl) {
         return KakaoUserInfoResponseDTO.builder()
-                .nickname(nickname)
-                .imageUrl(imageUrl)
+                .kakaoId(kakaoId)
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 }
