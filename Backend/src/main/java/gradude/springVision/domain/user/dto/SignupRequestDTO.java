@@ -16,7 +16,6 @@ import java.time.LocalDate;
 public class SignupRequestDTO {
 
     private Long kakaoId;
-    private String name;
     private String nickname;
     private Gender gender;
     private LocalDate birth;
@@ -26,7 +25,6 @@ public class SignupRequestDTO {
     public User toEntity() {
         return User.builder()
                 .kakaoId(this.kakaoId)
-                .name(this.name)
                 .nickname(this.nickname)
                 .gender(this.gender)
                 .birth(this.birth)

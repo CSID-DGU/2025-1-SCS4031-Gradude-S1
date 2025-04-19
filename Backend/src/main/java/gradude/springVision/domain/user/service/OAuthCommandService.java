@@ -95,9 +95,10 @@ public class OAuthCommandService {
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
             Long kakaoId = jsonNode.get("id").asLong();
+            String nickname = jsonNode.get("properties").get("nickname").asText();
             String picture = jsonNode.get("properties").has("profile_image")? jsonNode.get("properties").get("profile_image").asText() : null;
 
-            return KakaoUserInfoResponseDTO.of(kakaoId, picture);
+            return KakaoUserInfoResponseDTO.of(kakaoId, nickname, picture);
         } catch (JsonProcessingException e) {
             throw new GeneralException(ErrorCode.JSON_PARSE_ERROR);
         }
