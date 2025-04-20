@@ -8,6 +8,7 @@ import gradude.springVision.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class AuthController {
 
     @Operation(summary = "회원가입",description = "최초 로그인일 경우: 추가 정보 기입 <br> kakaoId, profileImageUrl은 카카오 로그인에서 받은 url")
     @PostMapping("/signup")
-    public ApiResponse<SignupResponseDTO> signup(@RequestBody SignupRequestDTO signupRequestDTO) {
+    public ApiResponse<SignupResponseDTO> signup(@RequestBody @Valid SignupRequestDTO signupRequestDTO) {
         return ApiResponse.onSuccess(authCommandService.signup(signupRequestDTO));
     }
 }
