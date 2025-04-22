@@ -22,9 +22,6 @@ public class User extends BaseEntity {
     private Long kakaoId;
 
     @Column(nullable = false, length = 10)
-    private String name;
-
-    @Column(nullable = false, length = 10)
     private String nickname;
 
     @Enumerated(EnumType.STRING)
