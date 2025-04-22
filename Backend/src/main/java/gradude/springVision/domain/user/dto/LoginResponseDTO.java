@@ -8,14 +8,15 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class LoginResponseDTO {
+
     private boolean isFirstLogin;
-    private String accessToken;
+    private TokenResponseDTO tokenResponse;
     private KakaoUserInfoResponseDTO userInfo;
 
-    public static LoginResponseDTO of(String accessToken, boolean isFirstLogin) {
+    public static LoginResponseDTO of(TokenResponseDTO tokenResponse, boolean isFirstLogin) {
         return LoginResponseDTO.builder()
                 .isFirstLogin(isFirstLogin)
-                .accessToken(accessToken)
+                .tokenResponse(tokenResponse)
                 .userInfo(null)
                 .build();
     }
@@ -23,7 +24,7 @@ public class LoginResponseDTO {
     public static LoginResponseDTO of(KakaoUserInfoResponseDTO userInfo, boolean isFirstLogin) {
         return LoginResponseDTO.builder()
                 .isFirstLogin(isFirstLogin)
-                .accessToken(null)
+                .tokenResponse(null)
                 .userInfo(userInfo)
                 .build();
     }
