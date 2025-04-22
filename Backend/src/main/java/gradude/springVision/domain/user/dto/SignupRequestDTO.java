@@ -2,6 +2,10 @@ package gradude.springVision.domain.user.dto;
 
 import gradude.springVision.domain.user.entity.Gender;
 import gradude.springVision.domain.user.entity.User;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,18 +19,28 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class SignupRequestDTO {
 
+    @NotNull
     private Long kakaoId;
-    private String name;
+
+    @NotBlank
     private String nickname;
+
+    @NotNull
     private Gender gender;
+
+    @NotNull
+    @Past
     private LocalDate birth;
+
+    @NotNull
+    @AssertTrue
     private Boolean isFaceRecognitionAgreed;
+
     private String profileImageUrl;
 
     public User toEntity() {
         return User.builder()
                 .kakaoId(this.kakaoId)
-                .name(this.name)
                 .nickname(this.nickname)
                 .gender(this.gender)
                 .birth(this.birth)
