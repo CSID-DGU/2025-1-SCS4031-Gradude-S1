@@ -1,9 +1,6 @@
 package gradude.springVision.domain.user.service;
 
-import gradude.springVision.domain.user.dto.KakaoUserInfoResponseDTO;
-import gradude.springVision.domain.user.dto.LoginResponseDTO;
-import gradude.springVision.domain.user.dto.SignupRequestDTO;
-import gradude.springVision.domain.user.dto.SignupResponseDTO;
+import gradude.springVision.domain.user.dto.*;
 import gradude.springVision.domain.user.entity.User;
 import gradude.springVision.domain.user.repository.UserRepository;
 import gradude.springVision.global.auth.TokenProvider;
@@ -37,7 +34,9 @@ public class AuthCommandService {
 
         if (user.isPresent()) {
             String accessToken = tokenProvider.createAccessToken(user.get().getId());
-            return LoginResponseDTO.of(accessToken, false);
+            String refreshToken = tokenProvider.createRefreshToken(user.get().getId());
+            TokenResponseDTO tokenResponseDTO = TokenResponseDTO.of(accessToken, refreshToken);
+            return LoginResponseDTO.of(tokenResponseDTO, false);
         }
 
         return LoginResponseDTO.of(kakaoUserInfoResponseDTO, true);
@@ -47,15 +46,24 @@ public class AuthCommandService {
      * 회원가입
      * - 회원가입 사용자 정보 저장 및 토큰 발급
      */
-    public SignupResponseDTO signup(SignupRequestDTO signupRequestDTO) {
+    public TokenResponseDTO signup(SignupRequestDTO signupRequestDTO) {
         if (userRepository.existsByKakaoId(signupRequestDTO.getKakaoId())) {
             throw new GeneralException(ErrorCode.USER_ALREADY_EXIST);
         }
 
         User user = signupRequestDTO.toEntity();
         userRepository.save(user);
-        String accessToken = tokenProvider.createAccessToken(user.getId());
 
-        return SignupResponseDTO.of(accessToken);
+        String accessToken = tokenProvider.createAccessToken(user.getId());
+        String refreshToken = tokenProvider.createRefreshToken(user.getId());
+
+        return TokenResponseDTO.of(accessToken, refreshToken);
+    }
+
+    /**
+     * 토큰 재발급
+    */
+    public TokenResponseDTO reissue(TokenRequestDTO tokenRequestDTO) {
+        return tokenProvider.reissueToken(tokenRequestDTO);
     }
 }

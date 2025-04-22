@@ -29,6 +29,12 @@ spring:
               - profile_nickname
               - profile_image
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      password: ${REDIS_PW}
+      port: ${REDIS_PORT}
+
 jwt:
   secret: {JWT_SECRET_KEY}
   access-token-expire-time: {JWT_ACCESS_EXPIRE_TIME}

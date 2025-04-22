@@ -7,13 +7,15 @@ import lombok.Getter;
 @Builder
 @Getter
 @AllArgsConstructor
-public class SignupResponseDTO {
+public class TokenResponseDTO {
 
     private String accessToken;
+    private String refreshToken;
 
-    public static SignupResponseDTO of(String accessToken) {
-        return SignupResponseDTO.builder()
+    public static TokenResponseDTO of(String accessToken, String refreshToken) {
+        return TokenResponseDTO.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }
