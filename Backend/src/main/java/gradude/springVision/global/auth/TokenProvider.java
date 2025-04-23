@@ -87,7 +87,8 @@ public class TokenProvider {
                     .parseClaimsJws(accessToken)
                     .getBody();
 
-            return new UsernamePasswordAuthenticationToken(claims.getSubject(), null, Collections.emptyList());
+            Long userId = Long.parseLong(claims.getSubject());
+            return new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
         } catch (ExpiredJwtException e) {
             throw new GeneralException(ErrorCode.EXPIRED_TOKEN);
         }
