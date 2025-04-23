@@ -23,7 +23,13 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN404", "토큰 형식이 잘못되었습니다."),
 
     // User Error
-    USER_ALREADY_EXIST(HttpStatus.CONFLICT, "USER4000", "사용자가 이미 존재합니다.");
+    USER_ALREADY_EXIST(HttpStatus.CONFLICT, "USER4000", "사용자가 이미 존재합니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4001", "사용자를 찾을 수 업습니다."),
+
+    // Diary Error
+    DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY4000", "하루 기록을 찾을 수 없습니다."),
+    DIARY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "DIARY4001", "하루 기록에 대한 권한이 없습니다."),
+    DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY4003", "하루 기록에 이미 존재합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
