@@ -1,4 +1,4 @@
-package gradude.springVision.domain.user.dto;
+package gradude.springVision.domain.user.dto.response;
 
 import lombok.*;
 

@@ -1,4 +1,4 @@
-package gradude.springVision.domain.diary.dto;
+package gradude.springVision.domain.diary.dto.request;
 
 import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.domain.user.entity.User;

@@ -1,7 +1,7 @@
 package gradude.springVision.domain.diary.service;
 
-import gradude.springVision.domain.diary.dto.DiaryRequestDTO;
-import gradude.springVision.domain.diary.dto.DiaryResponseDTO;
+import gradude.springVision.domain.diary.dto.request.DiaryRequestDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryResponseDTO;
 import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.domain.diary.repository.DiaryRepository;
 import gradude.springVision.domain.user.entity.User;

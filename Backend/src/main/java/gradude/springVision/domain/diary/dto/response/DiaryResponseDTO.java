@@ -1,4 +1,4 @@
-package gradude.springVision.domain.diary.dto;
+package gradude.springVision.domain.diary.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;
