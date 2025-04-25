@@ -1,10 +1,13 @@
 package gradude.springVision.domain.user.entity;
 
+import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.global.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -35,4 +38,7 @@ public class User extends BaseEntity {
     private Boolean isFaceRecognitionAgreed;
 
     private String profileImageUrl;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Diary> diaries = new ArrayList<>();
 }
