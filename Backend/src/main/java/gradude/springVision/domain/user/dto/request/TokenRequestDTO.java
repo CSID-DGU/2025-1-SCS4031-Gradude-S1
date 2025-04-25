@@ -1,4 +1,4 @@
-package gradude.springVision.domain.user.dto;
+package gradude.springVision.domain.user.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

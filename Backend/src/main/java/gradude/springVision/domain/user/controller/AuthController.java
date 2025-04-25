@@ -1,9 +1,9 @@
 package gradude.springVision.domain.user.controller;
 
-import gradude.springVision.domain.user.dto.LoginResponseDTO;
-import gradude.springVision.domain.user.dto.SignupRequestDTO;
-import gradude.springVision.domain.user.dto.TokenRequestDTO;
-import gradude.springVision.domain.user.dto.TokenResponseDTO;
+import gradude.springVision.domain.user.dto.response.LoginResponseDTO;
+import gradude.springVision.domain.user.dto.request.SignupRequestDTO;
+import gradude.springVision.domain.user.dto.request.TokenRequestDTO;
+import gradude.springVision.domain.user.dto.response.TokenResponseDTO;
 import gradude.springVision.domain.user.service.AuthCommandService;
 import gradude.springVision.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
