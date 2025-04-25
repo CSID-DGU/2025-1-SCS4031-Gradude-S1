@@ -2,6 +2,7 @@ package gradude.springVision.domain.diary.service;
 
 import gradude.springVision.domain.diary.dto.DiaryCalendarResponseDTO;
 import gradude.springVision.domain.diary.dto.DiaryDetailResponseDTO;
+import gradude.springVision.domain.diary.dto.DiaryGraphResponseDTO;
 import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.domain.diary.repository.DiaryRepository;
 import gradude.springVision.global.common.response.ErrorCode;
@@ -45,6 +46,16 @@ public class DiaryQueryService {
 
         return diaryRepository.findAllByUserIdAndCreatedAtBetween(userId, startOfDay, endOfDay).stream()
                 .map(DiaryCalendarResponseDTO::from)
+                .toList();
+    }
+
+    /**
+     * 건강 점수 그래프 조회
+     */
+    public List<DiaryGraphResponseDTO> getDiaryGraph(Long userId) {
+
+        return diaryRepository.findTop5ByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(DiaryGraphResponseDTO::from)
                 .toList();
     }
 }

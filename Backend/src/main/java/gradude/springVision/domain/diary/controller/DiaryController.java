@@ -1,9 +1,6 @@
 package gradude.springVision.domain.diary.controller;
 
-import gradude.springVision.domain.diary.dto.DiaryCalendarResponseDTO;
-import gradude.springVision.domain.diary.dto.DiaryDetailResponseDTO;
-import gradude.springVision.domain.diary.dto.DiaryRequestDTO;
-import gradude.springVision.domain.diary.dto.DiaryResponseDTO;
+import gradude.springVision.domain.diary.dto.*;
 import gradude.springVision.domain.diary.service.DiaryCommandService;
 import gradude.springVision.domain.diary.service.DiaryQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
@@ -42,5 +39,11 @@ public class DiaryController {
     public ApiResponse<List<DiaryCalendarResponseDTO>> getDiaryCalender(@AuthenticationPrincipal Long userId,
                                                                         @RequestParam int year, @RequestParam int month) {
         return ApiResponse.onSuccess(diaryQueryService.getDiaryCalendar(userId, year, month));
+    }
+
+    @Operation(summary = "건강 점수 그래프 조회")
+    @PostMapping("/graph")
+    public ApiResponse<List<DiaryGraphResponseDTO>> getDiaryGraph(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(diaryQueryService.getDiaryGraph(userId));
     }
 }
