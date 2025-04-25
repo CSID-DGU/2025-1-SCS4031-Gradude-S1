@@ -1,6 +1,10 @@
 package gradude.springVision.domain.diary.controller;
 
-import gradude.springVision.domain.diary.dto.*;
+import gradude.springVision.domain.diary.dto.request.DiaryRequestDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryCalendarResponseDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryDetailResponseDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryGraphResponseDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryResponseDTO;
 import gradude.springVision.domain.diary.service.DiaryCommandService;
 import gradude.springVision.domain.diary.service.DiaryQueryService;
 import gradude.springVision.global.common.response.ApiResponse;

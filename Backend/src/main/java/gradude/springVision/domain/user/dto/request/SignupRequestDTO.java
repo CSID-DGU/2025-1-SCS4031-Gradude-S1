@@ -1,4 +1,4 @@
-package gradude.springVision.domain.user.dto;
+package gradude.springVision.domain.user.dto.request;
 
 import gradude.springVision.domain.user.entity.Gender;
 import gradude.springVision.domain.user.entity.User;

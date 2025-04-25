@@ -3,7 +3,7 @@ package gradude.springVision.domain.user.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gradude.springVision.domain.user.dto.KakaoUserInfoResponseDTO;
+import gradude.springVision.domain.user.dto.response.KakaoUserInfoResponseDTO;
 import gradude.springVision.global.common.response.ErrorCode;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import lombok.RequiredArgsConstructor;

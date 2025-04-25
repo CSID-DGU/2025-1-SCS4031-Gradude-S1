@@ -1,4 +1,4 @@
-package gradude.springVision.domain.diary.dto;
+package gradude.springVision.domain.diary.dto.response;
 
 import gradude.springVision.domain.diary.entity.Diary;
 import lombok.AllArgsConstructor;
@@ -10,15 +10,15 @@ import java.time.LocalDate;
 @Builder
 @Getter
 @AllArgsConstructor
-public class DiaryGraphResponseDTO {
+public class DiaryCalendarResponseDTO {
 
     private LocalDate date;
-    private int healthScore;
+    private Long diaryId;
 
-    public static DiaryGraphResponseDTO from(Diary diary) {
-        return DiaryGraphResponseDTO.builder()
+    public static DiaryCalendarResponseDTO from(Diary diary) {
+        return DiaryCalendarResponseDTO.builder()
                 .date(diary.getCreatedAt().toLocalDate())
-                .healthScore(diary.getHealthScore())
+                .diaryId(diary.getId())
                 .build();
     }
 }

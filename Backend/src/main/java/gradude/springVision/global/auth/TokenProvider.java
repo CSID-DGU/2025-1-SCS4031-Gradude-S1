@@ -1,7 +1,7 @@
 package gradude.springVision.global.auth;
 
-import gradude.springVision.domain.user.dto.TokenRequestDTO;
-import gradude.springVision.domain.user.dto.TokenResponseDTO;
+import gradude.springVision.domain.user.dto.request.TokenRequestDTO;
+import gradude.springVision.domain.user.dto.response.TokenResponseDTO;
 import gradude.springVision.global.common.response.ErrorCode;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import io.jsonwebtoken.*;
