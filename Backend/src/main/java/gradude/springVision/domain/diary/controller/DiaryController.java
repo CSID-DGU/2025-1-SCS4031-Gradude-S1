@@ -1,5 +1,6 @@
 package gradude.springVision.domain.diary.controller;
 
+import gradude.springVision.domain.diary.dto.DiaryCalendarResponseDTO;
 import gradude.springVision.domain.diary.dto.DiaryDetailResponseDTO;
 import gradude.springVision.domain.diary.dto.DiaryRequestDTO;
 import gradude.springVision.domain.diary.dto.DiaryResponseDTO;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -30,7 +33,14 @@ public class DiaryController {
 
     @Operation(summary = "하루 기록 조회")
     @PostMapping("/{diaryId}")
-        public ApiResponse<DiaryDetailResponseDTO> getDiary(@AuthenticationPrincipal Long userId, @PathVariable Long diaryId) {
-            return ApiResponse.onSuccess(diaryQueryService.getDiary(userId, diaryId));
-        }
+    public ApiResponse<DiaryDetailResponseDTO> getDiary(@AuthenticationPrincipal Long userId, @PathVariable Long diaryId) {
+        return ApiResponse.onSuccess(diaryQueryService.getDiary(userId, diaryId));
+    }
+
+    @Operation(summary = "하루 기록 캘린더 조회")
+    @PostMapping("/calendar")
+    public ApiResponse<List<DiaryCalendarResponseDTO>> getDiaryCalender(@AuthenticationPrincipal Long userId,
+                                                                        @RequestParam int year, @RequestParam int month) {
+        return ApiResponse.onSuccess(diaryQueryService.getDiaryCalendar(userId, year, month));
+    }
 }
