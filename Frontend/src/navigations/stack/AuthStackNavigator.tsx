@@ -1,10 +1,10 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StyleSheet} from 'react-native';
-import LoginScreen from '../screens/Auth/LoginScreen';
-import KakaoLoginScreen from '../screens/Auth/KakaoLoginScreen';
+import LoginScreen from '@/screens/Auth/LoginScreen';
+import KakaoLoginScreen from '@/screens/Auth/KakaoLoginScreen';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {authNavigations} from '../constants';
+import {authNavigations} from '@/constants';
 
 export type AuthStackParamList = {
   [authNavigations.LOGIN]: undefined;
