@@ -1,16 +1,18 @@
 import {NavigationContainer} from '@react-navigation/native';
 import React from 'react';
-import {Button, StyleSheet, Text, View} from 'react-native';
-import AuthStackNavigator from './src/navigations/AuthStackNavigator';
+import AuthStackNavigator from './src/navigations/stack/AuthStackNavigator';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import queryClient from './src/api/queryClient';
+import RootNavigator from './src/navigations/root/RootNavigatior';
 
 function App() {
   return (
-    <NavigationContainer>
-      <AuthStackNavigator />
-    </NavigationContainer>
+    <QueryClientProvider client={queryClient}>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </QueryClientProvider>
   );
 }
-
-const styles = StyleSheet.create({});
 
 export default App;
