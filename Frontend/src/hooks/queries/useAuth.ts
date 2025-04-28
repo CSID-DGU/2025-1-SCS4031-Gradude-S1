@@ -1,21 +1,26 @@
 import {useEffect} from 'react';
-import {MutationFunction, useMutation, useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 
 import {
-  ResponseProfile,
-  ResponseToken,
+  kakaoLogin,
+  patchSignup,
   getAccessToken,
   getProfile,
-  kakaoLogin,
   logout,
-  postLogin,
-  postSignup,
+  signout,
 } from '@/api/auth';
+import type {
+  KakaoLoginResponse,
+  TokenResponse,
+  UserInfo,
+  SignupRequest,
+  SignupResponse,
+} from '@/types/auth';
 import {
-  removeEncryptStorage,
+  setHeader,
   removeHeader,
   setEncryptStorage,
-  setHeader,
+  removeEncryptStorage,
 } from '@/utils';
 import queryClient from '@/api/queryClient';
 import {numbers, queryKeys, storageKeys} from '@/constants';
@@ -24,22 +29,30 @@ import type {
   UseQueryCustomOptions,
 } from '@/types/common';
 
-function useSignup(mutationOptions?: UseMutationCustomOptions) {
+export function useSignup(mutationOptions?: UseMutationCustomOptions) {
   return useMutation({
-    mutationFn: postSignup,
+    mutationFn: patchSignup,
     ...mutationOptions,
   });
 }
 
-function useLogin<T>(
-  loginAPI: MutationFunction<ResponseToken, T>,
-  mutationOptions?: UseMutationCustomOptions,
-) {
+export function useKakaoLogin(mutationOptions?: UseMutationCustomOptions) {
   return useMutation({
-    mutationFn: postLogin,
-    onSuccess: ({accessToken, refreshToken}) => {
-      setHeader('Authorization', `Bearer ${accessToken}`);
-      setEncryptStorage(storageKeys.REFRESH_TOKEN, refreshToken);
+    mutationFn: kakaoLogin,
+    onSuccess: res => {
+      const {firstLogin, tokenResponse, userInfo} = res.result;
+      if (firstLogin && userInfo) {
+        queryClient.setQueryData(
+          [queryKeys.AUTH, queryKeys.GET_PROFILE],
+          userInfo,
+        );
+      } else if (tokenResponse) {
+        setHeader('Authorization', `Bearer ${tokenResponse.accessToken}`);
+        setEncryptStorage(
+          storageKeys.REFRESH_TOKEN,
+          tokenResponse.refreshToken,
+        );
+      }
     },
     onSettled: () => {
       queryClient.refetchQueries({
@@ -53,11 +66,7 @@ function useLogin<T>(
   });
 }
 
-function useKakaoLogin(mutationOptions?: UseMutationCustomOptions) {
-  return useLogin(kakaoLogin, mutationOptions);
-}
-
-function useGetRefreshToken() {
+export function useGetRefreshToken() {
   const {data, error, isSuccess, isError} = useQuery({
     queryKey: [queryKeys.AUTH, queryKeys.GET_ACCESS_TOKEN],
     queryFn: getAccessToken,
@@ -84,15 +93,17 @@ function useGetRefreshToken() {
   return {isSuccess, isError};
 }
 
-function useGetProfile(queryOptions?: UseQueryCustomOptions<ResponseProfile>) {
+// 이부분 수정해야함
+export function useGetProfile(queryOptions?: UseQueryCustomOptions<UserInfo>) {
   return useQuery({
-    queryFn: getProfile,
     queryKey: [queryKeys.AUTH, queryKeys.GET_PROFILE],
+    queryFn: getProfile,
+    enabled: true,
     ...queryOptions,
   });
 }
 
-function useLogout(mutationOptions?: UseMutationCustomOptions) {
+export function useLogout(mutationOptions?: UseMutationCustomOptions) {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
@@ -106,24 +117,36 @@ function useLogout(mutationOptions?: UseMutationCustomOptions) {
   });
 }
 
-function useAuth() {
-  const signupMutation = useSignup();
-  const refreshTokenQuery = useGetRefreshToken();
-  const getProfileQuery = useGetProfile({
-    enabled: refreshTokenQuery.isSuccess,
+export function useDeleteAccount(mutationOptions?: UseMutationCustomOptions) {
+  return useMutation({
+    mutationFn: signout,
+    onSuccess: () => {
+      removeHeader('Authorization');
+      removeEncryptStorage(storageKeys.REFRESH_TOKEN);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({queryKey: [queryKeys.AUTH]});
+    },
+    ...mutationOptions,
   });
-  const isLogin = getProfileQuery.isSuccess;
-  const kakaoLoginMutation = useKakaoLogin();
-  const logoutMutation = useLogout();
-
-  return {
-    signupMutation,
-    loginMutation,
-    getProfileQuery,
-    isLogin,
-    logoutMutation,
-    kakaoLoginMutation,
-  };
 }
 
-export default useAuth;
+export function useAuth() {
+  const signup = useSignup();
+  const kakaoLoginMutation = useKakaoLogin();
+  const refreshQuery = useGetRefreshToken();
+  const profileQuery = useGetProfile();
+  const logoutMutation = useLogout();
+  const deleteAccountMutation = useDeleteAccount();
+  const isLogin = profileQuery.isSuccess;
+
+  return {
+    signup,
+    kakaoLogin: kakaoLoginMutation,
+    refreshQuery,
+    profileQuery,
+    isLogin,
+    logout: logoutMutation,
+    deleteAccount: deleteAccountMutation,
+  };
+}

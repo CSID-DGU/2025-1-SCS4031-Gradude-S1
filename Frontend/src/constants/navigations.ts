@@ -1,7 +1,7 @@
 const authNavigations = {
-  LOGIN: 'Login',
-  SIGNUP: 'SignUp',
+  AUTH_HOME: 'AuthHome',
   KAKAO_LOGIN: 'KakaoLogin',
+  SIGNUP: 'SignUp',
 } as const;
 
 export {authNavigations};

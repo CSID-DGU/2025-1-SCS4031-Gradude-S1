@@ -1,54 +1,30 @@
-import {getEncryptStorage} from '../utils';
 import axiosInstance from 'axios';
-import {Profile, SignupResponse} from '../types/domain';
+import {getEncryptStorage} from '@/utils';
+import type {
+  KakaoLoginResponse,
+  TokenResponse,
+  UserInfo,
+  SignupRequest,
+  SignupResponse,
+} from '@/types/auth';
 
-const kakaoLogin = async (token: string): Promise<ResponseToken> => {
-  const {data} = await axiosInstance.post(
-    '/api/auth/login?code={카카오 인가 코드}',
-    {token},
-  );
-
+export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
+  const endpoint = `/api/auth/login?code=${encodeURIComponent(code)}`;
+  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint, {});
   return data;
 };
-type SignupRequest = Pick<
-  Profile,
-  'gender' | 'birth' | 'isFaceRecognitionAgreed'
->;
 
-const patchSignup = async (payload: SignupRequest): Promise<SignupResponse> => {
-  const {data} = await axiosInstance.post<SignupResponse>(
+export const patchSignup = async (
+  payload: SignupRequest,
+): Promise<SignupResponse> => {
+  const {data} = await axiosInstance.patch<SignupResponse>(
     '/api/auth/signup',
     payload,
   );
   return data;
 };
-type ResponseToken = {
-  accessToken: string;
-  refreshToken: string;
-};
 
-// const postLogin = async ({
-//   email,
-//   password,
-// }: RequestUser): Promise<ResponseToken> => {
-//   const {data} = await axiosInstance.post('/auth/signin', {
-//     email,
-//     password,
-//   });
-
-//   return data;
-// };
-
-type ResponseProfile = Profile;
-
-// 프로필 가져오기
-// const getProfile = async (): Promise<ResponseProfile> => {
-//   const {data} = await axiosInstance.get('/api/auth/me');
-
-//   return data;
-// };
-
-const getAccessToken = async (): Promise<ResponseToken> => {
+export const getAccessToken = async (): Promise<TokenResponse> => {
   const refreshToken = await getEncryptStorage('refreshToken');
 
   const {data} = await axiosInstance.get('/api/auth/reissue', {
@@ -60,9 +36,15 @@ const getAccessToken = async (): Promise<ResponseToken> => {
   return data;
 };
 
-const logout = async () => {
+export const getProfile = async (): Promise<UserInfo> => {
+  const {data} = await axiosInstance.get<UserInfo>('/api/auth/me');
+  return data;
+};
+
+export const logout = async (): Promise<void> => {
   await axiosInstance.post('/api/auth/logout');
 };
 
-export {patchSignup, getAccessToken, logout, kakaoLogin};
-export type {SignupRequest, ResponseToken, ResponseProfile};
+export const signout = async (): Promise<void> => {
+  await axiosInstance.delete('/api/auth/delete');
+};
