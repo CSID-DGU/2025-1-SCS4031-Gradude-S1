@@ -4,7 +4,15 @@ import TapNavigator from '../tap/TapNavigtor';
 import useAuth from '@/hooks/queries/useAuth';
 
 // function RootNavigator() {
-//   const {isLogin} = useAuth();
+// const {isLogin, isLoginLoading} = useAuth();
+
+// useEffect(() => {
+//   if (!isLoginLoading) {
+//     setTimeout(() => {
+//       SplashScreen.hide();
+//     }, 500);
+//   }
+// }, [isLoginLoading]);
 
 //   return <>{isLogin ? <TapNavigator /> : <AuthStackNavigator />}</>;
 // }
