@@ -10,7 +10,7 @@ import SignupScreen from '@/screens/Auth/SignupScreen';
 export type AuthStackParamList = {
   [authNavigations.AUTH_HOME]: undefined;
   [authNavigations.KAKAO_LOGIN]: undefined;
-  [authNavigations.SIGNUP]: undefined;
+  [authNavigations.SIGNUP]: {authCode: string};
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
