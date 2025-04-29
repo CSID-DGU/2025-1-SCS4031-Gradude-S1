@@ -15,6 +15,7 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "COMMON413", "파일 최대 크기를 초과하였습니다."),
     JSON_PARSE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON501", "JSON 파싱 오류입니다"),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON502", "파일 업로드에 실패했습니다."),
 
     // Unauthorized Error
     INVALID_TOKEN_SIGNATURE(HttpStatus.UNAUTHORIZED, "TOKEN401", "유효하지 않은 토큰 서명입니다."),
