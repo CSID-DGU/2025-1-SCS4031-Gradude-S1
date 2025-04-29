@@ -38,3 +38,16 @@ spring:
 jwt:
   secret: {JWT_SECRET_KEY}
   access-token-expire-time: {JWT_ACCESS_EXPIRE_TIME}
+  refresh-token-expire-time: {JWT_REFRESH_EXPIRE_TIME}
+
+cloud:
+  aws:
+    s3:
+      bucket: ${BUCKET_NAME}
+    stack:
+      auto: false
+    region:
+      static: ${BUCKET_REGION}
+    credentials:
+      accessKey: ${BUCKET_ACCESSKEY}
+      secretKey: ${BUCKET_SECRETKEY}
