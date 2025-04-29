@@ -131,7 +131,7 @@ export function useDeleteAccount(mutationOptions?: UseMutationCustomOptions) {
   });
 }
 
-export function useAuth() {
+function useAuth() {
   const signup = useSignup();
   const kakaoLoginMutation = useKakaoLogin();
   const refreshQuery = useGetRefreshToken();
@@ -142,11 +142,12 @@ export function useAuth() {
 
   return {
     signup,
-    kakaoLogin: kakaoLoginMutation,
+    kakaoLoginMutation,
     refreshQuery,
     profileQuery,
     isLogin,
-    logout: logoutMutation,
-    deleteAccount: deleteAccountMutation,
+    logoutMutation,
+    deleteAccountMutation,
   };
 }
+export default useAuth;
