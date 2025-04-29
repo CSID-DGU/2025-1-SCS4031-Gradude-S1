@@ -28,10 +28,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       in: window,
       launchOptions: launchOptions
     )
+    showSplashScreen()
 
     return true
   }
+  private func showSplashScreen() {
+        DispatchQueue.main.async {
+            if let splashClass = NSClassFromString("SplashView") as? NSObject.Type,
+               let splashInstance = splashClass.perform(NSSelectorFromString("sharedInstance"))?.takeUnretainedValue() as? NSObject {
+                splashInstance.perform(NSSelectorFromString("showSplash"))
+            }
+        }
+    }
 }
+ 
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   override func sourceURL(for bridge: RCTBridge) -> URL? {
