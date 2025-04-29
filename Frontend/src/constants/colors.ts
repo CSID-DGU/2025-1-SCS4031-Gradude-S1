@@ -5,9 +5,11 @@ const colors = {
   PURPLE: '#BE9FFF',
   RED: '#FF1400',
   BLACK: '#000000',
+  GRAY: '#717784',
   WHITE: '#FFFFFF',
   SEMIWHITE: '#F9F9F9',
   YELLOW: '#FEE500',
+  KAKAOBLACK: '#181600',
 };
 
-export default colors;
+export {colors};
