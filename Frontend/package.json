@@ -20,6 +20,7 @@
     "axios": "^1.9.0",
     "react": "19.0.0",
     "react-native": "0.79.1",
+    "react-native-config": "^1.5.5",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-gesture-handler": "^2.25.0",
     "react-native-reanimated": "^3.17.5",
