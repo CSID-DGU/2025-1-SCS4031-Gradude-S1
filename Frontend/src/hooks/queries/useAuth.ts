@@ -67,7 +67,7 @@ export function useKakaoLogin(mutationOptions?: UseMutationCustomOptions) {
 }
 
 export function useGetRefreshToken() {
-  const {data, error, isSuccess, isError} = useQuery({
+  const {data, error, isSuccess, isError, isPending} = useQuery({
     queryKey: [queryKeys.AUTH, queryKeys.GET_ACCESS_TOKEN],
     queryFn: getAccessToken,
     staleTime: numbers.ACCESS_TOKEN_REFRESH_TIME,
@@ -90,7 +90,7 @@ export function useGetRefreshToken() {
     }
   }, [isError]);
 
-  return {isSuccess, isError};
+  return {isSuccess, isError, isPending};
 }
 
 // 이부분 수정해야함
@@ -139,6 +139,7 @@ function useAuth() {
   const logoutMutation = useLogout();
   const deleteAccountMutation = useDeleteAccount();
   const isLogin = profileQuery.isSuccess;
+  const isLoginLoading = refreshQuery.isPending;
 
   return {
     signup,
@@ -148,6 +149,7 @@ function useAuth() {
     isLogin,
     logoutMutation,
     deleteAccountMutation,
+    isLoginLoading,
   };
 }
 export default useAuth;
