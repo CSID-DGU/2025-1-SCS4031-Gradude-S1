@@ -1,7 +1,7 @@
 import {Text} from 'react-native-gesture-handler';
 import AuthStackNavigator from '../stack/AuthStackNavigator';
 import TapNavigator from '../tap/TapNavigtor';
-import {useAuth} from '@/hooks/queries/useAuth';
+import useAuth from '@/hooks/queries/useAuth';
 
 // function RootNavigator() {
 //   const {isLogin} = useAuth();
