@@ -3,7 +3,7 @@ import {useMutation, useQuery} from '@tanstack/react-query';
 
 import {
   kakaoLogin,
-  patchSignup,
+  postSignup,
   getAccessToken,
   getProfile,
   logout,
@@ -25,18 +25,20 @@ import {
 import queryClient from '@/api/queryClient';
 import {numbers, queryKeys, storageKeys} from '@/constants';
 import type {
+  ResponseError,
   UseMutationCustomOptions,
   UseQueryCustomOptions,
 } from '@/types/common';
 
 export function useSignup(mutationOptions?: UseMutationCustomOptions) {
   return useMutation({
-    mutationFn: patchSignup,
+    mutationFn: postSignup,
     ...mutationOptions,
   });
 }
-
-export function useKakaoLogin(mutationOptions?: UseMutationCustomOptions) {
+export function useKakaoLogin(
+  mutationOptions?: UseMutationCustomOptions<KakaoLoginResponse>,
+) {
   return useMutation({
     mutationFn: kakaoLogin,
     onSuccess: res => {
@@ -46,13 +48,8 @@ export function useKakaoLogin(mutationOptions?: UseMutationCustomOptions) {
           [queryKeys.AUTH, queryKeys.GET_PROFILE],
           userInfo,
         );
-      } else if (tokenResponse) {
-        setHeader('Authorization', `Bearer ${tokenResponse.accessToken}`);
-        setEncryptStorage(
-          storageKeys.REFRESH_TOKEN,
-          tokenResponse.refreshToken,
-        );
       }
+      // …
     },
     onSettled: () => {
       queryClient.refetchQueries({
@@ -92,14 +89,29 @@ export function useGetRefreshToken() {
 
   return {isSuccess, isError, isPending};
 }
-
-// 이부분 수정해야함
-export function useGetProfile(queryOptions?: UseQueryCustomOptions<UserInfo>) {
-  return useQuery({
+export function useGetProfile(options?: UseQueryCustomOptions<UserInfo>) {
+  return useQuery<UserInfo, ResponseError>({
     queryKey: [queryKeys.AUTH, queryKeys.GET_PROFILE],
-    queryFn: getProfile,
-    enabled: true,
-    ...queryOptions,
+
+    queryFn: () => {
+      const cached = queryClient.getQueryData<UserInfo>([
+        queryKeys.AUTH,
+        queryKeys.GET_PROFILE,
+      ]);
+      if (!cached) {
+        throw new Error('로그인 후 프로필 정보가 없습니다');
+      }
+      return cached;
+    },
+
+    enabled: false,
+    initialData: () =>
+      queryClient.getQueryData<UserInfo>([
+        queryKeys.AUTH,
+        queryKeys.GET_PROFILE,
+      ])!,
+
+    ...options,
   });
 }
 
@@ -132,7 +144,7 @@ export function useDeleteAccount(mutationOptions?: UseMutationCustomOptions) {
 }
 
 function useAuth() {
-  const signup = useSignup();
+  const signupMutation = useSignup();
   const kakaoLoginMutation = useKakaoLogin();
   const refreshQuery = useGetRefreshToken();
   const profileQuery = useGetProfile();
@@ -142,7 +154,7 @@ function useAuth() {
   const isLoginLoading = refreshQuery.isPending;
 
   return {
-    signup,
+    signupMutation,
     kakaoLoginMutation,
     refreshQuery,
     profileQuery,
