@@ -35,7 +35,8 @@ function AuthStackNavigator() {
           name={authNavigations.AUTH_HOME}
           component={LoginScreen}
           options={{
-            headerTitle: ' ',
+            headerTitle: '',
+            headerBackVisible: false,
             headerShown: false,
           }}
         />

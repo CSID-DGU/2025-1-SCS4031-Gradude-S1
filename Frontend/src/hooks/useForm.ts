@@ -16,6 +16,12 @@ function useForm<T>({initialValue, validate}: UseFormProps<T>) {
       [name]: text,
     });
   };
+  const handleChange = <K extends keyof T>(name: K, value: T[K]) => {
+    setValues({
+      ...values,
+      [name]: value,
+    });
+  };
 
   const handleBlur = (name: keyof T) => {
     setTouched({
@@ -32,12 +38,26 @@ function useForm<T>({initialValue, validate}: UseFormProps<T>) {
     return {value, onChangeText, onBlur};
   };
 
+  const getFieldProps = <K extends keyof T>(name: K) => {
+    const value = values[name];
+    const onChange = (value: T[K]) => handleChange(name, value);
+    const onBlur = () => handleBlur(name);
+
+    return {value, onChange, onBlur};
+  };
+
   useEffect(() => {
     const newErrors = validate(values);
     setErrors(newErrors);
   }, [validate, values]);
 
-  return {values, errors, touched, getTextInputProps};
+  return {
+    values,
+    errors,
+    touched,
+    getTextInputProps,
+    getFieldProps,
+  };
 }
 
 export default useForm;
