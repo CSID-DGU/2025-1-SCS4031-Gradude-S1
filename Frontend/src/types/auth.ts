@@ -30,7 +30,7 @@ export type KakaoLoginResponse = ApiResponse<LoginResult>;
 /** 회원가입 요청 페이로드 */
 export type SignupRequest = Pick<
   Profile,
-  'name' | 'gender' | 'birth' | 'isFaceRecognitionAgreed'
+  'gender' | 'birth' | 'isFaceRecognitionAgreed'
 >;
 
 /** 회원가입 응답 타입 */

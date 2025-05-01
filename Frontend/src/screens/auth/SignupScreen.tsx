@@ -1,181 +1,160 @@
-// import React from 'react';
-// import {Button, Image, StyleSheet, View} from 'react-native';
-// import {SafeAreaView} from 'react-native-safe-area-context';
-// import {authNavigations} from '@/constants';
-// import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
-// import {StackScreenProps} from '@react-navigation/stack';
-// import {colors} from '@/constants';
-// import {getProfile} from '@/api/auth';
-// import useAuth from '@/hooks/queries/useAuth';
-// import {useEffect} from 'react';
-// import {TextInput} from 'react-native-gesture-handler';
+// src/screens/Auth/SignupScreen.tsx
+import React, {useState} from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  Switch,
+} from 'react-native';
+import {format} from 'date-fns';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {StackScreenProps} from '@react-navigation/stack';
 
-// type SignUpScreenProps = StackScreenProps<
-//   AuthStackParamList,
-//   typeof authNavigations.SIGNUP
-// >;
-// function SignupScreen({navigation, route}: SignUpScreenProps) {
-//   const {authCode} = route.params;
-//   const {signupMutation} = useAuth();
-//   const [name, setName] = React.useState('');
-//   const [profileUrl, setProfileUrl] = React.useState('');
+import InputField from '@/components/commons/InputField';
+import CustomButton from '@/components/commons/CustomButton';
+import RadioButton from '@/components/commons/RadioButton';
+import useForm from '@/hooks/useForm';
+import useAuth, {useGetProfile} from '@/hooks/queries/useAuth';
+import {validateSignup} from '@/utils/validate';
+import {authNavigations, colors} from '@/constants';
+import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
 
-//   useEffect(() => {
-//     getProfile(authCode).then(data => {
-//       setName(data.nickname);
-//       setProfileUrl(data.profileImageUrl);
-//     });
-//   }, [authCode]);
+type SignupProps = StackScreenProps<
+  AuthStackParamList,
+  typeof authNavigations.SIGNUP
+>;
 
-//   const handleSignup = () => {
-//     signupMutation.mutate(
-//       {authCode, name, profileUrl},
-//       {
-//         onSuccess: () => navigation.replace('HomeScreen'), // 가입 끝나면 메인탭으로
-//       },
-//     );
-//   };
+function SignupScreen({navigation}: SignupProps) {
+  const {data: profile} = useGetProfile({enabled: true});
+  const {signupMutation} = useAuth();
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-//   return (
-//     <View style={styles.container}>
-//       {profileUrl ? (
-//         <Image source={{uri: profileUrl}} style={styles.avatar} />
-//       ) : null}
-//       <TextInput
-//         placeholder="이름"
-//         value={name}
-//         onChangeText={setName}
-//         style={styles.input}
-//       />
-//       {/* ...추가 폼 필드... */}
-//       <Button title="회원가입 완료" onPress={handleSignup} />
-//     </View>
-//   );
-// }
+  const dummyProfile = {
+    nickname: '홍길동',
+    profileImageUrl: 'https://picsum.photos/200',
+  };
+  const profileToUse = profile ?? dummyProfile;
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     backgroundColor: colors.WHITE,
-//   },
-//   avatar: {
-//     width: 100,
-//     height: 100,
-//     borderRadius: 50,
-//     marginBottom: 20,
-//   },
-//   input: {
-//     width: '80%',
-//     height: 40,
-//     borderColor: colors.GRAY,
-//     borderWidth: 1,
-//     borderRadius: 5,
-//     paddingHorizontal: 10,
-//     marginBottom: 20,
-//   },
-//   button: {
-//     backgroundColor: colors.MAINBLUE,
-//   },
-// });
+  const form = useForm({
+    initialValue: {
+      gender: 'MALE',
+      birth: '',
+      isFaceRecognitionAgreed: false,
+    },
+    validate: validateSignup,
+  });
 
-// export default SignupScreen;
-// import React, {useState, useEffect} from 'react';
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   Image,
-//   Button,
-//   StyleSheet,
-//   Switch,
-//   SafeAreaView,
-// } from 'react-native';
-// import {StackScreenProps} from '@react-navigation/stack';
-// import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
-// import {useGetProfile, useSignup} from '@/hooks/queries/useAuth';
-// import {authNavigations, colors} from '@/constants';
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
+  const handleConfirm = (date: Date) => {
+    const formatted = format(date, 'yyyy-MM-dd');
+    form.getFieldProps('birth').onChange(formatted);
+    hideDatePicker();
+  };
 
-// type Props = StackScreenProps<
-//   AuthStackParamList,
-//   typeof authNavigations.SIGNUP
-// >;
+  const handleSignup = () => {
+    signupMutation.mutate(form.values);
+  };
 
-// export default function SignupScreen({navigation}: Props) {
-//
-//   const {data: profile} = useGetProfile({enabled: true});
-//
-//   const {
-//     mutate: signup,
-//     isLoading,
-//     isError,
-//   } = useSignup({
-//     // onSuccess: () => navigation.replace(authNavigations.TAB_HOME),
-//   });
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.form}>
+        <Image
+          source={{uri: profileToUse.profileImageUrl}}
+          style={styles.avatar}
+        />
+        <Text style={styles.nicknameText}>{profileToUse.nickname}</Text>
 
-//   const [name, setName] = useState('');
-//   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('OTHER'); // → payload.gender
-//   const [birth, setBirth] = useState(''); // → payload.birth
-//   const [isFaceRecognitionAgreed, setIsFaceRecognitionAgreed] = useState(false); // → payload.isFaceRecognitionAgreed
+        <Text style={styles.label}>성별</Text>
+        <View style={styles.row}>
+          {(['MALE', 'FEMALE'] as const).map(g => (
+            <RadioButton
+              key={g}
+              label={g === 'MALE' ? '남성' : '여성'}
+              selected={form.values.gender === g}
+              onPress={() => form.getFieldProps('gender').onChange(g)}
+            />
+          ))}
+        </View>
 
-//     if (profile) setName(profile.nickname);
-//   }, [profile]);
+        <Text style={styles.label}>생년월일</Text>
+        <TouchableOpacity onPress={showDatePicker}>
+          <InputField
+            placeholder="YYYY-MM-DD"
+            style={styles.input}
+            value={form.values.birth}
+            editable={false}
+          />
+        </TouchableOpacity>
 
-//   const handleSignup = () => {
-//     signup({name, gender, birth, isFaceRecognitionAgreed});
-//   };
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          onConfirm={handleConfirm}
+          onCancel={hideDatePicker}
+        />
 
-//   if (!profile) return <Text style={styles.loading}>프로필 불러오는 중…</Text>;
+        <View style={styles.switchRow}>
+          <Text>안면인식 이용 동의(필수)</Text>
+          <Switch
+            value={form.values.isFaceRecognitionAgreed}
+            onValueChange={val =>
+              form.getFieldProps('isFaceRecognitionAgreed').onChange(val)
+            }
+          />
+        </View>
+      </View>
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <Image source={{uri: profile.profileImageUrl}} style={styles.avatar} />
-//       <Text style={styles.nickname}>{profile.nickname}</Text>
+      <CustomButton
+        label="회원가입 완료"
+        variant="filled"
+        size="large"
+        onPress={handleSignup}
+      />
+    </SafeAreaView>
+  );
+}
 
-//       <Text>실명</Text>
-//       <TextInput value={name} onChangeText={setName} style={styles.input} />
+const styles = StyleSheet.create({
+  container: {flex: 1, padding: 20},
+  form: {flex: 1, justifyContent: 'center'},
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  nicknameText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderColor: colors.GRAY,
+    marginBottom: 24,
+    paddingVertical: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginBottom: 24,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+});
 
-//       <Text>성별</Text>
-//
-//       <View style={styles.row}>
-//         <Button title="남성" onPress={() => setGender('MALE')} />
-//         <Button title="여성" onPress={() => setGender('FEMALE')} />
-//         <Button title="기타" onPress={() => setGender('OTHER')} />
-//       </View>
-
-//       <Text>생년월일</Text>
-//       <TextInput
-//         placeholder="YYYY-MM-DD"
-//         value={birth}
-//         onChangeText={setBirth}
-//         style={styles.input}
-//       />
-
-//       <View style={styles.row}>
-//         <Switch
-//           value={isFaceRecognitionAgreed}
-//           onValueChange={setIsFaceRecognitionAgreed}
-//         />
-//         <Text>안면인식 동의</Text>
-//       </View>
-
-//       <Button
-//         title={isLoading ? '가입 중…' : '회원가입 완료'}
-//         onPress={handleSignup}
-//         disabled={isLoading}
-//       />
-//       {isError && <Text style={styles.error}>오류가 발생했습니다</Text>}
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {flex: 1, padding: 20},
-//   loading: {flex: 1, textAlign: 'center', marginTop: 50},
-//   avatar: {width: 100, height: 100, borderRadius: 50, marginBottom: 12},
-//   nickname: {fontSize: 18, fontWeight: '600', marginBottom: 24},
-//   input: {borderBottomWidth: 1, borderColor: colors.GRAY, marginBottom: 16},
-//   row: {flexDirection: 'row', gap: 12, marginBottom: 16},
-//   error: {color: 'red', marginTop: 12},
-// });
+export default SignupScreen;

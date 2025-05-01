@@ -7,7 +7,6 @@ interface KakaoProfile {
 // 회원가입 시 서버에 보낼 전체 타입
 interface Profile {
   kakaoId?: number;
-  name: string;
   nickname: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   birth: string;
