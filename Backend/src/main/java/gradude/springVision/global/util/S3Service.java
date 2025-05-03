@@ -17,7 +17,7 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class S3Provider {
+public class S3Service {
 
     private final AmazonS3 amazonS3Client;
 
@@ -27,7 +27,7 @@ public class S3Provider {
     /**
      * S3에 파일 업로드하고 업로드된 파일 URL 반환 메서드
      */
-    public String uploadFile(MultipartFile file, Long userId, String dirName) {
+    public String uploadFile(Long userId, MultipartFile file, String dirName) {
         String originalFilename = file.getOriginalFilename();
         String extension = "";
 
@@ -44,6 +44,7 @@ public class S3Provider {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
         metadata.setContentType(file.getContentType());
+        metadata.setContentDisposition("inline");// 브라우저에서 파일 미리보기 가능하게
 
         try {
             amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), metadata));
