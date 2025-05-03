@@ -1,5 +1,6 @@
 package gradude.springVision.domain.user.entity;
 
+import gradude.springVision.domain.diagnosis.entity.Diagnosis;
 import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.global.util.BaseEntity;
 import jakarta.persistence.*;
@@ -40,5 +41,8 @@ public class User extends BaseEntity {
     private String profileImageUrl;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Diary> diaries = new ArrayList<>();
+    private List<Diary> diaryList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Diagnosis> diagnosisList = new ArrayList<>();
 }
