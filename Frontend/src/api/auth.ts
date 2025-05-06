@@ -14,10 +14,10 @@ export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
   return data;
 };
 
-export const patchSignup = async (
+export const postSignup = async (
   payload: SignupRequest,
 ): Promise<SignupResponse> => {
-  const {data} = await axiosInstance.patch<SignupResponse>(
+  const {data} = await axiosInstance.post<SignupResponse>(
     '/api/auth/signup',
     payload,
   );
@@ -36,8 +36,8 @@ export const getAccessToken = async (): Promise<TokenResponse> => {
   return data;
 };
 
-export const getProfile = async (): Promise<UserInfo> => {
-  const {data} = await axiosInstance.get<UserInfo>('/api/auth/me');
+export const getProfile = async (authCode: string): Promise<UserInfo> => {
+  const {data} = await axiosInstance.post<UserInfo>('/api/auth/signup');
   return data;
 };
 

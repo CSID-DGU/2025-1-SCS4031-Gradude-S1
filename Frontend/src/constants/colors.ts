@@ -6,10 +6,12 @@ const colors = {
   RED: '#FF1400',
   BLACK: '#000000',
   GRAY: '#717784',
+  LIGHTGRAY: '#DCDCDC',
   WHITE: '#FFFFFF',
   SEMIWHITE: '#F9F9F9',
   YELLOW: '#FEE500',
   KAKAOBLACK: '#181600',
+  ALERTBACK: '#EDEDED',
 };
 
 export {colors};

@@ -25,16 +25,13 @@ export default function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
 
   const handleNavChange = (event: WebViewNavigation) => {
     const {url, loading: navLoading} = event;
-    console.log('URLsfdfsfs:', event.url);
+    // console.log('URLsfdfsfs:', event.url);
 
     if (!navLoading && url.startsWith(`${REDIRECT_URI}?code=`)) {
       const code = url.split('?code=')[1];
       setLoading(true);
 
       kakaoLoginMutation.mutate(code, {
-        onSuccess: () => {
-          navigation.replace(authNavigations.SIGNUP, {authCode: code});
-        },
         onSettled: () => setLoading(false),
       });
     }
@@ -58,6 +55,8 @@ export default function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
             `&client_id=${CLIENT_ID}` +
             `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`,
         }}
+        // recaptcha 안뜨게 하는 코드
+        userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
         onNavigationStateChange={handleNavChange}
         startInLoadingState
       />
