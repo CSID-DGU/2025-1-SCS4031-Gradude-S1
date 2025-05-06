@@ -66,21 +66,22 @@ const InputField = forwardRef(
 const styles = StyleSheet.create({
   container: {
     borderWidth: 1,
-    borderColor: colors.GRAY,
-    padding: deviceHeight > 700 ? 15 : 10,
+    borderRadius: 10,
+    borderColor: colors.LIGHTGRAY,
+    padding: deviceHeight > 700 ? 5 : 3,
   },
   multiLine: {
-    paddingBottom: deviceHeight > 700 ? 45 : 30,
+    paddingBottom: deviceHeight > 700 ? 30 : 25,
   },
   input: {
-    fontSize: 16,
+    fontSize: 15,
     color: colors.BLACK,
     padding: 0,
   },
   innerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 3,
   },
   disabled: {
     backgroundColor: colors.GRAY,
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.RED,
-    fontSize: 12,
+    fontSize: 10,
     paddingTop: 5,
   },
 });

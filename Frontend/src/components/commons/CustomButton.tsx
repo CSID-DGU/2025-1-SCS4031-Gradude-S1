@@ -57,9 +57,10 @@ function CustomButton({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 3,
+    borderRadius: 30,
     flexDirection: 'row',
     justifyContent: 'center',
+    padding: 5,
   },
   inValid: {
     opacity: 0.5,
