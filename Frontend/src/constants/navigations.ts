@@ -7,6 +7,11 @@ const homeNavigations = {
   MAIN_HOME: 'MainHome', // 탭에서 쓰는 이름
   DIAGNOSE_HOME: 'DiagnoseHome', // 스택에서 쓰는 이름 , 위 아래 같은 페이지
   FACE_SMILE: 'FaceSmile',
+  FACE_WINK: 'FaceWink',
+  RECORD: 'Record',
+  LOADING: 'Loading',
+  CAUTION: 'Caution',
+  NORMAL: 'Normal',
 } as const;
 
 export {authNavigations, homeNavigations};

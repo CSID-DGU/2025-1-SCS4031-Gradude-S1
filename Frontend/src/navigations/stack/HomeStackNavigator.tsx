@@ -5,10 +5,20 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {colors, homeNavigations} from '@/constants';
 import HomeScreen from '@/screens/Home/HomeScreen';
 import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
+import FaceWinkScreen from '@/screens/Home/FaceWinkScreen';
+import RecordScreen from '@/screens/Home/RecordScreen';
+import LoadingScreen from '@/screens/Home/LoadingScreen';
+import CautionResultScreen from '@/screens/Home/CautionResultScreen';
+import NormalResultScreen from '@/screens/Home/NormalResultScreen';
 
 export type HomeStackParamList = {
   [homeNavigations.DIAGNOSE_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
+  [homeNavigations.FACE_WINK]: undefined;
+  [homeNavigations.RECORD]: undefined;
+  [homeNavigations.LOADING]: undefined;
+  [homeNavigations.CAUTION]: undefined;
+  [homeNavigations.NORMAL]: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -41,6 +51,45 @@ function HomeStackNavigator() {
         <Stack.Screen
           name={homeNavigations.FACE_SMILE}
           component={FaceSmileScreen}
+          options={{
+            headerTitle: '',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.FACE_WINK}
+          component={FaceWinkScreen}
+          options={{
+            headerTitle: '',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.RECORD}
+          component={RecordScreen}
+          options={{
+            headerTitle: '',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.LOADING}
+          component={LoadingScreen}
+          options={{
+            headerTitle: '',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.CAUTION}
+          component={CautionResultScreen}
+          options={{
+            headerTitle: '',
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.NORMAL}
+          component={NormalResultScreen}
           options={{
             headerTitle: '',
             headerShown: false,
