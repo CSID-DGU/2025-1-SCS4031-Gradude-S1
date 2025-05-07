@@ -1,98 +1,84 @@
 import React, {useEffect} from 'react';
-import {Dimensions, StyleSheet, Text, View, SafeAreaView} from 'react-native';
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Pressable,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withDelay,
-  withRepeat,
 } from 'react-native-reanimated';
-import SmileEmoji from '@/assets/Home/SmileEmoji.svg';
-import StraightEmoji from '@/assets/Home/StraightEmoji.svg';
-import CustomButton from '@/components/commons/CustomButton';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import {StackScreenProps} from '@react-navigation/stack';
-
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import CautionResultScreen from './CautionResultScreen';
+type RecordScreenProps = StackScreenProps<
+  HomeStackParamList,
+  typeof homeNavigations.RECORD
+>;
 const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_W * 0.85;
-const CARD_HEIGHT = SCREEN_H * 0.55;
+const CARD_HEIGHT = SCREEN_H * 0.4;
 const EMOJI_SIZE = SCREEN_W * 0.4;
 
-type FaceSmileScreenProps = StackScreenProps<
-  HomeStackParamList,
-  typeof homeNavigations.FACE_SMILE
->;
-
-function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
+function RecordScreen({navigation}: RecordScreenProps) {
   const insets = useSafeAreaInsets();
 
   const cardOpacity = useSharedValue(0);
-  const emojiProgress = useSharedValue(0);
   const btnScale = useSharedValue(1);
 
   useEffect(() => {
     cardOpacity.value = withTiming(1, {duration: 500});
-    emojiProgress.value = withDelay(
-      1500,
-      withRepeat(withTiming(1, {duration: 1500}), -1, true),
-    );
   }, []);
 
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
     transform: [{scale: cardOpacity.value * 0.05 + 0.95}],
   }));
-  const straightStyle = useAnimatedStyle(() => ({
-    opacity: 1 - emojiProgress.value,
-  }));
-  const smileStyle = useAnimatedStyle(() => ({
-    opacity: emojiProgress.value,
-  }));
+
   const buttonAnimStyle = useAnimatedStyle(() => ({
     transform: [{scale: btnScale.value}],
   }));
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Main Content Card */}
       <Animated.View style={[styles.card, cardStyle]}>
-        <Text style={styles.title}>
-          정면을 바라본 채 무표정으로{'\n'}
-          1초간 유지한 뒤,{'\n'}
-          마지막 2초 동안 “이~” 소리를 내며{'\n'}
-          천천히 미소 지어주세요
-        </Text>
         <Text style={styles.subtitle}>
-          아래 그림대로 준비가 완료되면{'\n'}
-          '촬영 시작' 버튼을 눌러주세요
+          녹음 버튼을 누른 후{'\n'}
+          아래 문장을 또박또박 읽어주세요
         </Text>
-        <View style={styles.imageRow}>
-          <Animated.View style={[styles.emojiContainer, straightStyle]}>
-            <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
-          </Animated.View>
-          <Animated.View style={[styles.emojiContainer, smileStyle]}>
-            <SmileEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
-          </Animated.View>
-        </View>
+        <Text style={styles.title}>
+          "나는 바지를 입고 단추를 채웁니다."{'\n'}
+          라고 말해보세요
+        </Text>
+
+        <Text style={styles.cautiontext}>
+          ※ 정확한 인식을 위해 주변 소음을 최소화하고 ※ {'\n'}
+          마이크에 가까이 말해주시기 바랍니다.
+        </Text>
       </Animated.View>
 
       <View style={[styles.buttonCardWrapper, {bottom: insets.bottom + 10}]}>
         <Animated.View style={buttonAnimStyle}>
-          <CustomButton
-            label="촬영 시작"
-            size="large"
-            variant="filled"
-            style={styles.button}
-            textStyle={styles.buttonText}
+          <Pressable
             onPressIn={() => {
-              btnScale.value = withTiming(0.95, {duration: 100});
+              btnScale.value = withTiming(0.9, {duration: 100});
             }}
             onPressOut={() => {
               btnScale.value = withTiming(1, {duration: 100});
-              navigation.navigate(homeNavigations.FACE_WINK);
+              //   handleRecordPress();
+              navigation.navigate(homeNavigations.NORMAL);
             }}
-          />
+            style={styles.recordButton}>
+            <Ionicons name="mic-outline" size={50} color={colors.WHITE} />
+          </Pressable>
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -112,7 +98,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.WHITE,
     borderRadius: 16,
     padding: 8,
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: colors.BLACK,
     shadowOffset: {width: 0, height: 4},
@@ -121,31 +107,26 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 80,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: colors.MAINBLUE,
-    textAlign: 'center',
-    lineHeight: 26,
-  },
   subtitle: {
+    marginTop: 15,
     fontSize: 18,
     color: colors.BLACK,
     textAlign: 'center',
     lineHeight: 26,
   },
-  imageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: EMOJI_SIZE,
+  title: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: colors.MAINBLUE,
+    textAlign: 'center',
+    lineHeight: 30,
   },
-  emojiContainer: {
-    width: EMOJI_SIZE,
-    height: EMOJI_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cautiontext: {
+    fontSize: 15,
+    color: colors.GRAY,
+    textAlign: 'center',
   },
+  /* 버튼 카드 */
   buttonCardWrapper: {
     position: 'absolute',
     width: CARD_WIDTH,
@@ -166,6 +147,14 @@ const styles = StyleSheet.create({
     color: colors.WHITE,
     fontSize: 20,
   },
+  recordButton: {
+    width: 90,
+    height: 90,
+    backgroundColor: colors.RED,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
-export default FaceSmileScreen;
+export default RecordScreen;

@@ -8,24 +8,24 @@ import Animated, {
   withDelay,
   withRepeat,
 } from 'react-native-reanimated';
-import SmileEmoji from '@/assets/Home/SmileEmoji.svg';
+import WinkEmoji from '@/assets/Home/WinkEmoji.svg';
 import StraightEmoji from '@/assets/Home/StraightEmoji.svg';
 import CustomButton from '@/components/commons/CustomButton';
 import {colors, homeNavigations} from '@/constants';
-import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import {StackScreenProps} from '@react-navigation/stack';
+import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
+
+type FaceWinkScreenProps = StackScreenProps<
+  HomeStackParamList,
+  typeof homeNavigations.FACE_WINK
+>;
 
 const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_W * 0.85;
 const CARD_HEIGHT = SCREEN_H * 0.55;
 const EMOJI_SIZE = SCREEN_W * 0.4;
 
-type FaceSmileScreenProps = StackScreenProps<
-  HomeStackParamList,
-  typeof homeNavigations.FACE_SMILE
->;
-
-function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
+export default function FaceWinkScreen({navigation}: FaceWinkScreenProps) {
   const insets = useSafeAreaInsets();
 
   const cardOpacity = useSharedValue(0);
@@ -44,39 +44,42 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
     opacity: cardOpacity.value,
     transform: [{scale: cardOpacity.value * 0.05 + 0.95}],
   }));
+
   const straightStyle = useAnimatedStyle(() => ({
     opacity: 1 - emojiProgress.value,
   }));
-  const smileStyle = useAnimatedStyle(() => ({
-    opacity: emojiProgress.value,
-  }));
+  const winkStyle = useAnimatedStyle(() => ({opacity: emojiProgress.value}));
   const buttonAnimStyle = useAnimatedStyle(() => ({
     transform: [{scale: btnScale.value}],
   }));
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Main Content Card */}
       <Animated.View style={[styles.card, cardStyle]}>
         <Text style={styles.title}>
-          정면을 바라본 채 무표정으로{'\n'}
+          정면을 바라본 채 눈을 뜬 상태로{'\n'}
           1초간 유지한 뒤,{'\n'}
-          마지막 2초 동안 “이~” 소리를 내며{'\n'}
-          천천히 미소 지어주세요
+          마지막 2초 동안 살짝 눈을 감으며{'\n'}
+          자연스럽게 윙크해주세요
         </Text>
+
         <Text style={styles.subtitle}>
           아래 그림대로 준비가 완료되면{'\n'}
           '촬영 시작' 버튼을 눌러주세요
         </Text>
+
         <View style={styles.imageRow}>
           <Animated.View style={[styles.emojiContainer, straightStyle]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
-          <Animated.View style={[styles.emojiContainer, smileStyle]}>
-            <SmileEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
+          <Animated.View style={[styles.emojiContainer, winkStyle]}>
+            <WinkEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
         </View>
       </Animated.View>
 
+      {/* Button Card */}
       <View style={[styles.buttonCardWrapper, {bottom: insets.bottom + 10}]}>
         <Animated.View style={buttonAnimStyle}>
           <CustomButton
@@ -90,7 +93,7 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
             }}
             onPressOut={() => {
               btnScale.value = withTiming(1, {duration: 100});
-              navigation.navigate(homeNavigations.FACE_WINK);
+              navigation.navigate(homeNavigations.RECORD);
             }}
           />
         </Animated.View>
@@ -167,5 +170,3 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 });
-
-export default FaceSmileScreen;
