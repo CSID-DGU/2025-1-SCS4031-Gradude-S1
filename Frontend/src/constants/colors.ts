@@ -12,6 +12,7 @@ const colors = {
   YELLOW: '#FEE500',
   KAKAOBLACK: '#181600',
   ALERTBACK: '#EDEDED',
+  BACKGRAY: '#F2F5F9',
 };
 
 export {colors};
