@@ -4,10 +4,10 @@ import {StyleSheet, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {colors, homeNavigations} from '@/constants';
 import HomeScreen from '@/screens/Home/HomeScreen';
-import FaceSmileScreen from '@/screens/Home/FaceSmile';
+import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
 
 export type HomeStackParamList = {
-  [homeNavigations.MAIN_HOME]: undefined;
+  [homeNavigations.DIAGNOSE_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
 };
 
@@ -30,7 +30,7 @@ function HomeStackNavigator() {
           headerTintColor: colors.BLACK,
         }}>
         <Stack.Screen
-          name={homeNavigations.MAIN_HOME}
+          name={homeNavigations.DIAGNOSE_HOME}
           component={HomeScreen}
           options={{
             headerTitle: '',
@@ -43,7 +43,6 @@ function HomeStackNavigator() {
           component={FaceSmileScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
             headerShown: false,
           }}
         />

@@ -10,13 +10,15 @@ import FirstAid from '@/assets/Home/FirstAid.svg';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import {StackScreenProps} from '@react-navigation/stack';
-import {CompositeScreenProps} from '@react-navigation/native';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-import {MainTabParamList} from '@/navigations/tab/TabNavigator';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type HomeScreenProps = StackScreenProps<
   HomeStackParamList,
-  typeof homeNavigations.MAIN_HOME
+  typeof homeNavigations.DIAGNOSE_HOME
 >;
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -24,8 +26,12 @@ const ICON_SIZE = 170;
 const CIRCLE_DIAMETER = SCREEN_WIDTH * 2;
 const R = CIRCLE_DIAMETER / 2;
 
-export default function HomeScreen({navigation}: HomeScreenProps) {
+function HomeScreen({navigation}: HomeScreenProps) {
   const insets = useSafeAreaInsets();
+  const btnScale = useSharedValue(1);
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{scale: btnScale.value}],
+  }));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,23 +83,29 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             오늘 자가진단을 통해{'\n'}내 뇌졸중 위험도를 확인하고,{'\n'}
             미리 예방해요
           </Text>
-
-          <CustomButton
-            label="진단하기"
-            size="large"
-            variant="filled"
-            style={styles.cardButton}
-            textStyle={styles.cardButtonText}
-            onPress={() => {
-              navigation.navigate(homeNavigations.FACE_SMILE);
-            }}
-          />
+          <Animated.View style={buttonStyle}>
+            <CustomButton
+              label="진단하기"
+              size="large"
+              variant="filled"
+              style={styles.cardButton}
+              textStyle={styles.cardButtonText}
+              onPressIn={() => {
+                btnScale.value = withTiming(0.95, {duration: 100});
+              }}
+              onPressOut={() => {
+                btnScale.value = withTiming(1, {duration: 100});
+                navigation.navigate(homeNavigations.FACE_SMILE);
+              }}
+            />
+          </Animated.View>
         </LinearGradient>
       </View>
     </SafeAreaView>
   );
 }
 
+export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
