@@ -17,7 +17,7 @@ import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import CautionResultScreen from './CautionResultScreen';
+
 type RecordScreenProps = StackScreenProps<
   HomeStackParamList,
   typeof homeNavigations.RECORD
@@ -48,7 +48,6 @@ function RecordScreen({navigation}: RecordScreenProps) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Main Content Card */}
       <Animated.View style={[styles.card, cardStyle]}>
         <Text style={styles.subtitle}>
           녹음 버튼을 누른 후{'\n'}
@@ -74,7 +73,7 @@ function RecordScreen({navigation}: RecordScreenProps) {
             onPressOut={() => {
               btnScale.value = withTiming(1, {duration: 100});
               //   handleRecordPress();
-              navigation.navigate(homeNavigations.NORMAL);
+              navigation.navigate(homeNavigations.MID_RESULT);
             }}
             style={styles.recordButton}>
             <Ionicons name="mic-outline" size={50} color={colors.WHITE} />

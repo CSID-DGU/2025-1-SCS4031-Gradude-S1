@@ -10,8 +10,8 @@ const homeNavigations = {
   FACE_WINK: 'FaceWink',
   RECORD: 'Record',
   LOADING: 'Loading',
-  CAUTION: 'Caution',
-  NORMAL: 'Normal',
+  MID_RESULT: 'MidResult',
+  SELF_DGS: 'SelfDgs',
 } as const;
 
 export {authNavigations, homeNavigations};
