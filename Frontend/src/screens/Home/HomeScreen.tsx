@@ -2,7 +2,7 @@ import React from 'react';
 import {View, SafeAreaView, StyleSheet, Dimensions, Text} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import FloatingIcon from '@/components/FloatingIcon';
+import FloatingIcon from '@/components/home/FloatingIcon';
 import CustomButton from '@/components/commons/CustomButton';
 import Chart from '@/assets/Home/Chart.svg';
 import Defibrillator from '@/assets/Home/Defibrillator.svg';

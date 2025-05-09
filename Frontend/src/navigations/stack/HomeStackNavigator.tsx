@@ -8,8 +8,8 @@ import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
 import FaceWinkScreen from '@/screens/Home/FaceWinkScreen';
 import RecordScreen from '@/screens/Home/RecordScreen';
 import LoadingScreen from '@/screens/Home/LoadingScreen';
-import CautionResultScreen from '@/screens/Home/CautionResultScreen';
-import NormalResultScreen from '@/screens/Home/NormalResultScreen';
+import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
+import MidResultScreen from '@/screens/Home/MidResultScreen';
 
 export type HomeStackParamList = {
   [homeNavigations.DIAGNOSE_HOME]: undefined;
@@ -17,8 +17,8 @@ export type HomeStackParamList = {
   [homeNavigations.FACE_WINK]: undefined;
   [homeNavigations.RECORD]: undefined;
   [homeNavigations.LOADING]: undefined;
-  [homeNavigations.CAUTION]: undefined;
-  [homeNavigations.NORMAL]: undefined;
+  [homeNavigations.MID_RESULT]: undefined;
+  [homeNavigations.SELF_DGS]: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -81,18 +81,18 @@ function HomeStackNavigator() {
           }}
         />
         <Stack.Screen
-          name={homeNavigations.CAUTION}
-          component={CautionResultScreen}
-          options={{
-            headerTitle: '',
-          }}
-        />
-        <Stack.Screen
-          name={homeNavigations.NORMAL}
-          component={NormalResultScreen}
+          name={homeNavigations.MID_RESULT}
+          component={MidResultScreen}
           options={{
             headerTitle: '',
             headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.SELF_DGS}
+          component={SelfDgsScreen}
+          options={{
+            headerTitle: '',
           }}
         />
       </Stack.Navigator>
