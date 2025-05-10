@@ -1,5 +1,5 @@
-// metro.config.js
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const path = require('path');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
@@ -18,6 +18,9 @@ const customConfig = {
     ),
     // add svg & json to the sourceExts so Metro will compile them
     sourceExts: [...defaultConfig.resolver.sourceExts, 'svg', 'json'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
   },
 };
 

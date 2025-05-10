@@ -1,5 +1,4 @@
-// src/utils/validateForm.ts
-function isBlank(value: string) {
+export function isBlank(value: string) {
   return value.trim() === '';
 }
 
