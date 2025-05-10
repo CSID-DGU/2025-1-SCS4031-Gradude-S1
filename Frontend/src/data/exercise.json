@@ -1,0 +1,65 @@
+[
+  {
+    "title": "스트레칭",
+    "data": [
+      {
+        "id": "1",
+        "title": "이리저리 쭉쭉",
+        "durationMins": 10,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "videoId": "workout1"
+      },
+      {
+        "id": "2",
+        "title": "요리조리 쫙쫙",
+        "durationMins": 12,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://www.w3schools.com/html/mov_bbb.mp4",
+        "videoId": "workout2"
+      }
+    ]
+  },
+  {
+    "title": "근력운동",
+    "data": [
+      {
+        "id": "3",
+        "title": "팔굽혀펴기",
+        "durationMins": 8,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://www.w3schools.com/html/mov_bbb.mp4",
+        "videoId": "workout3"
+      },
+      {
+        "id": "4",
+        "title": "스쿼트 반복",
+        "durationMins": 15,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://www.w3schools.com/html/mov_bbb.mp4",
+        "videoId": "workout4"
+      }
+    ]
+  },
+  {
+    "title": "무릎 운동",
+    "data": [
+      {
+        "id": "5",
+        "title": "무릎 쭉쭉",
+        "durationMins": 10,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://www.w3schools.com/html/mov_bbb.mp4",
+        "videoId": "workout5"
+      },
+      {
+        "id": "6",
+        "title": "관절 유연해지기",
+        "durationMins": 12,
+        "thumbnail": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        "uri": "https://www.w3schools.com/html/mov_bbb.mp4",
+        "videoId": "workout6"
+      }
+    ]
+  }
+]

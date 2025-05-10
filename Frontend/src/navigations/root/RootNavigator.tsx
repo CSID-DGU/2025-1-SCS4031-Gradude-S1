@@ -4,7 +4,7 @@ import {Text, View, ActivityIndicator} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AuthStackNavigator from '../stack/AuthStackNavigator';
 import SignupScreen from '@/screens/Auth/SignupScreen';
-import TapNavigator from '../tap/TapNavigator';
+import TapNavigator from '../tab/TabNavigator';
 import useAuth from '@/hooks/queries/useAuth';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {authNavigations} from '@/constants';
@@ -54,7 +54,7 @@ import {authNavigations} from '@/constants';
 
 export default RootNavigator;
 function RootNavigator() {
-  const isLogin = false;
+  const isLogin = true;
   if (isLogin === undefined) {
     return <Text>로딩중…</Text>;
   }

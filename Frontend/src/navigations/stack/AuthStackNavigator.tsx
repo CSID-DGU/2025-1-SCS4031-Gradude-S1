@@ -59,7 +59,7 @@ function AuthStackNavigator() {
   );
 }
 const styles = StyleSheet.create({
-  container: {flex: 1}, // 반드시 flex:1
+  container: {flex: 1},
 });
 
 export default AuthStackNavigator;

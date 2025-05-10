@@ -1,4 +1,3 @@
-// src/screens/Auth/SignupScreen.tsx
 import React, {useState} from 'react';
 import {
   SafeAreaView,
