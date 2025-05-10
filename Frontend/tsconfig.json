@@ -6,6 +6,9 @@
       "@/*": ["src/*"]
     },
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
+  },
+  "include": ["src", "src/types"]
 }

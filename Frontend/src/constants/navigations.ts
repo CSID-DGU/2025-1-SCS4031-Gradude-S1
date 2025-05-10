@@ -12,6 +12,9 @@ const homeNavigations = {
   LOADING: 'Loading',
   MID_RESULT: 'MidResult',
   SELF_DGS: 'SelfDgs',
+  FINAL_RESULT: 'FinalReusult',
+  EXERCISE_LIST: 'ExerciseList',
+  VIDEO_PLAYER: 'VideoPlayer',
 } as const;
 
 export {authNavigations, homeNavigations};

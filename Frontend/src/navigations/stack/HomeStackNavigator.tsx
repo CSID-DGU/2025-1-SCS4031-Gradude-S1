@@ -1,7 +1,6 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StyleSheet, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {colors, homeNavigations} from '@/constants';
 import HomeScreen from '@/screens/Home/HomeScreen';
 import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
@@ -10,6 +9,9 @@ import RecordScreen from '@/screens/Home/RecordScreen';
 import LoadingScreen from '@/screens/Home/LoadingScreen';
 import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
 import MidResultScreen from '@/screens/Home/MidResultScreen';
+import FinalResultScreen from '@/screens/Home/FinalResultScreen';
+import VideoPlayerScreen from '@/screens/Home/VideoPlayerScreen';
+import type {ImageSourcePropType} from 'react-native';
 
 export type HomeStackParamList = {
   [homeNavigations.DIAGNOSE_HOME]: undefined;
@@ -19,6 +21,13 @@ export type HomeStackParamList = {
   [homeNavigations.LOADING]: undefined;
   [homeNavigations.MID_RESULT]: undefined;
   [homeNavigations.SELF_DGS]: undefined;
+  [homeNavigations.FINAL_RESULT]: undefined;
+  [homeNavigations.EXERCISE_LIST]: undefined;
+  [homeNavigations.VIDEO_PLAYER]: {
+    uri: string | number;
+    thumbnail: ImageSourcePropType;
+    videoId: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -93,6 +102,21 @@ function HomeStackNavigator() {
           component={SelfDgsScreen}
           options={{
             headerTitle: '',
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.FINAL_RESULT}
+          component={FinalResultScreen}
+          options={{
+            headerTitle: '진단 결과',
+          }}
+        />
+        <Stack.Screen
+          name={homeNavigations.VIDEO_PLAYER}
+          component={VideoPlayerScreen}
+          options={{
+            headerTitle: '',
+            headerShown: false,
           }}
         />
       </Stack.Navigator>

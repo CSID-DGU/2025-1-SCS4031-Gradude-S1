@@ -1,10 +1,16 @@
-// screens/SelfDgsQuizScreen.tsx
 import React, {useState} from 'react';
 import {SafeAreaView} from 'react-native';
 import SelfDgsQuiz from '@/components/home/SelfDgsQuiz';
-import {colors} from '@/constants';
+import {colors, homeNavigations} from '@/constants';
+import {StackScreenProps} from '@react-navigation/stack';
+import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
-function SelfDgsScreen() {
+type SelfDgsScreenProps = StackScreenProps<
+  HomeStackParamList,
+  typeof homeNavigations.SELF_DGS
+>;
+
+function SelfDgsScreen({navigation}: SelfDgsScreenProps) {
   // dummy
   const questions = [
     '시야가 흐려지거나\n물체가 두 개로 보인 적이 있나요?',
@@ -22,9 +28,14 @@ function SelfDgsScreen() {
     setSelectedAnswer(prev => (prev === value ? null : value));
   };
   const handleNext = () => {
-    // TODO: 추후 답안 저장 로직 여기에!
-    setSelectedAnswer(null);
-    setStep(s => Math.min(s + 1, questions.length));
+    if (!selectedAnswer) return;
+    // TODO: 답안 저장 로직
+    if (step < questions.length) {
+      setSelectedAnswer(null);
+      setStep(s => s + 1);
+    } else {
+      navigation.navigate(homeNavigations.FINAL_RESULT);
+    }
   };
 
   return (

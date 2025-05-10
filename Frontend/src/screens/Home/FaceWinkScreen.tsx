@@ -35,8 +35,8 @@ export default function FaceWinkScreen({navigation}: FaceWinkScreenProps) {
   useEffect(() => {
     cardOpacity.value = withTiming(1, {duration: 500});
     emojiProgress.value = withDelay(
-      1500,
-      withRepeat(withTiming(1, {duration: 1500}), -1, true),
+      1100,
+      withRepeat(withTiming(1, {duration: 1100}), -1, true),
     );
   }, []);
 
@@ -138,16 +138,18 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   imageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: EMOJI_SIZE,
-  },
-  emojiContainer: {
     width: EMOJI_SIZE,
     height: EMOJI_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  emojiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: EMOJI_SIZE,
+    height: EMOJI_SIZE,
   },
   buttonCardWrapper: {
     position: 'absolute',
