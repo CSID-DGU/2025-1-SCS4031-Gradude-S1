@@ -19,7 +19,7 @@ type KakaoLoginScreenProps = StackScreenProps<
   AuthStackParamList,
   typeof authNavigations.KAKAO_LOGIN
 >;
-export default function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
+function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
   const {kakaoLoginMutation} = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -74,3 +74,5 @@ const styles = StyleSheet.create({
   },
 });
 // KakaoLoginScreen;
+
+export default KakaoLoginScreen;
