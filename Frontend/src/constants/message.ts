@@ -12,6 +12,7 @@ const alerts = {
     TITLE: '사진 접근 권한이 필요합니다.',
     DESCRIPTION: '설정 화면에서 사진 권한을 허용해주세요.',
   },
+  // 녹음도 넣어야 함
 } as const;
 
 export {alerts};
