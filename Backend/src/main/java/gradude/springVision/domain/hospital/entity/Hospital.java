@@ -1,6 +1,5 @@
 package gradude.springVision.domain.hospital.entity;
 
-import gradude.springVision.domain.hospital.dto.OpeningHour;
 import gradude.springVision.global.util.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
