@@ -30,7 +30,10 @@ public enum ErrorCode {
     // Diary Error
     DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY4000", "하루 기록을 찾을 수 없습니다."),
     DIARY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "DIARY4001", "하루 기록에 대한 권한이 없습니다."),
-    DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY4003", "하루 기록에 이미 존재합니다.");
+    DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY4003", "하루 기록에 이미 존재합니다."),
+
+    // Hospital Error
+    HOSPITAL_NOT_FOUND(HttpStatus.NOT_FOUND, "HOSPITAL4000", "병원을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
