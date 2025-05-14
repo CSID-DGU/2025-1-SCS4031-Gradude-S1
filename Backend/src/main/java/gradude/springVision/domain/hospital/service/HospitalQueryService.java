@@ -38,7 +38,10 @@ public class HospitalQueryService {
 
         double distance = calculateDistance(lat, lng, hospital.getLatitude(), hospital.getLongitude());
 
-        boolean isOpen = hospital.getOpeningHour().isOpenNow();
+        boolean isOpen = false;
+        if (hospital.getOpeningHour() != null) {
+            isOpen = hospital.getOpeningHour().isOpenNow();
+        }
 
         return HospitalDetailResponseDTO.ofMarker(hospital, distance, isOpen);
     }
