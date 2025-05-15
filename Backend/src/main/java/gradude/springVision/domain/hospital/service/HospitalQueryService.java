@@ -1,11 +1,14 @@
 package gradude.springVision.domain.hospital.service;
 
 import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
 import gradude.springVision.global.common.response.ErrorCode;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -27,7 +30,15 @@ public class HospitalQueryService {
     /**
      * 병원 검색
      */
+    public Page<HospitalSearchResponseDTO> searchHospital(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
+            throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
+        }
 
+        Page<Hospital> page = hospitalRepository.findByNameContaining(keyword, pageable);
+
+        return page.map(HospitalSearchResponseDTO::from);
+    }
 
     /**
      * 병원 마커 상세 조회
