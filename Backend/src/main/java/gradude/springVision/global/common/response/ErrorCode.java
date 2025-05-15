@@ -33,7 +33,8 @@ public enum ErrorCode {
     DIARY_ALREADY_EXISTS(HttpStatus.CONFLICT, "DIARY4003", "하루 기록에 이미 존재합니다."),
 
     // Hospital Error
-    HOSPITAL_NOT_FOUND(HttpStatus.NOT_FOUND, "HOSPITAL4000", "병원을 찾을 수 없습니다.");
+    HOSPITAL_NOT_FOUND(HttpStatus.NOT_FOUND, "HOSPITAL4000", "병원을 찾을 수 없습니다."),
+    HOSPITAL_INVALID_SEARCH(HttpStatus.NOT_FOUND, "HOSPITAL4001", "병원 검색어는 두 글자 이상이어야 합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
