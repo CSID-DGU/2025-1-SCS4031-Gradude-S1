@@ -42,6 +42,7 @@ target 'Frontend' do
   pod 'react-native-maps', :path => rn_maps_path, :modular_headers => true
   pod 'react-native-google-maps', :path => rn_maps_path
   # pod 'react-native-maps-generated', :path => rn_maps_path 
+  pod 'react-native-config',     :path => '../node_modules/react-native-config'
   config = use_native_modules!
 
   use_react_native!(

@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import FinalResultCard from '@/components/FinalResultCard';
 import ExerciseCard from '@/components/ExerciseCard';
-import HospitalCard from '@/components/HospitalCard';
+import HospitalCard from '@/components/hospital/HospitalCard';
 import CustomButton from '@/components/commons/CustomButton';
 import SECTIONS from '@/data/exercise.json';
 import HOSPITALS from '@/data/hospitals.json';
