@@ -62,10 +62,8 @@ export default function MapScreen() {
     }
   };
 
-  // Marker 터치 시
   const handleMarkerPress =
     (h: (typeof hospitals)[0]) => (e: MarkerPressEvent) => {
-      // 1) 지도 중앙으로 이동
       mapRef.current?.animateCamera({
         center: {
           latitude: h.latitude,
@@ -73,11 +71,11 @@ export default function MapScreen() {
         },
         zoom: 15,
       });
-      // 2) 기존 열려 있던 콜아웃 닫기
+
       if (openId && openId !== h.id) {
         markerRefs.current[openId]?.hideCallout();
       }
-      // 3) 방금 누른 마커 콜아웃 열기
+
       markerRefs.current[h.id]?.showCallout();
       setOpenId(h.id);
     };

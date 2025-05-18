@@ -1,4 +1,3 @@
-// ModalWrapper.tsx
 import React, {ReactNode} from 'react';
 import {
   View,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {colors} from '@/constants';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type Props = {
   visible: boolean;
@@ -39,8 +39,16 @@ export default function ModalWrapper({visible, onClose, children}: Props) {
         />
 
         <View style={styles.content}>
-          <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>✕</Text>
+          <Pressable
+            style={styles.closeBtn}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="모달 닫기">
+            <Ionicons
+              name="close-circle-outline"
+              size={24}
+              color={colors.GRAY}
+            />
           </Pressable>
           {children}
         </View>
@@ -73,10 +81,6 @@ const styles = StyleSheet.create({
     top: 8,
     right: 12,
     zIndex: 10,
-  },
-  closeText: {
-    fontSize: 20,
-    color: colors.GRAY,
     padding: 8,
   },
 });
