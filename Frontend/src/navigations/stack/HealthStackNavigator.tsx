@@ -50,8 +50,6 @@ function HealthStackNavigator() {
           component={CalendarScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
-            headerShown: false,
           }}
         />
         <Stack.Screen
@@ -77,8 +75,6 @@ function HealthStackNavigator() {
           component={FinalResultListScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
-            headerShown: false,
           }}
         />
         <Stack.Screen
@@ -86,8 +82,6 @@ function HealthStackNavigator() {
           component={StrokeScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
-            headerShown: false,
           }}
         />
       </Stack.Navigator>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   Dimensions,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {BlurView} from '@react-native-community/blur';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, healthNavigations} from '@/constants';
@@ -16,6 +15,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
+import {LineChart} from 'react-native-chart-kit';
+import {Text as SvgText} from 'react-native-svg';
 
 const {width} = Dimensions.get('window');
 const BUTTON_MARGIN = 8;
@@ -31,16 +32,17 @@ type Navigation = CompositeNavigationProp<
 function HealthScreen() {
   const navigation = useNavigation<Navigation>();
 
-  // 더미 예시 // TODO : 연동
   const responseFromBackend = [
-    {date: '2025-05-15', healthScore: 128},
-    {date: '2025-05-16', healthScore: 256},
-    {date: '2025-05-17', healthScore: 512},
-    {date: '2025-05-18', healthScore: 1024},
-    {date: '2025-05-19', healthScore: 2048},
+    {date: '2025-05-15', healthScore: 94},
+    {date: '2025-05-16', healthScore: 56},
+    {date: '2025-05-17', healthScore: 76},
+    {date: '2025-05-18', healthScore: 20},
+    {date: '2025-05-19', healthScore: 80},
   ];
 
-  // 데이터 표에 넣기 위해 계산하는 함수
+  const scores = responseFromBackend.map(item => item.healthScore);
+  const [selectedIndex, setSelectedIndex] = useState<number>(scores.length - 1);
+
   const chartData = {
     labels: responseFromBackend.map(
       item =>
@@ -50,7 +52,7 @@ function HealthScreen() {
     ),
     datasets: [
       {
-        data: responseFromBackend.map(item => item.healthScore),
+        data: scores,
         strokeWidth: 2,
       },
     ],
@@ -76,13 +78,13 @@ function HealthScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* TODO : 이름 수정 해야 함 */}
       <View style={styles.header}>
         <Text style={styles.title}>홍길동님의 건강 수첩</Text>
-        <View style={styles.row}>
-          <Text style={styles.subtitle}>하루 한 번, 건강 확인 </Text>
-          <Icon name="checkbox" size={25} color="#00C20B" />
-        </View>
+      </View>
+
+      <View style={styles.row}>
+        <Icon name="checkbox" size={25} color="#00C20B" />
+        <Text style={styles.subtitle}> 하루 한 번, 건강 확인 </Text>
       </View>
 
       <View style={styles.actions}>
@@ -106,21 +108,81 @@ function HealthScreen() {
         ))}
       </View>
 
-      {/* 차트 섹션 */}
-      <Text style={styles.sectionTitle}>나의 건강 점수</Text>
+      <View style={styles.row}>
+        <Icon name="bar-chart" size={25} color={colors.SKYBLUE} />
+        <Text style={styles.sectionTitle}> 나의 건강 점수</Text>
+      </View>
+
       <View style={styles.card}>
-        {/* <LineChart
+        <LineChart
           data={chartData}
-          width={width - 40}
-          height={200}
-          chartConfig={chartConfig}
-          style={styles.chart}
-          withInnerLines={false}
-          withOuterLines={false}
+          width={width - 80}
+          height={300}
+          chartConfig={{
+            backgroundGradientFrom: colors.WHITE,
+            backgroundGradientTo: colors.WHITE,
+            decimalPlaces: 0,
+            color: () => colors.MAINBLUE,
+            labelColor: () => colors.BLACK,
+            propsForDots: {
+              r: '5',
+              strokeWidth: '2',
+              stroke: colors.MAINBLUE,
+            },
+            propsForBackgroundLines: {
+              stroke: '#e6e6e6',
+              strokeDasharray: '4',
+            },
+          }}
+          fromZero={false}
+          withInnerLines
+          withVerticalLines={false}
           withShadow={false}
+          withDots
           bezier
           yAxisSuffix="점"
-        /> */}
+          yAxisLabel=""
+          verticalLabelRotation={0}
+          yLabelsOffset={8}
+          yAxisInterval={1}
+          segments={3}
+          onDataPointClick={({index}) => setSelectedIndex(index)}
+          decorator={() => {
+            if (selectedIndex === null) return null;
+            const step = (width - 80) / (chartData.labels.length - 1);
+            const x = step * selectedIndex;
+            return (
+              <SvgText
+                key={`label-${selectedIndex}`}
+                x={x}
+                y={40}
+                fill="#000"
+                fontSize="14"
+                fontWeight="bold"
+                textAnchor="middle">
+                {scores[selectedIndex]}점
+              </SvgText>
+            );
+          }}
+          renderDotContent={({x, y, index}) =>
+            index === selectedIndex ? (
+              <View
+                key={`dot-${index}`}
+                style={{
+                  position: 'absolute',
+                  top: y - 8,
+                  left: x - 8,
+                  width: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  backgroundColor: '#fff',
+                  borderWidth: 3,
+                  borderColor: colors.MAINBLUE,
+                }}
+              />
+            ) : null
+          }
+        />
       </View>
     </SafeAreaView>
   );
@@ -146,10 +208,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 14,
   },
   actions: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 40,
   },
   actionBtn: {
     alignItems: 'center',
@@ -172,20 +235,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    marginBottom: 24,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.WHITE,
     borderRadius: 16,
     padding: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: {width: 0, height: 4},
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  chart: {
-    borderRadius: 16,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowOffset: {width: 0, height: 2},
+    shadowRadius: 6,
+    elevation: 5,
   },
 });
 
