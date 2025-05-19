@@ -17,4 +17,8 @@ const homeNavigations = {
   VIDEO_PLAYER: 'VideoPlayer',
 } as const;
 
-export {authNavigations, homeNavigations};
+const MapNavigations = {
+  MAP_HOME: 'MapHome', // 탭에서 쓰는 이름
+} as const;
+
+export {authNavigations, homeNavigations, MapNavigations};

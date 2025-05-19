@@ -12,19 +12,25 @@ function HospitalCard({item}: HospitalCardProps) {
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>{item.name}</Text>
-        <Text style={styles.distance}>{item.distance}</Text>
+        <Text style={styles.distance}>{item.distance}km</Text>
       </View>
       <Text style={styles.address}>{item.address}</Text>
       <View style={styles.infoRow}>
         <Ionicons name="call" size={16} color={colors.GRAY} />
-        <Text style={styles.infoText}>{item.phone}</Text>
+        <Text style={styles.infoText}>{item.phoneNumber}</Text>
         <Ionicons
           name="time"
           size={16}
           color={colors.GRAY}
           style={styles.iconSpacing}
         />
-        <Text style={styles.infoText}>{item.hours}</Text>
+        <Text
+          style={[
+            styles.infoText,
+            item.isOpen ? styles.openText : styles.closedText,
+          ]}>
+          {item.isOpen ? '진료중' : '진료 마감'}
+        </Text>
       </View>
     </View>
   );
@@ -32,8 +38,9 @@ function HospitalCard({item}: HospitalCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    height: 120,
+    height: 110,
     backgroundColor: colors.WHITE,
+    justifyContent: 'space-evenly',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -73,10 +80,18 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     marginRight: 16,
     fontSize: 14,
-    color: colors.GRAY,
+    color: colors.BLACK,
   },
   iconSpacing: {
     marginLeft: 0,
+  },
+  openText: {
+    color: colors.GREEN,
+    fontWeight: 'bold',
+  },
+  closedText: {
+    color: colors.RED,
+    fontWeight: 'bold',
   },
 });
 

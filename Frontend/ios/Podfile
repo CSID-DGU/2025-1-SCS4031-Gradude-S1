@@ -17,7 +17,7 @@ end
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
-platform :ios, min_ios_version_supported
+platform :ios, '15.1'
 prepare_react_native_project!
 
 setup_permissions([
@@ -32,10 +32,17 @@ setup_permissions([
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
+  use_frameworks! :linkage => :static
 end
 
 target 'Frontend' do
+
+
+  rn_maps_path = '../node_modules/react-native-maps'
+  pod 'react-native-maps', :path => rn_maps_path, :modular_headers => true
+  pod 'react-native-google-maps', :path => rn_maps_path
+  # pod 'react-native-maps-generated', :path => rn_maps_path 
+  pod 'react-native-config',     :path => '../node_modules/react-native-config'
   config = use_native_modules!
 
   use_react_native!(

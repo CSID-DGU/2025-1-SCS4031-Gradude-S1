@@ -3,40 +3,126 @@
     "id": "1",
     "name": "고려대학교 구로병원",
     "address": "서울시 구로구 구로동로 148",
-    "phone": "1577-9966",
+    "phoneNumber": "1577-9966",
     "hours": "24시간 영업",
-    "distance": "3.07km"
+    "distance": 3.07,
+    "latitude": 35.548283,
+    "longitude": 129.307013,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": true
   },
   {
     "id": "2",
-    "name": "한림대학교 강남성심병원",
-    "address": "서울시 구로구 가리봉로 123",
-    "phone": "02-1234-5678",
+    "name": "서울대학교병원",
+    "address": "서울시 종로구 대학로 101",
+    "phoneNumber": "02-2072-1234",
     "hours": "24시간 영업",
-    "distance": "5.04km"
+    "distance": 4.5,
+    "latitude": 37.579621,
+    "longitude": 126.999923,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": true
   },
   {
     "id": "3",
-    "name": "삼성서울병원",
-    "address": "서울시 송파구 일원로 81",
-    "phone": "02-3410-0200",
-    "hours": "24시간 응급실 운영",
-    "distance": "7.42km"
+    "name": "한림대학교 강남성심병원",
+    "address": "서울시 구로구 가리봉로 123",
+    "phoneNumber": "02-1234-5678",
+    "hours": "24시간 영업",
+    "distance": 5.04,
+    "latitude": 37.514286,
+    "longitude": 127.062166,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": false
   },
   {
     "id": "4",
-    "name": "서울아산병원",
-    "address": "서울시 송파구 올림픽로43길 88",
-    "phone": "02-3010-0500",
+    "name": "서울특별시 보라매병원",
+    "address": "서울시 동작구 보라매로5길 20",
+    "phoneNumber": "02-870-2000",
     "hours": "24시간 응급실 운영",
-    "distance": "6.85km"
+    "distance": 6.39,
+    "latitude": 37.499388,
+    "longitude": 126.924703,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": false
   },
   {
     "id": "5",
-    "name": "세브란스병원",
-    "address": "서울시 서대문구 연세로 50-1",
-    "phone": "02-2228-3114",
+    "name": "한림대학교 한강성심병원",
+    "address": "서울시 광진구 능동로 120",
+    "phoneNumber": "02-458-0114",
     "hours": "24시간 응급실 운영",
-    "distance": "8.13km"
+    "distance": 6.93,
+    "latitude": 37.531639,
+    "longitude": 127.04727,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": false
+  },
+  {
+    "id": "6",
+    "name": "이화여자대학교 목동병원",
+    "address": "서울시 양천구 목동로 257",
+    "phoneNumber": "02-2650-5114",
+    "hours": "24시간 응급실 운영",
+    "distance": 7.0,
+    "latitude": 37.526929,
+    "longitude": 126.864515,
+    "openingHours": {
+      "monday": "00:00~24:00",
+      "tuesday": "00:00~24:00",
+      "wednesday": "00:00~24:00",
+      "thursday": "00:00~24:00",
+      "friday": "00:00~24:00",
+      "saturday": "00:00~24:00",
+      "sunday": "00:00~24:00"
+    },
+    "isOpen": true,
+    "isCenter": false
   }
 ]
