@@ -10,8 +10,8 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {BlurView} from '@react-native-community/blur';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {colors} from '@/constants';
-import {CompositeNavigationProp} from '@react-navigation/native';
+import {colors, healthNavigations} from '@/constants';
+import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
@@ -29,24 +29,50 @@ type Navigation = CompositeNavigationProp<
 >;
 
 function HealthScreen() {
+  const navigation = useNavigation<Navigation>();
+
+  // 더미 예시 // TODO : 연동
+  const responseFromBackend = [
+    {date: '2025-05-15', healthScore: 128},
+    {date: '2025-05-16', healthScore: 256},
+    {date: '2025-05-17', healthScore: 512},
+    {date: '2025-05-18', healthScore: 1024},
+    {date: '2025-05-19', healthScore: 2048},
+  ];
+
+  // 데이터 표에 넣기 위해 계산하는 함수
   const chartData = {
-    labels: ['3.01', '3.02', '3.05', '3.11', '오늘'],
+    labels: responseFromBackend.map(
+      item =>
+        `${new Date(item.date).getMonth() + 1}.${new Date(
+          item.date,
+        ).getDate()}`,
+    ),
     datasets: [
       {
-        data: [12, 28, 45, 33, 53],
+        data: responseFromBackend.map(item => item.healthScore),
         strokeWidth: 2,
       },
     ],
   };
 
-  // const chartConfig = {
-  //   backgroundGradientFrom: '#fff',
-  //   backgroundGradientTo: '#fff',
-  //   decimalPlaces: 0,
-  //   color: () => '#3B82F6',
-  //   labelColor: () => '#999',
-  //   propsForDots: {r: '4', strokeWidth: '2', stroke: '#3B82F6'},
-  // };
+  const buttons = [
+    {
+      icon: 'calendar-clear-outline',
+      label: '하루 기록',
+      screen: healthNavigations.CALENDAR,
+    },
+    {
+      icon: 'pie-chart-outline',
+      label: '진단 결과',
+      screen: healthNavigations.FINAL_RESULT_LIST,
+    },
+    {
+      icon: 'information-circle-outline',
+      label: '뇌졸중이란?',
+      screen: healthNavigations.STROKE_DETAIL,
+    },
+  ] as const;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,15 +85,11 @@ function HealthScreen() {
         </View>
       </View>
 
-      {/* 버튼 그룹 */}
       <View style={styles.actions}>
-        {[
-          {icon: 'calendar-clear-outline', label: '하루 기록'},
-          {icon: 'pie-chart-outline', label: '진단 결과'},
-          {icon: 'information-circle-outline', label: '뇌졸중이란?'},
-        ].map(btn => (
+        {buttons.map(btn => (
           <TouchableOpacity
             key={btn.label}
+            onPress={() => navigation.navigate(btn.screen)}
             style={[
               styles.actionBtn,
               {width: BUTTON_SIZE, height: BUTTON_SIZE},
@@ -127,7 +149,6 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 24,
   },
   actionBtn: {

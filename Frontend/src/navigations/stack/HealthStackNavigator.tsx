@@ -3,9 +3,19 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StyleSheet, View} from 'react-native';
 import {colors, healthNavigations} from '@/constants';
 import HealthScreen from '@/screens/Health/HealthScreen';
+import CalendarScreen from '../../screens/Health/CalendarScreen';
+import HealthDairyScreen from '../../screens/Health/HealthDairyScreen';
+import HealthResultScreen from '@/screens/Health/HealthResultScreen';
+import FinalResultListScreen from '@/screens/Health/FinalResultListScreen';
+import StrokeScreen from '@/screens/Health/StrokeScreen';
 
 export type HealthStackParamList = {
   [healthNavigations.HEALTH_HOME]: undefined;
+  [healthNavigations.CALENDAR]: undefined;
+  [healthNavigations.HEALTH_DAIRY]: undefined;
+  [healthNavigations.HEALTH_RESULT]: undefined;
+  [healthNavigations.FINAL_RESULT_LIST]: undefined;
+  [healthNavigations.STROKE_DETAIL]: undefined;
 };
 
 const Stack = createNativeStackNavigator<HealthStackParamList>();
@@ -35,20 +45,51 @@ function HealthStackNavigator() {
             headerShown: false,
           }}
         />
-        {/* <Stack.Screen
-          name={authNavigations.KAKAO_LOGIN}
-          component={KakaoLoginScreen}
+        <Stack.Screen
+          name={healthNavigations.CALENDAR}
+          component={CalendarScreen}
           options={{
-            headerTitle: '카카오 로그인',
+            headerTitle: '',
+            headerBackVisible: false,
+            headerShown: false,
           }}
-        /> */}
-        {/* <Stack.Screen
-          name={authNavigations.SIGNUP}
-          component={SignupScreen}
+        />
+        <Stack.Screen
+          name={healthNavigations.HEALTH_DAIRY}
+          component={HealthDairyScreen}
           options={{
-            headerTitle: '회원가입',
+            headerTitle: '',
+            headerBackVisible: false,
+            headerShown: false,
           }}
-        /> */}
+        />
+        <Stack.Screen
+          name={healthNavigations.HEALTH_RESULT}
+          component={HealthResultScreen}
+          options={{
+            headerTitle: '',
+            headerBackVisible: false,
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={healthNavigations.FINAL_RESULT_LIST}
+          component={FinalResultListScreen}
+          options={{
+            headerTitle: '',
+            headerBackVisible: false,
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name={healthNavigations.STROKE_DETAIL}
+          component={StrokeScreen}
+          options={{
+            headerTitle: '',
+            headerBackVisible: false,
+            headerShown: false,
+          }}
+        />
       </Stack.Navigator>
     </View>
   );

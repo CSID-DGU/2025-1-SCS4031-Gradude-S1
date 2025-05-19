@@ -24,7 +24,7 @@ import HospitalCard from '@/components/hospital/HospitalCard';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import ModalWrapper from '@/components/commons/ModalWrapper';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
-import {CompositeNavigationProp} from '@react-navigation/native';
+import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {MapStackParamList} from '@/navigations/stack/MapStackNavigator';
@@ -40,6 +40,7 @@ interface MarkerRef {
 }
 
 export default function MapScreen() {
+  const navigation = useNavigation<Navigation>();
   const mapRef = useRef<MapView | null>(null);
 
   const markerRefs = useRef<Record<string, MarkerRef | null>>({});

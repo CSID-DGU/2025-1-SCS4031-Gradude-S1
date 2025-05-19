@@ -61,7 +61,7 @@ function TabNavigator() {
       <Tab.Screen
         name={mainTabNavigations.HEALTH}
         component={HealthStackNavigator}
-        options={{tabBarLabel: '건강기록'}}
+        options={{tabBarLabel: '건강수첩'}}
       />
       <Tab.Screen
         name={mainTabNavigations.PROFILE}
