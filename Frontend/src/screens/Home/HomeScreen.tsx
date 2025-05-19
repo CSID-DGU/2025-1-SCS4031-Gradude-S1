@@ -9,24 +9,32 @@ import Defibrillator from '@/assets/Home/Defibrillator.svg';
 import FirstAid from '@/assets/Home/FirstAid.svg';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
-import {StackScreenProps} from '@react-navigation/stack';
+import {StackNavigationProp, StackScreenProps} from '@react-navigation/stack';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
+import {MainTabParamList} from '@/navigations/tab/TabNavigator';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 
-type HomeScreenProps = StackScreenProps<
-  HomeStackParamList,
-  typeof homeNavigations.DIAGNOSE_HOME
+// type HomeScreenProps = StackScreenProps<
+//   HomeStackParamList,
+//   typeof homeNavigations.DIAGNOSE_HOME
+// >;
+
+type Navigation = CompositeNavigationProp<
+  StackNavigationProp<HomeStackParamList>,
+  BottomTabNavigationProp<MainTabParamList>
 >;
-
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const ICON_SIZE = 170;
 const CIRCLE_DIAMETER = SCREEN_WIDTH * 2;
 const R = CIRCLE_DIAMETER / 2;
 
-function HomeScreen({navigation}: HomeScreenProps) {
+function HomeScreen() {
+  const navigation = useNavigation<Navigation>();
   const insets = useSafeAreaInsets();
   const btnScale = useSharedValue(1);
   const buttonStyle = useAnimatedStyle(() => ({

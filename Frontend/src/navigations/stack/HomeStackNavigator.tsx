@@ -14,7 +14,7 @@ import VideoPlayerScreen from '@/screens/Home/VideoPlayerScreen';
 import type {ImageSourcePropType} from 'react-native';
 
 export type HomeStackParamList = {
-  [homeNavigations.DIAGNOSE_HOME]: undefined;
+  [homeNavigations.MAIN_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
   [homeNavigations.FACE_WINK]: undefined;
   [homeNavigations.RECORD]: undefined;
@@ -49,7 +49,7 @@ function HomeStackNavigator() {
           headerTintColor: colors.BLACK,
         }}>
         <Stack.Screen
-          name={homeNavigations.DIAGNOSE_HOME}
+          name={homeNavigations.MAIN_HOME}
           component={HomeScreen}
           options={{
             headerTitle: '',
