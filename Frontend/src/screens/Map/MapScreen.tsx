@@ -23,6 +23,16 @@ import hospitals from '@/data/hospitals.json';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import ModalWrapper from '@/components/commons/ModalWrapper';
+import {MainTabParamList} from '@/navigations/tab/TabNavigator';
+import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {MapStackParamList} from '@/navigations/stack/MapStackNavigator';
+
+type Navigation = CompositeNavigationProp<
+  StackNavigationProp<MapStackParamList>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 interface MarkerRef {
   showCallout: () => void;
@@ -30,6 +40,7 @@ interface MarkerRef {
 }
 
 export default function MapScreen() {
+  const navigation = useNavigation<Navigation>();
   const mapRef = useRef<MapView | null>(null);
 
   const markerRefs = useRef<Record<string, MarkerRef | null>>({});
@@ -120,12 +131,12 @@ export default function MapScreen() {
 
       <TouchableOpacity style={styles.searchBtn}>
         <Text style={styles.searchText}>병원 리스트 / 검색</Text>
-        <Ionicons name="search" size={20} color={colors.GRAY} />
+        <Ionicons name="search" size={25} color={colors.GRAY} />
       </TouchableOpacity>
 
       <View style={styles.buttonList}>
         <Pressable style={styles.mapButton} onPress={handlePressUserLocation}>
-          <Ionicons name="navigate" size={20} color={colors.GRAY} />
+          <Ionicons name="locate-outline" size={25} color={colors.WHITE} />
         </Pressable>
       </View>
 
@@ -156,7 +167,7 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
   },
   mapButton: {
-    backgroundColor: colors.SEMIWHITE,
+    backgroundColor: colors.MAINBLUE,
     marginVertical: 5,
     height: 48,
     width: 48,
@@ -170,6 +181,7 @@ const styles = StyleSheet.create({
   },
   searchBtn: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     position: 'absolute',
     top: 70,
@@ -183,5 +195,9 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 1, height: 2},
     shadowOpacity: 0.5,
   },
-  searchText: {textAlign: 'center', fontWeight: '600', color: colors.GRAY},
+  searchText: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: colors.GRAY,
+  },
 });

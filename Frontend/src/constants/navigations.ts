@@ -4,8 +4,7 @@ const authNavigations = {
   SIGNUP: 'SignUp',
 } as const;
 const homeNavigations = {
-  MAIN_HOME: 'MainHome', // 탭에서 쓰는 이름
-  DIAGNOSE_HOME: 'DiagnoseHome', // 스택에서 쓰는 이름 , 위 아래 같은 페이지
+  MAIN_HOME: 'MainHome',
   FACE_SMILE: 'FaceSmile',
   FACE_WINK: 'FaceWink',
   RECORD: 'Record',
@@ -17,8 +16,17 @@ const homeNavigations = {
   VIDEO_PLAYER: 'VideoPlayer',
 } as const;
 
-const MapNavigations = {
-  MAP_HOME: 'MapHome', // 탭에서 쓰는 이름
+const mapNavigations = {
+  MAP_HOME: 'MapHome',
 } as const;
 
-export {authNavigations, homeNavigations, MapNavigations};
+const healthNavigations = {
+  HEALTH_HOME: 'HealthHome',
+  HEALTH_RESULT: 'HealthResult',
+  CALENDAR: 'Calendar',
+  HEALTH_DAIRY: 'HealthDiary',
+  STROKE_DETAIL: 'StrokeDetail',
+  FINAL_RESULT_LIST: 'FinalResultList',
+} as const;
+
+export {authNavigations, homeNavigations, mapNavigations, healthNavigations};
