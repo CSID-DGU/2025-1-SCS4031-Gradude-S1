@@ -1,38 +1,49 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {LineChart} from 'react-native-chart-kit';
 import {colors, healthNavigations} from '@/constants';
 import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
-import {LineChart} from 'react-native-chart-kit';
-import {Text as SvgText} from 'react-native-svg';
 
-const {width} = Dimensions.get('window');
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
+const OUTER_PAD = 24; // SafeAreaView horizontal padding
+const INNER_PAD = 16; // card padding
+const CHART_HEIGHT = 300;
+const CHART_WIDTH = SCREEN_WIDTH - OUTER_PAD * 2 - INNER_PAD * 2;
+
 const BUTTON_MARGIN = 8;
 const BUTTON_COUNT = 3;
-const BUTTON_TOTAL_MARGIN = BUTTON_MARGIN * 2 * BUTTON_COUNT;
-const BUTTON_SIZE = (width - 40 - BUTTON_TOTAL_MARGIN) / BUTTON_COUNT;
+const BUTTON_SIZE =
+  (SCREEN_WIDTH - OUTER_PAD * 2 - BUTTON_MARGIN * 2 * BUTTON_COUNT) /
+  BUTTON_COUNT;
 
-type Navigation = CompositeNavigationProp<
-  StackNavigationProp<HealthStackParamList>,
-  BottomTabNavigationProp<MainTabParamList>
->;
+const BOX_WIDTH = 80;
+const BOX_MARGIN = 8;
 
-function HealthScreen() {
-  const navigation = useNavigation<Navigation>();
+export default function HealthScreen() {
+  const navigation =
+    useNavigation<
+      CompositeNavigationProp<
+        StackNavigationProp<HealthStackParamList>,
+        BottomTabNavigationProp<MainTabParamList>
+      >
+    >();
 
-  const responseFromBackend = [
+  // 원본 데이터 (오름차순)
+  const response = [
     {date: '2025-05-15', healthScore: 94},
     {date: '2025-05-16', healthScore: 56},
     {date: '2025-05-17', healthScore: 76},
@@ -40,22 +51,25 @@ function HealthScreen() {
     {date: '2025-05-19', healthScore: 80},
   ];
 
-  const scores = responseFromBackend.map(item => item.healthScore);
-  const [selectedIndex, setSelectedIndex] = useState<number>(scores.length - 1);
+  const labels = response.map(r => r.date.slice(5).replace('-', '.'));
+  const data = response.map(r => r.healthScore);
 
-  const chartData = {
-    labels: responseFromBackend.map(
-      item =>
-        `${new Date(item.date).getMonth() + 1}.${new Date(
-          item.date,
-        ).getDate()}`,
-    ),
-    datasets: [
-      {
-        data: scores,
-        strokeWidth: 2,
-      },
-    ],
+  // ScrollView 에는 최신순(역순)으로 보여줌
+  const reversed = [...response].reverse();
+
+  const [selectedIndex, setSelectedIndex] = useState(data.length - 1);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // x 간격 (renderDotContent 에서도 쓰일 수 있음)
+  const stepX = CHART_WIDTH / (data.length - 1);
+
+  const onSelect = (origIdx: number) => {
+    setSelectedIndex(origIdx);
+    // 역순된 ScrollView 에서의 인덱스
+    const revIdx = data.length - 1 - origIdx;
+    const offsetX =
+      revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
+    scrollRef.current?.scrollTo({x: offsetX, animated: true});
   };
 
   const buttons = [
@@ -78,20 +92,19 @@ function HealthScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header & Action Buttons */}
       <View style={styles.header}>
-        <Text style={styles.title}>홍길동님의 건강 수첩</Text>
+        <Text style={styles.title}>홍길동님의 건강 수첵</Text>
       </View>
-
       <View style={styles.row}>
         <Icon name="checkbox" size={25} color="#00C20B" />
-        <Text style={styles.subtitle}> 하루 한 번, 건강 확인 </Text>
+        <Text style={styles.subtitle}>하루 한 번, 건강 확인</Text>
       </View>
-
       <View style={styles.actions}>
-        {buttons.map(btn => (
+        {buttons.map(b => (
           <TouchableOpacity
-            key={btn.label}
-            onPress={() => navigation.navigate(btn.screen)}
+            key={b.label}
+            onPress={() => navigation.navigate(b.screen)}
             style={[
               styles.actionBtn,
               {width: BUTTON_SIZE, height: BUTTON_SIZE},
@@ -101,89 +114,108 @@ function HealthScreen() {
               start={{x: 0.2, y: 0}}
               end={{x: 0, y: 1.4}}
               style={styles.gradient}>
-              <Icon name={btn.icon} size={42} color={colors.WHITE} />
-              <Text style={styles.actionLabel}>{btn.label}</Text>
+              <Icon name={b.icon} size={42} color={colors.WHITE} />
+              <Text style={styles.actionLabel}>{b.label}</Text>
             </LinearGradient>
           </TouchableOpacity>
         ))}
       </View>
 
-      <View style={styles.row}>
+      {/* Chart Section Title */}
+      <View style={styles.sectionHeader}>
         <Icon name="bar-chart" size={25} color={colors.SKYBLUE} />
-        <Text style={styles.sectionTitle}> 나의 건강 점수</Text>
+        <Text style={styles.sectionTitle}>나의 건강 점수</Text>
       </View>
 
+      {/* Line Chart */}
       <View style={styles.card}>
         <LineChart
-          data={chartData}
-          width={width - 80}
-          height={300}
+          data={{labels, datasets: [{data}]}}
+          width={CHART_WIDTH}
+          height={CHART_HEIGHT}
           chartConfig={{
             backgroundGradientFrom: colors.WHITE,
             backgroundGradientTo: colors.WHITE,
+            backgroundGradientFromOpacity: 1,
+            backgroundGradientToOpacity: 1,
             decimalPlaces: 0,
             color: () => colors.MAINBLUE,
             labelColor: () => colors.BLACK,
-            propsForDots: {
-              r: '5',
-              strokeWidth: '2',
-              stroke: colors.MAINBLUE,
-            },
             propsForBackgroundLines: {
-              stroke: '#e6e6e6',
+              stroke: colors.LIGHTGRAY,
               strokeDasharray: '4',
             },
+            // 기본 점은 반경 0으로 숨김
+            propsForDots: {r: '0'},
           }}
-          fromZero={false}
+          style={{alignSelf: 'center'}}
           withInnerLines
           withVerticalLines={false}
-          withShadow={false}
-          withDots
-          bezier
+          withHorizontalLabels
+          withVerticalLabels
+          yLabelsOffset={10}
           yAxisSuffix="점"
-          yAxisLabel=""
-          verticalLabelRotation={0}
-          yLabelsOffset={8}
-          yAxisInterval={1}
-          segments={3}
-          onDataPointClick={({index}) => setSelectedIndex(index)}
-          decorator={() => {
-            if (selectedIndex === null) return null;
-            const step = (width - 80) / (chartData.labels.length - 1);
-            const x = step * selectedIndex;
+          fromZero
+          segments={4}
+          bezier
+          onDataPointClick={({index}) => onSelect(index)}
+          renderDotContent={({x, y, index}) => {
+            const isSelected = index === selectedIndex;
+            const size = isSelected ? 12 : 8;
             return (
-              <SvgText
-                key={`label-${selectedIndex}`}
-                x={x}
-                y={40}
-                fill="#000"
-                fontSize="14"
-                fontWeight="bold"
-                textAnchor="middle">
-                {scores[selectedIndex]}점
-              </SvgText>
-            );
-          }}
-          renderDotContent={({x, y, index}) =>
-            index === selectedIndex ? (
               <View
-                key={`dot-${index}`}
+                key={index}
                 style={{
                   position: 'absolute',
-                  top: y - 8,
-                  left: x - 8,
-                  width: 16,
-                  height: 16,
-                  borderRadius: 8,
-                  backgroundColor: '#fff',
-                  borderWidth: 3,
-                  borderColor: colors.MAINBLUE,
+                  left: x - size / 2,
+                  top: y - size / 2,
+                  width: size,
+                  height: size,
+                  borderRadius: size / 2,
+                  backgroundColor: isSelected
+                    ? colors.MAINBLUE
+                    : colors.LIGHTGRAY,
                 }}
               />
-            ) : null
-          }
+            );
+          }}
         />
       </View>
+
+      {/* Info Boxes (역순) */}
+      <ScrollView
+        horizontal
+        ref={scrollRef}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.infoContainer}>
+        {reversed.map((item, revIdx) => {
+          const origIdx = data.length - 1 - revIdx;
+          const active = origIdx === selectedIndex;
+          const d = new Date(item.date);
+          const dateLabel = `${d.getFullYear().toString().slice(-2)}.${(
+            d.getMonth() + 1
+          )
+            .toString()
+            .padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`;
+          return (
+            <TouchableOpacity
+              key={origIdx}
+              style={[
+                styles.infoBox,
+                {width: BOX_WIDTH, marginHorizontal: BOX_MARGIN},
+                active && styles.infoBoxActive,
+              ]}
+              onPress={() => onSelect(origIdx)}>
+              <Text style={[styles.infoDate, active && styles.infoTextActive]}>
+                {dateLabel}
+              </Text>
+              <Text style={[styles.infoScore, active && styles.infoTextActive]}>
+                {item.healthScore}점
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -191,61 +223,50 @@ function HealthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.BACKGRAY,
-    padding: 24,
+    backgroundColor: colors.SEMIWHITE,
+    paddingHorizontal: OUTER_PAD,
+    paddingTop: 24,
   },
-  header: {
-    marginVertical: 24,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 18,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  actions: {
-    flexDirection: 'row',
-    marginBottom: 40,
-  },
-  actionBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: BUTTON_MARGIN,
-  },
+  header: {marginBottom: 16},
+  title: {fontSize: 20, fontWeight: 'bold'},
+  row: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
+  subtitle: {marginLeft: 8, fontSize: 16},
+  actions: {flexDirection: 'row', marginBottom: 24},
+  actionBtn: {marginHorizontal: BUTTON_MARGIN},
   gradient: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    width: '100%',
-    height: '100%',
   },
   actionLabel: {
-    marginTop: 6,
+    marginTop: 4,
     color: colors.WHITE,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  sectionTitle: {
-    fontSize: 18,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
+  sectionTitle: {marginLeft: 8, fontSize: 18},
   card: {
     backgroundColor: colors.WHITE,
     borderRadius: 16,
-    padding: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 6,
+    padding: INNER_PAD,
     elevation: 5,
+    marginBottom: 24,
   },
+  infoContainer: {paddingVertical: 12, alignItems: 'center'},
+  infoBox: {
+    backgroundColor: '#F8F8FA',
+    borderRadius: 6,
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  infoBoxActive: {backgroundColor: colors.MAINBLUE},
+  infoDate: {fontSize: 14, color: colors.GRAY},
+  infoScore: {fontSize: 14, color: colors.BLACK, marginTop: 4},
+  infoTextActive: {color: '#fff'},
 });
-
-export default HealthScreen;
