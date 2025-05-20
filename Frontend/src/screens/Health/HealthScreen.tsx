@@ -30,7 +30,7 @@ const BUTTON_SIZE =
   (SCREEN_WIDTH - OUTER_PAD * 2 - BUTTON_MARGIN * 2 * BUTTON_COUNT) /
   BUTTON_COUNT;
 
-const BOX_WIDTH = 80;
+const BOX_WIDTH = 110;
 const BOX_MARGIN = 8;
 
 export default function HealthScreen() {
@@ -43,6 +43,7 @@ export default function HealthScreen() {
     >();
 
   // 원본 데이터 (오름차순)
+  // TODO : chart 컴포넌트로 빼기
   const response = [
     {date: '2025-05-15', healthScore: 94},
     {date: '2025-05-16', healthScore: 56},
@@ -54,7 +55,7 @@ export default function HealthScreen() {
   const labels = response.map(r => r.date.slice(5).replace('-', '.'));
   const data = response.map(r => r.healthScore);
 
-  // ScrollView 에는 최신순(역순)으로 보여줌
+  // ScrollView 최신순(역순)으로 보여줌
   const reversed = [...response].reverse();
 
   const [selectedIndex, setSelectedIndex] = useState(data.length - 1);
@@ -65,7 +66,6 @@ export default function HealthScreen() {
 
   const onSelect = (origIdx: number) => {
     setSelectedIndex(origIdx);
-    // 역순된 ScrollView 에서의 인덱스
     const revIdx = data.length - 1 - origIdx;
     const offsetX =
       revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
@@ -92,13 +92,13 @@ export default function HealthScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header & Action Buttons */}
+      {/* TODO : 유저 이름 넣기 */}
       <View style={styles.header}>
-        <Text style={styles.title}>홍길동님의 건강 수첵</Text>
+        <Text style={styles.title}>홍길동님의 건강 수첩</Text>
       </View>
       <View style={styles.row}>
-        <Icon name="checkbox" size={25} color="#00C20B" />
-        <Text style={styles.subtitle}>하루 한 번, 건강 확인</Text>
+        <Icon name="checkbox" size={25} color={colors.BLUE} />
+        <Text style={styles.sectionTitle}>하루 한 번, 건강 확인</Text>
       </View>
       <View style={styles.actions}>
         {buttons.map(b => (
@@ -121,13 +121,11 @@ export default function HealthScreen() {
         ))}
       </View>
 
-      {/* Chart Section Title */}
       <View style={styles.sectionHeader}>
-        <Icon name="bar-chart" size={25} color={colors.SKYBLUE} />
+        <Icon name="bar-chart" size={25} color={colors.BLUE} />
         <Text style={styles.sectionTitle}>나의 건강 점수</Text>
       </View>
 
-      {/* Line Chart */}
       <View style={styles.card}>
         <LineChart
           data={{labels, datasets: [{data}]}}
@@ -141,11 +139,13 @@ export default function HealthScreen() {
             decimalPlaces: 0,
             color: () => colors.MAINBLUE,
             labelColor: () => colors.BLACK,
+            fillShadowGradient: 'transparent',
+            fillShadowGradientOpacity: 0,
             propsForBackgroundLines: {
               stroke: colors.LIGHTGRAY,
               strokeDasharray: '4',
             },
-            // 기본 점은 반경 0으로 숨김
+
             propsForDots: {r: '0'},
           }}
           style={{alignSelf: 'center'}}
@@ -161,7 +161,7 @@ export default function HealthScreen() {
           onDataPointClick={({index}) => onSelect(index)}
           renderDotContent={({x, y, index}) => {
             const isSelected = index === selectedIndex;
-            const size = isSelected ? 12 : 8;
+            const size = isSelected ? 12 : 12;
             return (
               <View
                 key={index}
@@ -182,7 +182,6 @@ export default function HealthScreen() {
         />
       </View>
 
-      {/* Info Boxes (역순) */}
       <ScrollView
         horizontal
         ref={scrollRef}
@@ -230,7 +229,6 @@ const styles = StyleSheet.create({
   header: {marginBottom: 16},
   title: {fontSize: 20, fontWeight: 'bold'},
   row: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
-  subtitle: {marginLeft: 8, fontSize: 16},
   actions: {flexDirection: 'row', marginBottom: 24},
   actionBtn: {marginHorizontal: BUTTON_MARGIN},
   gradient: {
@@ -260,13 +258,15 @@ const styles = StyleSheet.create({
   },
   infoContainer: {paddingVertical: 12, alignItems: 'center'},
   infoBox: {
-    backgroundColor: '#F8F8FA',
+    backgroundColor: colors.WHITE,
+    borderColor: colors.LIGHTGRAY,
     borderRadius: 6,
     alignItems: 'center',
-    paddingVertical: 6,
+    padding: 12,
+    borderWidth: 1,
   },
   infoBoxActive: {backgroundColor: colors.MAINBLUE},
   infoDate: {fontSize: 14, color: colors.GRAY},
-  infoScore: {fontSize: 14, color: colors.BLACK, marginTop: 4},
+  infoScore: {fontSize: 14, color: colors.MAINBLUE, marginTop: 4},
   infoTextActive: {color: '#fff'},
 });

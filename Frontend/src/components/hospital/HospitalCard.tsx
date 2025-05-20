@@ -29,7 +29,7 @@ function HospitalCard({item}: HospitalCardProps) {
             styles.infoText,
             item.isOpen ? styles.openText : styles.closedText,
           ]}>
-          {item.isOpen ? '진료중' : '진료 마감'}
+          {item.isOpen ? '진료 중' : '진료 마감'}
         </Text>
       </View>
     </View>
