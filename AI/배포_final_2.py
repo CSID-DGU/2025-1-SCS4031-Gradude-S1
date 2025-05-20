@@ -202,5 +202,4 @@ def facial_palsy(video_path: str,
     return {"video":Path(video_path).name, "probability":prob, "label":label}
 
 # ── run: just call this line in your script / REPL
-from 배포_final import facial_palsy   # 모듈 이름이 배포_final.py 라면
 facial_palsy("test.mp4")              # artefact_path, fps 기본값 사용
