@@ -5,20 +5,15 @@ import numpy as np
 import joblib
 import logging
 from transformers import WhisperProcessor, WhisperModel
-import os
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
-import joblib
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
-import matplotlib.pyplot as plt
 import pickle
-import os
 
 # ✅ 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -118,9 +113,13 @@ def predict(path, model_path="AI/svm_model.pkl"):
         embedding_scaled = scaler.transform([embedding])
 
         prediction = classifier.predict(embedding_scaled)[0]
-        probability = classifier.decision_function(embedding_scaled)[0]
-
+        if hasattr(classifier, "predict_proba"):
+            probability = classifier.predict_proba(embedding_scaled)[0][prediction]  # 해당 클래스의 확률
+        else:
+            probability = classifier.decision_function(embedding_scaled)[0]  # fallback
+        
         logging.info(f"예측 완료 - 결과: {prediction}, 확률: {probability:.4f}")
+        
         return prediction, probability
     except Exception as e:
         logging.error(f"예측 실패: {e}")
