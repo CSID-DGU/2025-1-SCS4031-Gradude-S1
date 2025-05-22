@@ -2078,6 +2078,12 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - VisionCamera (4.6.4):
+    - VisionCamera/Core (= 4.6.4)
+    - VisionCamera/React (= 4.6.4)
+  - VisionCamera/Core (4.6.4)
+  - VisionCamera/React (4.6.4):
+    - React-Core
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2174,6 +2180,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - SplashView (from `../node_modules/react-native-splash-view`)
+  - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2366,6 +2373,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   SplashView:
     :path: "../node_modules/react-native-splash-view"
+  VisionCamera:
+    :path: "../node_modules/react-native-vision-camera"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2464,6 +2473,7 @@ SPEC CHECKSUMS:
   RNSVG: 769d0a2e79162d08639e1fbb43031adac58ed24c
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   SplashView: 153fb6488ffbac3e54b3b54b778497be5b39c1d8
+  VisionCamera: b5c2b3c45e641102902a5194af11dc532805221e
   Yoga: 9f110fc4b7aa538663cba3c14cbb1c335f43c13f
 
 PODFILE CHECKSUM: bf6a1ef63c77bfa78a6cf90ad33dc0b3554d3fe6
