@@ -5,15 +5,6 @@ import numpy as np
 import joblib
 import logging
 from transformers import WhisperProcessor, WhisperModel
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.svm import SVC
-from sklearn.metrics import classification_report, ConfusionMatrixDisplay
-import pickle
 
 # ✅ 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -104,7 +95,7 @@ def extract_embedding(path, processor, model, device):
         raise
 
 # ✅ 예측 수행 함수
-def predict(path, model_path="AI/svm_model.pkl"):
+def predict(path, model_path="svm_model.pkl"):
     try:
         scaler, classifier = load_model(model_path)
         processor, whisper_model, device = load_whisper_model()
@@ -130,7 +121,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Whisper 기반 음성 분류기")
     parser.add_argument("audio_path", type=str, help="분석할 .wav 또는 .pcm 파일 경로")
-    parser.add_argument("--model_path", type=str, default="AI/svm_model.pkl", help="SVM 모델 pkl 파일 경로")
+    parser.add_argument("--model_path", type=str, default="svm_model.pkl", help="SVM 모델 pkl 파일 경로")
 
     args = parser.parse_args()
 
