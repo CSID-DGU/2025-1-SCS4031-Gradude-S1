@@ -1,0 +1,9 @@
+torch
+torchaudio
+numpy
+pandas
+scikit-learn
+joblib
+transformers==4.37.0
+sentencepiece
+tokenizers==0.15.2
