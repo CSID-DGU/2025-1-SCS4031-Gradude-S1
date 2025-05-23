@@ -1,0 +1,11 @@
+opencv-python
+mediapipe
+torch
+facenet-pytorch
+pandas
+numpy
+scipy
+joblib
+xgboost==1.7.6
+fastapi
+uvicorn
