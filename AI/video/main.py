@@ -21,7 +21,7 @@ def predict_video(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
 
         # 예측 수행
-        result = _facial_palsy_core(str(temp_path), artefact_path="xgb_stroke.pkl", fps=10)
+        result = _facial_palsy_core(str(temp_path), artefact_path="xgb_stroke.json", fps=10)
         return {
             "prediction": int(result["label"]),
             "probability": float(result["probability"])
