@@ -5,16 +5,8 @@ Facial Palsy Inference – crash‑safe edition
 
 Usage
 -----
-Run 버튼/터미널 모두 지원::
-
-    python facial_palsy.py                        # 예제 영상 사용
-    python facial_palsy.py my_face.mp4            # 사용자 영상 분석
-
-Options::
-
-    --artefact  PATH    모델 artefact(pkl) (default: xgb_stroke.pkl)
-    --fps       INT     샘플링 FPS (default: 10)
-    --no-isolate        위험 모드 – 격리 비활성화(SEGFAULT 시 전체 종료)
+python facial_palsy.py                        # 예제 영상 사용
+python facial_palsy.py my_face.mp4            # 사용자 영상 분석
 """
 
 from __future__ import annotations
@@ -48,9 +40,6 @@ with contextlib.redirect_stdout(open(os.devnull, 'w')):
     import mediapipe as mp_mediapipe
     from facenet_pytorch import MTCNN
 
-# ────────────────────────────────────────────────────────────────────────────
-# 로깅 설정
-# ────────────────────────────────────────────────────────────────────────────
 logger = logging.getLogger("facial_palsy")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
@@ -58,17 +47,10 @@ formatter = logging.Formatter("[%(levelname)s] %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# ────────────────────────────────────────────────────────────────────────────
-# 환경 변수 설정
-# ────────────────────────────────────────────────────────────────────────────
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "True")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
-# ────────────────────────────────────────────────────────────────────────────
-# 누락 패키지를 즉석 pip install
-# ────────────────────────────────────────────────────────────────────────────
 
 REQUIRED_PACKAGES: dict[str, str] = {
     "cv2": "opencv-python",
@@ -90,28 +72,14 @@ def _lazy_pip_install() -> None:
             logger.info(f"Missing {mod} → installing {pip_cmd}")
             subprocess.check_call(f"{sys.executable} -m pip install {pip_cmd}", shell=True)
 
-# ────────────────────────────────────────────────────────────────────────────
-# Core inference
-# ────────────────────────────────────────────────────────────────────────────
-
 def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.Queue | None = None) -> Dict[str, Any]:
     warnings.filterwarnings("ignore")
-
     _lazy_pip_install()
 
     import importlib
     import pickle
-
     import joblib
-    import numpy as np
-    import pandas as pd
-    from scipy.stats import kurtosis, skew
-    from scipy.signal import find_peaks
-
-    import cv2
-    import mediapipe as mp
-    import torch
-    from facenet_pytorch import MTCNN
+    import xgboost as xgb
 
     try:
         artefact = joblib.load(artefact_path)
@@ -121,23 +89,20 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
     if not isinstance(artefact, dict):
         raise TypeError("Artefact must be a dict produced by training script.")
 
-    required_xgb_ver = artefact.get("xgb_version")
-
+    required_xgb_ver = "1.7.6"
     def _ensure_xgb(ver: str | None):
         try:
-            import xgboost
-            if ver and xgboost.__version__ != ver:
-                logger.info(f"xgboost {xgboost.__version__} → {ver} (re-install)")
+            if ver and xgb.__version__ != ver:
+                logger.info(f"xgboost {xgb.__version__} → {ver} (re-install)")
                 subprocess.check_call([sys.executable, "-m", "pip", "install", f"xgboost=={ver}"])
                 importlib.invalidate_caches()
-                importlib.reload(xgboost)
+                importlib.reload(xgb)
         except ImportError:
             to_install = f"xgboost=={ver}" if ver else "xgboost"
             subprocess.check_call([sys.executable, "-m", "pip", "install", to_install])
             import xgboost
 
     _ensure_xgb(required_xgb_ver)
-    import xgboost as xgb
 
     model: xgb.XGBClassifier = artefact["model"]
     thr: float = artefact["threshold"]
@@ -146,7 +111,6 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
         tmp_root = tempfile.mkdtemp(prefix="fp_tmp_")
         dst_dir = Path(tmp_root, Path(vp).stem)
         dst_dir.mkdir()
-
         cap = cv2.VideoCapture(vp)
         if not cap.isOpened():
             raise RuntimeError(f"Cannot open video: {vp}")
@@ -163,21 +127,15 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
         cap.release()
         return str(dst_dir), tmp_root
 
-    frame_dir, tmp_root = _extract_frames(video_path, fps)
-
     _corr = lambda a, b: np.corrcoef(a, b)[0, 1] if (~np.isnan(a) & ~np.isnan(b)).sum() > 1 else np.nan
-
     _ns = lambda l, p: np.nan if p is None else abs(l[1][0] - p[1][0])
     _ja = lambda l, p: np.nan if p is None else abs(l[152][0] - p[152][0])
-    _eci = lambda l, *_: (abs(l[159][1] - l[145][1]) + abs(l[386][1] - l[374][1])) / 2
-
+    _eci = lambda l, *_: (abs(l[159][1]-l[145][1]) + abs(l[386][1]-l[374][1])) / 2
     def _smm(l, p):
         if p is None: return np.nan
-        dr = np.linalg.norm(l[61] - p[61])
-        dl = np.linalg.norm(l[291] - p[291])
+        dr, dl = np.linalg.norm(l[61] - p[61]), np.linalg.norm(l[291] - p[291])
         d = np.hypot(dr, dl)
         return (dr * dl) / d if d else np.nan
-
     def _dms(l, *_):
         idx = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291]
         mid = (l[61][0] + l[291][0]) / 2
@@ -185,30 +143,20 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
         R = [l[i][0] for i in idx if l[i][0] >= mid]
         sL, sR = sum(L), sum(R)
         return abs(sL - sR) / (sL + sR) if (sL + sR) else np.nan
-
-    def _eoa(l, *_):
-        r = abs(l[159][1] - l[145][1])
-        le = abs(l[386][1] - l[374][1])
-        return r / le if le else np.nan
-
+    def _eoa(l, *_): return abs(l[159][1] - l[145][1]) / abs(l[386][1] - l[374][1])
     def _fca(l, *_):
-        R = [234, 93, 132, 58, 172, 136, 150]
-        L = [454, 323, 361, 288, 397, 365, 379]
+        R, L = [234, 93, 132, 58, 172, 136, 150], [454, 323, 361, 288, 397, 365, 379]
         return abs(np.mean(l[R, 0]) - np.mean(l[L, 0]))
-
     def _la(l, *_):
         idx = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291]
         xs = l[idx, 0]
         c = (xs.min() + xs.max()) / 2
         L, R = xs[xs < c], xs[xs >= c]
         return np.nan if not (len(L) and len(R)) else abs(L.mean() - R.mean()) / (L.mean() + R.mean())
-
     _era = lambda l, *_: abs(l[70][1] - l[300][1])
-
     def _sca(l, *_):
         r, lm, mid = l[61], l[291], l[13]
-        return abs(np.arctan2(mid[1] - r[1], mid[0] - r[0]) - np.arctan2(mid[1] - lm[1], mid[0] - lm[0]))
-
+        return abs(np.arctan2(mid[1]-r[1], mid[0]-r[0]) - np.arctan2(mid[1]-lm[1], mid[0]-lm[0]))
     def _hta(l, *_):
         dx, dy = l[159][0] - l[386][0], l[159][1] - l[386][1]
         return np.degrees(np.arctan2(dy, dx)) if dx else np.nan
@@ -216,11 +164,12 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
     FEATS = [_smm, _dms, _eoa, _ns, _ja, _fca, _la, _era, _sca, _hta, _eci]
     COLS = ["SMM", "DMS", "EOA", "NS", "JA", "FCA", "LA", "ERA", "SCA", "HTA", "ECI"]
 
+    frame_dir, tmp_root = _extract_frames(video_path, fps)
     device = "cuda" if torch.cuda.is_available() and os.environ.get("CUDA_VISIBLE_DEVICES", "0") != "" else "cpu"
     mtcnn = MTCNN(keep_all=True, device=device)
     rows, prev = [], None
 
-    with mp.solutions.face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=False, min_detection_confidence=0.3) as fm:
+    with mp_mediapipe.solutions.face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1, refine_landmarks=False, min_detection_confidence=0.3) as fm:
         for fp in sorted(Path(frame_dir).glob("*.jpg")):
             rgb = cv2.cvtColor(cv2.imread(str(fp)), cv2.COLOR_BGR2RGB)
             boxes, _ = mtcnn.detect(rgb)
@@ -233,10 +182,6 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
             w, h = x2 - x1, y2 - y1
             x1, y1 = max(0, x1 - int(w * pad)), max(0, y1 - int(h * pad))
             x2, y2 = min(rgb.shape[1], x2 + int(w * pad)), min(rgb.shape[0], y2 + int(h * pad))
-            if x2 <= x1 or y2 <= y1:
-                rows.append([np.nan] * len(FEATS))
-                prev = None
-                continue
             crop = rgb[y1:y2, x1:x2]
             res = fm.process(crop)
             if not res.multi_face_landmarks:
@@ -262,9 +207,9 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
             sk, ku = skew(s), kurtosis(s)
             diff = np.diff(s)
             out.extend([
-                mean, std, mx, mn, rng, sk, ku, abs(diff).mean(),
-                abs(diff).max(), (abs(diff) > 3 * std).sum(),
-                (int(np.where(abs(diff) > 3 * std)[0][0]) if (abs(diff) > 3 * std).any() else len(s)),
+                mean, std, mx, mn, rng, sk, ku, abs(diff).mean(), abs(diff).max(),
+                (abs(diff) > 3 * std).sum(),
+                int(np.where(abs(diff) > 3 * std)[0][0]) if (abs(diff) > 3 * std).any() else len(s),
                 (diff > 0).sum() / len(diff),
                 (diff < 0).sum() / len(diff),
                 len(find_peaks(s)[0]), len(find_peaks(-s)[0])
@@ -286,7 +231,6 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
         out_q.put(payload)
     return payload
 
-
 def _run_isolated(ns: SimpleNamespace):
     q: mp.Queue = mp.Queue()
     p: mp.Process = mp.Process(target=_facial_palsy_core, args=(ns.video, ns.artefact, ns.fps, q))
@@ -297,16 +241,14 @@ def _run_isolated(ns: SimpleNamespace):
         raise RuntimeError(f"Child process crashed with exit code {p.exitcode} (possible segfault)")
     return q.get()
 
-
 def _parse_cli():
-    default_video = Path("test.mp4")
+    default_video = Path("/Users/siyeonlee/Desktop/학교/융합캡스톤디자인/2025-1-SCS4031-Gradude-S1/AI/test_video_data/affected_4.mp4")
     ag = argparse.ArgumentParser(prog="facial_palsy.py", formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent(__doc__))
     ag.add_argument("video", nargs="?", default=str(default_video), help="Input video path [default: %(default)s]")
-    ag.add_argument("--artefact", default="xgb_stroke.pkl", help="Pickle containing XGB model [default: %(default)s]")
+    ag.add_argument("--artefact", default="/Users/siyeonlee/Desktop/학교/융합캡스톤디자인/2025-1-SCS4031-Gradude-S1/AI/video/xgb_stroke.pkl", help="Pickle containing XGB model [default: %(default)s]")
     ag.add_argument("--fps", type=int, default=10, help="Target sampling FPS [default: %(default)s]")
     ag.add_argument("--no-isolate", action="store_true", help="Disable process isolation (danger mode)")
     return ag.parse_args()
-
 
 def main() -> None:
     ns: SimpleNamespace = _parse_cli()  # type: ignore
