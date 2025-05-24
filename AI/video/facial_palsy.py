@@ -86,8 +86,18 @@ def _facial_palsy_core(video_path: str, artefact_path: str, fps: int, out_q: mp.
     except Exception:
         with open(artefact_path, "rb") as f:
             artefact = pickle.load(f)
+
     if not isinstance(artefact, dict):
         raise TypeError("Artefact must be a dict produced by training script.")
+
+    model = artefact["model"]
+
+    # ✅ 안전하게 속성 제거
+    if "use_label_encoder" in model.__dict__:
+        del model.__dict__["use_label_encoder"]
+        logger.info("✅ Patched: removed 'use_label_encoder' from model.__dict__")
+
+    artefact["model"] = model
 
     required_xgb_ver = "1.7.6"
     def _ensure_xgb(ver: str | None):
