@@ -1,4 +1,3 @@
-// useIOSPermission.ts
 import {useEffect} from 'react';
 import {Alert, Linking} from 'react-native';
 import {
@@ -10,11 +9,13 @@ import {
 } from 'react-native-permissions';
 import {alerts} from '@/constants';
 
-type PermissionType = 'LOCATION' | 'PHOTO';
+type PermissionType = 'LOCATION' | 'PHOTO' | 'CAMERA' | 'MICROPHONE';
 
 const iosPermissions: Record<PermissionType, Permission> = {
   LOCATION: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
   PHOTO: PERMISSIONS.IOS.PHOTO_LIBRARY,
+  CAMERA: PERMISSIONS.IOS.CAMERA,
+  MICROPHONE: PERMISSIONS.IOS.MICROPHONE,
 };
 
 function usePermission(type: PermissionType) {

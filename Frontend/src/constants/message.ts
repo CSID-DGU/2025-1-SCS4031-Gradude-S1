@@ -12,6 +12,14 @@ const alerts = {
     TITLE: '사진 접근 권한이 필요합니다.',
     DESCRIPTION: '설정 화면에서 사진 권한을 허용해주세요.',
   },
+  CAMERA_PERMISSION: {
+    TITLE: '카메라 접근 권한이 필요합니다.',
+    DESCRIPTION: '설정 화면에서 카메라 권한을 허용해주세요.',
+  },
+  MICROPHONE_PERMISSION: {
+    TITLE: '녹음 접근 권한이 필요합니다.',
+    DESCRIPTION: '설정 화면에서 녹음 권한을 허용해주세요.',
+  },
   // 녹음도 넣어야 함
 } as const;
 

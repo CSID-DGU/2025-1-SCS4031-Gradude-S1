@@ -6,7 +6,7 @@ const authNavigations = {
 const homeNavigations = {
   MAIN_HOME: 'MainHome',
   FACE_SMILE: 'FaceSmile',
-  FACE_WINK: 'FaceWink',
+  CAMERA: 'Camera',
   RECORD: 'Record',
   LOADING: 'Loading',
   MID_RESULT: 'MidResult',
