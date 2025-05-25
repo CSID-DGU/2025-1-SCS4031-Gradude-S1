@@ -21,6 +21,9 @@ public class Diagnosis extends BaseEntity {
     private boolean face;
 
     @Column(nullable = false)
+    private double faceProbability;
+
+    @Column(nullable = false)
     private boolean speech;
 
     private boolean paralysis;
@@ -41,4 +44,3 @@ public class Diagnosis extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
-

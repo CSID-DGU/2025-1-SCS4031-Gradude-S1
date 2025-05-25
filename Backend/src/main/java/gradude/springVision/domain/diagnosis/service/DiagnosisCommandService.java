@@ -1,48 +1,92 @@
 package gradude.springVision.domain.diagnosis.service;
 
+import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResposneDTO;
+import gradude.springVision.domain.diagnosis.entity.Diagnosis;
 import gradude.springVision.domain.diagnosis.repository.DiagnosisRepository;
+import gradude.springVision.domain.user.entity.User;
 import gradude.springVision.domain.user.repository.UserRepository;
+import gradude.springVision.global.common.response.ErrorCode;
+import gradude.springVision.global.common.response.exception.GeneralException;
 import gradude.springVision.global.util.S3Service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.io.IOException;
+import java.util.Map;
 
 @Transactional
 @RequiredArgsConstructor
+
 @Service
 public class DiagnosisCommandService {
 
-    private final DiagnosisRepository diagnosisRepository;
+    @Value("${external.facial-api-url}")
+    private String facialApiUrl;
     private final UserRepository userRepository;
+    private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
 
     /**
      * 안면 자가 진단
-//     */
-//    public FaceDiagnosisResposneDTO faceDiagnosis(Long userId, MultipartFile file) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
-//
-//        String videoUrl = s3Service.uploadFile(userId, file, "face");
-//
-//        // TODO: AI 안면 자가 진단 (영상 파일 전송 -> 진단 결과 받아오기)
-////        FaceDiagnosisResposneDTO faceDiagnosisResposneDTO = requestToAIServer(videoUrl);
-//
-//        // 진단 결과 DB 저장
-//        Diagnosis diagnosis = Diagnosis.builder()
-//                .date(LocalDate.now())
-//                .facialParalysis(result.getFacialParalysis())
-//                .probability(result.getProbability())
-//                .user(getCurrentUser()) // 또는 userRepository.findById() 등
-//                .build();
-//        diagnosisRepository.save(diagnosis);
-//
-//        return result;
-//
-//    }
+     */
+    public AiDiagnosisResposneDTO faceDiagnosis(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
-    public String faceDiagnosis(Long userId, MultipartFile file) {
-            return s3Service.uploadFile(userId, file, "face");
+        s3Service.uploadFile(userId, file, "face");
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(); // Multipart/form-data
+        try {
+            body.add("file", new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+        } catch (IOException e) {
+            throw new GeneralException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+
+        // TODO - 파일 확장자 영상인지 확인
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(facialApiUrl, requestEntity, Map.class); // API 호출
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> respBody = response.getBody();
+
+                boolean isFacePositive = ((int) respBody.get("prediction")) == 1;
+
+                double probability = (double) respBody.get("probability");
+
+                // 진단 엔티티 생성 및 저장
+                Diagnosis diagnosis = Diagnosis.builder()
+                        .user(user)
+                        .face(isFacePositive)
+                        .faceProbability(probability)
+                        .build();
+
+                diagnosisRepository.save(diagnosis);
+                return AiDiagnosisResposneDTO.of(isFacePositive, probability);
+            } else{
+                throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
+            }
+        } catch (Exception e) {
+            throw new GeneralException(ErrorCode.AI_CALL_FAILED);
+        }
     }
 }
