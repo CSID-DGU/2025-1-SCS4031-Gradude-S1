@@ -31,6 +31,8 @@ public class DiagnosisCommandService {
 
     @Value("${external.facial-api-url}")
     private String facialApiUrl;
+    @Value("${external.speech-api-url}")
+    private String speechApiUrl;
     private final UserRepository userRepository;
     private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
@@ -42,7 +44,7 @@ public class DiagnosisCommandService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
-        s3Service.uploadFile(userId, file, "face");
+        s3Service.uploadFile(userId, file, "video");
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -70,7 +72,6 @@ public class DiagnosisCommandService {
                 Map<String, Object> respBody = response.getBody();
 
                 boolean isFacePositive = ((int) respBody.get("prediction")) == 1;
-
                 double probability = (double) respBody.get("probability");
 
                 // 진단 엔티티 생성 및 저장
@@ -82,6 +83,60 @@ public class DiagnosisCommandService {
 
                 diagnosisRepository.save(diagnosis);
                 return AiDiagnosisResposneDTO.of(isFacePositive, probability);
+            } else{
+                throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
+            }
+        } catch (Exception e) {
+            throw new GeneralException(ErrorCode.AI_CALL_FAILED);
+        }
+    }
+
+    /**
+     * 음성 자가 진단
+     */
+    public AiDiagnosisResposneDTO speechDiagnosis(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+
+        s3Service.uploadFile(userId, file, "audio");
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(); // Multipart/form-data
+        try {
+            body.add("file", new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+        } catch (IOException e) {
+            throw new GeneralException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+
+        // TODO - 파일 확장자 음성인지 확인
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(speechApiUrl, requestEntity, Map.class); // API 호출
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> respBody = response.getBody();
+
+                boolean isSpeechPositive = ((int) respBody.get("prediction")) == 1;
+                double probability = (double) respBody.get("probability");
+
+                // 진단 엔티티 생성 및 저장
+                Diagnosis diagnosis = Diagnosis.builder()
+                        .user(user)
+                        .speech(isSpeechPositive)
+                        .speechProbability(probability)
+                        .build();
+
+                diagnosisRepository.save(diagnosis);
+                return AiDiagnosisResposneDTO.of(isSpeechPositive, probability);
             } else{
                 throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
             }
