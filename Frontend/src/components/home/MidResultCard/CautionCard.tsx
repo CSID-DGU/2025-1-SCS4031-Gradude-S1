@@ -36,6 +36,9 @@ function CautionCard({onCallPress, onSelfPress}: CautionCardProps) {
       <Text style={styles.title}>주의가 필요합니다</Text>
 
       <View style={styles.messageContainer}>
+        <Text style={styles.mainmessage}>
+          발화와 얼굴 표정 모두에서 어색함이 느껴집니다
+        </Text>
         <Text style={styles.message}>
           이러한 증상은 뇌졸중과 관련이 있을 수 있어요{'\n'}
           갑작스럽게 증상 발생하였다면{'\n'}
@@ -99,6 +102,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  mainmessage: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.RED,
   },
   message: {
     fontSize: 16,

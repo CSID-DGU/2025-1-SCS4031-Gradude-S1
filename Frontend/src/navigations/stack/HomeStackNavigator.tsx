@@ -9,7 +9,7 @@ import LoadingScreen from '@/screens/Home/LoadingScreen';
 import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
 import MidResultScreen from '@/screens/Home/MidResultScreen';
 import FinalResultScreen from '@/screens/Home/FinalResultScreen';
-import VideoPlayerScreen from '@/screens/Home/VideoPlayerScreen';
+
 import type {ImageSourcePropType} from 'react-native';
 import CameraScreen from '@/screens/Home/CameraScreen';
 
@@ -109,14 +109,6 @@ function HomeStackNavigator() {
           component={FinalResultScreen}
           options={{
             headerTitle: '진단 결과',
-          }}
-        />
-        <Stack.Screen
-          name={homeNavigations.VIDEO_PLAYER}
-          component={VideoPlayerScreen}
-          options={{
-            headerTitle: '',
-            headerShown: false,
           }}
         />
       </Stack.Navigator>

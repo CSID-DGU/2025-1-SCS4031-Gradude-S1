@@ -6,22 +6,18 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import FinalResultCard from '@/components/FinalResultCard';
-import ExerciseCard from '@/components/ExerciseCard';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import CustomButton from '@/components/commons/CustomButton';
-import SECTIONS from '@/data/exercise.json';
 import HOSPITALS from '@/data/hospitals.json';
-import Random from '@/utils/random';
 import {useNavigation} from '@react-navigation/native';
 import {homeNavigations} from '@/constants';
 import type {StackNavigationProp} from '@react-navigation/stack';
-import type {Exercise} from '@/types/exercise';
 import type {Hospital} from '@/types/hospital';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
 type VideoNavProp = StackNavigationProp<HomeStackParamList, 'ExerciseList'>;
 
-type SectionListItem = Hospital | Exercise;
+type SectionListItem = Hospital;
 
 type MySection = {
   title: string;
@@ -37,53 +33,23 @@ export default function FinalResultScreen() {
 
   // 병원 데이터 2개 추출
   const hospitalList = useMemo(() => (HOSPITALS as Hospital[]).slice(0, 2), []);
-  // 운동 데이터 랜덤 2개 추출
-  const allExercises = useMemo(
-    () => (SECTIONS as {data: Exercise[]}[]).flatMap(s => s.data),
-    [],
-  );
-  const exerciseList = useMemo(
-    () => Random(allExercises).slice(0, 2),
-    [allExercises],
-  );
 
-  // 섹션 배열
+  // 섹션 배열 (병원만)
   const sections: MySection[] = useMemo(
-    () => [
-      {title: '🏥 가장 가까운 병원', data: hospitalList},
-      {title: '💪🏻 오늘의 추천 운동', data: exerciseList},
-    ],
-    [hospitalList, exerciseList],
+    () => [{title: '🏥 가장 가까운 병원', data: hospitalList}],
+    [hospitalList],
   );
 
-  const renderItem = ({
-    item,
-    section,
-  }: {
-    item: SectionListItem;
-    section: MySection;
-  }) =>
-    section.title === '🏥 가장 가까운 병원' ? (
-      <HospitalCard item={item as Hospital} />
-    ) : (
-      <ExerciseCard
-        item={item as Exercise}
-        onPress={() =>
-          navigation.navigate(homeNavigations.VIDEO_PLAYER, {
-            uri: (item as Exercise).uri,
-            videoId: (item as Exercise).videoId,
-            thumbnail: (item as Exercise).thumbnail,
-          })
-        }
-      />
-    );
+  const renderItem = ({item}: {item: SectionListItem}) => (
+    <HospitalCard item={item} />
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <SectionList<SectionListItem, MySection>
           sections={sections}
-          keyExtractor={item => (item as any).id}
+          keyExtractor={item => item.id}
           renderItem={renderItem}
           renderSectionHeader={({section: {title}}) => (
             <Text style={styles.sectionHeader}>{title}</Text>
@@ -110,7 +76,7 @@ export default function FinalResultScreen() {
           }}
           onPressOut={() => {
             btnScale.value = withTiming(1, {duration: 100});
-            // navigation.navigate(homeNavigations.진단 불가한 메인으로) ;
+            navigation.navigate(homeNavigations.MAIN_HOME);
           }}
         />
       </Animated.View>
@@ -134,13 +100,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10, //애랑
+    marginBottom: 10,
   },
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
     backgroundColor: 'transparent',
-    marginBottom: 10, //얘랑 숫자 동일하게 바꿔야함
+    marginBottom: 10,
   },
   buttonWrapper: {
     position: 'absolute',
