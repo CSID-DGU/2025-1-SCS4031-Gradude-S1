@@ -59,3 +59,4 @@ cloud:
 
 external:
   facial-api-url: ${FACIAL_API_URL}
+  speech-api-url: ${SPEECH_API_URL}
