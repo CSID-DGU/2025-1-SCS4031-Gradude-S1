@@ -35,6 +35,7 @@ import {authNavigations} from '@/constants';
 
 //   // 2) 토큰은 있는데, 프로필(추가정보) 없으면 → SignupScreen
 //   if (!isProfileComplete) {
+//     return (
 //     <Stack.Navigator screenOptions={{headerShown: false}}>
 //       <Stack.Screen
 //         name={authNavigations.SIGNUP}

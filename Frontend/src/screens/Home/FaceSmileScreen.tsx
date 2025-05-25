@@ -7,9 +7,11 @@ import Animated, {
   withTiming,
   withDelay,
   withRepeat,
+  withSequence,
 } from 'react-native-reanimated';
 import SmileEmoji from '@/assets/Home/SmileEmoji.svg';
 import StraightEmoji from '@/assets/Home/StraightEmoji.svg';
+import BlinkEmoji from '@/assets/Home/BlinkEmoji.svg';
 import CustomButton from '@/components/commons/CustomButton';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
@@ -32,11 +34,25 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
   const emojiProgress = useSharedValue(0);
   const btnScale = useSharedValue(1);
 
+  const SEGMENT_DURATION = 800;
+
   useEffect(() => {
+    // 카드 페이드인
     cardOpacity.value = withTiming(1, {duration: 500});
+
+    // 이모지 애니메이션: 0→1(정색1초)→2(윙크0.5초)→3(정색1초)→4(스마일2초) 반복
     emojiProgress.value = withDelay(
-      1100,
-      withRepeat(withTiming(1, {duration: 1100}), -1, true),
+      SEGMENT_DURATION,
+      withRepeat(
+        withSequence(
+          withTiming(1, {duration: SEGMENT_DURATION}), // 0→1: 첫번째 정색 (1초)
+          withTiming(2, {duration: SEGMENT_DURATION}), // 1→2: 윙크 (0.5초)
+          withTiming(3, {duration: SEGMENT_DURATION}), // 2→3: 두번째 정색 (1초)
+          withTiming(4, {duration: SEGMENT_DURATION}), // 3→4: 스마일 (2초)
+        ),
+        -1,
+        false,
+      ),
     );
   }, []);
 
@@ -44,11 +60,23 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
     opacity: cardOpacity.value,
     transform: [{scale: cardOpacity.value * 0.05 + 0.95}],
   }));
-  const straightStyle = useAnimatedStyle(() => ({
-    opacity: 1 - emojiProgress.value,
+  const straight1Style = useAnimatedStyle(() => ({
+    opacity: emojiProgress.value >= 0 && emojiProgress.value < 1 ? 1 : 0,
   }));
+
+  // 1→2 구간에서는 윙크
+  const blinkStyle = useAnimatedStyle(() => ({
+    opacity: emojiProgress.value >= 1 && emojiProgress.value < 2 ? 1 : 0,
+  }));
+
+  // 2→3 구간에서는 다시 정색
+  const straight2Style = useAnimatedStyle(() => ({
+    opacity: emojiProgress.value >= 2 && emojiProgress.value < 3 ? 1 : 0,
+  }));
+
+  // 3→4 구간에서는 스마일
   const smileStyle = useAnimatedStyle(() => ({
-    opacity: emojiProgress.value,
+    opacity: emojiProgress.value >= 3 && emojiProgress.value <= 4 ? 1 : 0,
   }));
   const buttonAnimStyle = useAnimatedStyle(() => ({
     transform: [{scale: btnScale.value}],
@@ -68,7 +96,13 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
           '촬영 시작' 버튼을 눌러주세요
         </Text>
         <View style={styles.imageRow}>
-          <Animated.View style={[styles.emojiContainer, straightStyle]}>
+          <Animated.View style={[styles.emojiContainer, straight1Style]}>
+            <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
+          </Animated.View>
+          <Animated.View style={[styles.emojiContainer, blinkStyle]}>
+            <BlinkEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
+          </Animated.View>
+          <Animated.View style={[styles.emojiContainer, straight2Style]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
           <Animated.View style={[styles.emojiContainer, smileStyle]}>
@@ -90,7 +124,7 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
             }}
             onPressOut={() => {
               btnScale.value = withTiming(1, {duration: 100});
-              navigation.navigate(homeNavigations.FACE_WINK);
+              navigation.navigate(homeNavigations.CAMERA);
             }}
           />
         </Animated.View>

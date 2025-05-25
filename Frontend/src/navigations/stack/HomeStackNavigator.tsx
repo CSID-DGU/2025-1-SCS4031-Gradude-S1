@@ -4,7 +4,6 @@ import {StyleSheet, View} from 'react-native';
 import {colors, homeNavigations} from '@/constants';
 import HomeScreen from '@/screens/Home/HomeScreen';
 import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
-import FaceWinkScreen from '@/screens/Home/FaceWinkScreen';
 import RecordScreen from '@/screens/Home/RecordScreen';
 import LoadingScreen from '@/screens/Home/LoadingScreen';
 import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
@@ -12,14 +11,15 @@ import MidResultScreen from '@/screens/Home/MidResultScreen';
 import FinalResultScreen from '@/screens/Home/FinalResultScreen';
 import VideoPlayerScreen from '@/screens/Home/VideoPlayerScreen';
 import type {ImageSourcePropType} from 'react-native';
+import CameraScreen from '@/screens/Home/CameraScreen';
 
 export type HomeStackParamList = {
   [homeNavigations.MAIN_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
-  [homeNavigations.FACE_WINK]: undefined;
-  [homeNavigations.RECORD]: undefined;
+  [homeNavigations.CAMERA]: undefined;
+  [homeNavigations.RECORD]: {CameraUri: string};
   [homeNavigations.LOADING]: undefined;
-  [homeNavigations.MID_RESULT]: undefined;
+  [homeNavigations.MID_RESULT]: {AudioUri: string};
   [homeNavigations.SELF_DGS]: undefined;
   [homeNavigations.FINAL_RESULT]: undefined;
   [homeNavigations.EXERCISE_LIST]: undefined;
@@ -66,8 +66,8 @@ function HomeStackNavigator() {
           }}
         />
         <Stack.Screen
-          name={homeNavigations.FACE_WINK}
-          component={FaceWinkScreen}
+          name={homeNavigations.CAMERA}
+          component={CameraScreen}
           options={{
             headerTitle: '',
             headerShown: false,
