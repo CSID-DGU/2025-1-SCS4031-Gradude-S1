@@ -19,7 +19,7 @@ export type HomeStackParamList = {
   [homeNavigations.CAMERA]: undefined;
   [homeNavigations.RECORD]: {CameraUri: string};
   [homeNavigations.LOADING]: undefined;
-  [homeNavigations.MID_RESULT]: undefined;
+  [homeNavigations.MID_RESULT]: {AudioUri: string};
   [homeNavigations.SELF_DGS]: undefined;
   [homeNavigations.FINAL_RESULT]: undefined;
   [homeNavigations.EXERCISE_LIST]: undefined;

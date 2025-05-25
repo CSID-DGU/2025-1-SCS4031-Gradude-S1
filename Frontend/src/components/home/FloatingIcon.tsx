@@ -1,4 +1,3 @@
-// src/components/FloatingIcon.tsx
 import React, {ReactNode, useEffect} from 'react';
 import {StyleSheet, StyleProp, ViewStyle} from 'react-native';
 import Animated, {

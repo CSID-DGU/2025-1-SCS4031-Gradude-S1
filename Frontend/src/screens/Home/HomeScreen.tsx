@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
   halfCircle: {
     position: 'absolute',
-    top: 90,
+    top: 120,
     left: -SCREEN_WIDTH / 2,
     width: CIRCLE_DIAMETER,
     height: CIRCLE_DIAMETER,
@@ -143,8 +143,8 @@ const styles = StyleSheet.create({
   },
   icon2: {
     position: 'absolute',
-    top: 90,
-    right: -30,
+    top: 115,
+    right: -20,
     width: ICON_SIZE,
     height: ICON_SIZE,
   },
