@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,8 +37,8 @@ public class DiagnosisController {
     }
 
     @Operation(summary = "설문 자가 진단")
-    @PostMapping(value = "/survey", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
+    @PostMapping(value = "/survey")
+    public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, @RequestBody SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
         return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO));
     }
 }
