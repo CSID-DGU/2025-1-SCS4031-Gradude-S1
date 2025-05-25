@@ -6,8 +6,13 @@ declare module 'react-native-video' {
     source: {uri: string};
     style?: StyleProp<ViewStyle>;
     controls?: boolean;
+    paused?: boolean;
+    onEnd?: () => void;
     resizeMode?: 'contain' | 'cover' | 'stretch';
   }
 
-  export default class Video extends Component<VideoProperties> {}
+  export default class Video extends React.Component<VideoProperties> {
+    /** 특정 시점으로 이동 */
+    seek(time: number): void;
+  }
 }
