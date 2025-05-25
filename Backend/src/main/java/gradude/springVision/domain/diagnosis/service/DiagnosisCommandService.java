@@ -1,6 +1,8 @@
 package gradude.springVision.domain.diagnosis.service;
 
+import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO;
 import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResposneDTO;
+import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.entity.Diagnosis;
 import gradude.springVision.domain.diagnosis.repository.DiagnosisRepository;
 import gradude.springVision.domain.user.entity.User;
@@ -37,6 +39,8 @@ public class DiagnosisCommandService {
     private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
 
+    // TODO - 중복 코드 정리!!!!!!!!!!!!!!!!!
+
     /**
      * 안면 자가 진단
      */
@@ -65,6 +69,7 @@ public class DiagnosisCommandService {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
+        // TODO - 예외처리 단계별로!!! ai 응답 결과도 고려하기
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(facialApiUrl, requestEntity, Map.class); // API 호출
 
@@ -83,7 +88,7 @@ public class DiagnosisCommandService {
 
                 diagnosisRepository.save(diagnosis);
                 return AiDiagnosisResposneDTO.of(isFacePositive, probability);
-            } else{
+            } else {
                 throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
             }
         } catch (Exception e) {
@@ -97,6 +102,9 @@ public class DiagnosisCommandService {
     public AiDiagnosisResposneDTO speechDiagnosis(Long userId, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+
+        Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
         s3Service.uploadFile(userId, file, "audio");
 
@@ -128,20 +136,32 @@ public class DiagnosisCommandService {
                 boolean isSpeechPositive = ((int) respBody.get("prediction")) == 1;
                 double probability = (double) respBody.get("probability");
 
-                // 진단 엔티티 생성 및 저장
-                Diagnosis diagnosis = Diagnosis.builder()
-                        .user(user)
-                        .speech(isSpeechPositive)
-                        .speechProbability(probability)
-                        .build();
+                diagnosis.updateDiagnosis(isSpeechPositive, probability);
 
-                diagnosisRepository.save(diagnosis);
                 return AiDiagnosisResposneDTO.of(isSpeechPositive, probability);
-            } else{
+            } else {
                 throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
             }
         } catch (Exception e) {
             throw new GeneralException(ErrorCode.AI_CALL_FAILED);
         }
+    }
+
+    /**
+     * 설문 자가진단 후 자가진단 최종 결과 반환
+     */
+    public DiagnosisResponseDTO selfDiagnosis(Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
+        Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
+
+        int totalScore = selfDiagnosisRequestDTO.getAlertness() + selfDiagnosisRequestDTO.getOrientation() + selfDiagnosisRequestDTO.getGaze()
+                        + selfDiagnosisRequestDTO.getVisualField() + selfDiagnosisRequestDTO.getLeftArm() + selfDiagnosisRequestDTO.getRightArm()
+                        + selfDiagnosisRequestDTO.getLeftLeg() + selfDiagnosisRequestDTO.getRightLeg() + selfDiagnosisRequestDTO.getLimbAtaxia()
+                        + selfDiagnosisRequestDTO.getSensory() + selfDiagnosisRequestDTO.getAphasia() + selfDiagnosisRequestDTO.getNeglect()
+                        + (diagnosis.isFace() ? 2 : 0) + (diagnosis.isSpeech() ? 2 : 0);
+
+        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, totalScore);
+
+        return DiagnosisResponseDTO.from(diagnosis);
     }
 }
