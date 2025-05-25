@@ -2,7 +2,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import ProfileScreen from '@/screens/Profile/ProfileScreen';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors} from '@/constants';
+import {colors, homeNavigations} from '@/constants';
 import HomeStackNavigator from '../stack/HomeStackNavigator';
 import MapStackNavigator from '../stack/MapStackNavigator';
 import HealthStackNavigator from '../stack/HealthStackNavigator';
@@ -49,10 +49,24 @@ function TabNavigator() {
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}>
-      <Tab.Screen
+      {/* <Tab.Screen
         name={mainTabNavigations.HOME}
         component={HomeStackNavigator}
         options={{tabBarLabel: '홈'}}
+      /> */}
+      <Tab.Screen
+        name={mainTabNavigations.HOME}
+        component={HomeStackNavigator}
+        options={({route}) => {
+          const focusedRouteName = getFocusedRouteNameFromRoute(route);
+          return {
+            tabBarLabel: '홈',
+            tabBarStyle:
+              focusedRouteName === homeNavigations.CAMERA
+                ? {display: 'none'}
+                : undefined,
+          };
+        }}
       />
       <Tab.Screen
         name={mainTabNavigations.MAP}
