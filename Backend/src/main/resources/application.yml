@@ -35,6 +35,11 @@ spring:
       password: ${REDIS_PW}
       port: ${REDIS_PORT}
 
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
 jwt:
   secret: ${JWT_SECRET_KEY}
   access-token-expire-time: ${JWT_ACCESS_EXPIRE_TIME}
@@ -51,3 +56,6 @@ cloud:
     credentials:
       accessKey: ${BUCKET_ACCESSKEY}
       secretKey: ${BUCKET_SECRETKEY}
+
+external:
+  facial-api-url: ${FACIAL_API_URL}
