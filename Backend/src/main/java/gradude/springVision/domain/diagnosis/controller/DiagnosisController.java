@@ -26,4 +26,10 @@ public class DiagnosisController {
     public ApiResponse<AiDiagnosisResposneDTO> faceDiagnosis(@AuthenticationPrincipal Long userId, MultipartFile file) {
         return ApiResponse.onSuccess(diagnosisCommandService.faceDiagnosis(userId, file));
     }
+
+    @Operation(summary = "음성 자가 진단")
+    @PostMapping(value = "/speech", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<AiDiagnosisResposneDTO> speechDiagnosis(@AuthenticationPrincipal Long userId, MultipartFile file) {
+        return ApiResponse.onSuccess(diagnosisCommandService.speechDiagnosis(userId, file));
+    }
 }

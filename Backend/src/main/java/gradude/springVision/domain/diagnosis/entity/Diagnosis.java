@@ -26,6 +26,9 @@ public class Diagnosis extends BaseEntity {
     @Column(nullable = false)
     private boolean speech;
 
+    @Column(nullable = false)
+    private double speechProbability;
+
     private boolean paralysis;
 
     private boolean language;
