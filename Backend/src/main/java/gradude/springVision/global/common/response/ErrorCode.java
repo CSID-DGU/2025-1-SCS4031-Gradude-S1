@@ -38,7 +38,10 @@ public enum ErrorCode {
 
     // AI Error
     AI_PREDICTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI500", "AI 모델 진단 실패입니다."),
-    AI_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI500", "AI 모델 호출 실패입니다.");
+    AI_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI501", "AI 모델 호출 실패입니다."),
+
+    // Diagnosis Error
+    DIAGNOSIS_NOT_FOUND(HttpStatus.NOT_FOUND, "HOSPITAL4000", "병원을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

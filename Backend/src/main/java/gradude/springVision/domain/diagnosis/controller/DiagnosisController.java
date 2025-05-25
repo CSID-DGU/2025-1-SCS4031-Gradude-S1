@@ -1,6 +1,8 @@
 package gradude.springVision.domain.diagnosis.controller;
 
+import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO;
 import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResposneDTO;
+import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.service.DiagnosisCommandService;
 import gradude.springVision.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +25,7 @@ public class DiagnosisController {
 
     @Operation(summary = "안면 자가 진단")
     @PostMapping(value = "/face", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<AiDiagnosisResposneDTO> faceDiagnosis(@AuthenticationPrincipal Long userId, MultipartFile file) {
+    public ApiResponse<Object> faceDiagnosis(@AuthenticationPrincipal Long userId, MultipartFile file) {
         return ApiResponse.onSuccess(diagnosisCommandService.faceDiagnosis(userId, file));
     }
 
@@ -31,5 +33,11 @@ public class DiagnosisController {
     @PostMapping(value = "/speech", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<AiDiagnosisResposneDTO> speechDiagnosis(@AuthenticationPrincipal Long userId, MultipartFile file) {
         return ApiResponse.onSuccess(diagnosisCommandService.speechDiagnosis(userId, file));
+    }
+
+    @Operation(summary = "설문 자가 진단")
+    @PostMapping(value = "/survey", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
+        return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO));
     }
 }

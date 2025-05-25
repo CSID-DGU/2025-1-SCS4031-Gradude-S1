@@ -1,5 +1,6 @@
 package gradude.springVision.domain.diagnosis.entity;
 
+import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO;
 import gradude.springVision.domain.user.entity.User;
 import gradude.springVision.global.util.BaseEntity;
 import jakarta.persistence.*;
@@ -67,7 +68,30 @@ public class Diagnosis extends BaseEntity {
     @Min(0) @Max(2)
     private int neglect; // 편측 무시
 
+    private int totalScore;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public void updateDiagnosis(boolean speech, double speechProbability) {
+        this.speech = speech;
+        this.speechProbability = speechProbability;
+    }
+
+    public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int totalScore) {
+        this.alertness = dto.getAlertness();
+        this.orientation = dto.getOrientation();
+        this.gaze = dto.getGaze();
+        this.visualField = dto.getVisualField();
+        this.leftArm = dto.getLeftArm();
+        this.rightArm = dto.getRightArm();
+        this.leftLeg = dto.getLeftLeg();
+        this.rightLeg = dto.getRightLeg();
+        this.limbAtaxia = dto.getLimbAtaxia();
+        this.sensory = dto.getSensory();
+        this.aphasia = dto.getAphasia();
+        this.neglect = dto.getNeglect();
+        this.totalScore = totalScore;
+    }
 }
