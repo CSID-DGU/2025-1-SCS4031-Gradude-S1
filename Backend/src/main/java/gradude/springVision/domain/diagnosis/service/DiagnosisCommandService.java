@@ -23,6 +23,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Map;
 
 @Transactional
@@ -154,13 +155,39 @@ public class DiagnosisCommandService {
         Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
-        int totalScore = selfDiagnosisRequestDTO.getAlertness() + selfDiagnosisRequestDTO.getOrientation() + selfDiagnosisRequestDTO.getGaze()
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+
+        int orientation = 0;
+
+        LocalDate today = LocalDate.now(); // 오늘 날짜
+
+        // 월 확인 (입력값 == 오늘 월)
+        if (selfDiagnosisRequestDTO.getOrientationMonth() != today.getDayOfMonth()) {
+            orientation += 1;
+        }
+
+        // 만나이 계산
+        LocalDate birth = user.getBirth();
+        int age = today.getYear() - birth.getYear();
+        if (today.getMonthValue() < birth.getMonthValue() ||
+                (today.getMonthValue() == birth.getMonthValue() && today.getDayOfMonth() < birth.getDayOfMonth())) {
+            // 생일이 아직 안 지났으면 한 살 빼기
+            age--;
+        }
+
+        // 입력한 만 나이와 비교
+        if (selfDiagnosisRequestDTO.getOrientationAge() != age) {
+            orientation += 1;
+        }
+
+        int totalScore = selfDiagnosisRequestDTO.getAlertness() + orientation + selfDiagnosisRequestDTO.getGaze()
                         + selfDiagnosisRequestDTO.getVisualField() + selfDiagnosisRequestDTO.getLeftArm() + selfDiagnosisRequestDTO.getRightArm()
                         + selfDiagnosisRequestDTO.getLeftLeg() + selfDiagnosisRequestDTO.getRightLeg() + selfDiagnosisRequestDTO.getLimbAtaxia()
                         + selfDiagnosisRequestDTO.getSensory() + selfDiagnosisRequestDTO.getAphasia() + selfDiagnosisRequestDTO.getNeglect()
                         + (diagnosis.isFace() ? 2 : 0) + (diagnosis.isSpeech() ? 2 : 0);
 
-        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, totalScore);
+        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore);
 
         return DiagnosisResponseDTO.from(diagnosis);
     }
