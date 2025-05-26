@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.BACKGRAY,
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 24,
   },
   progressContainer: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: SCREEN_WIDTH - 48,
-    height: 200,
+    height: 130,
     backgroundColor: colors.WHITE,
     borderRadius: 12,
     paddingHorizontal: 6,
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.BLACK,
     textAlign: 'center',
-    marginBottom: 16,
   },
   answerContainer: {
     marginTop: 10,

@@ -1,3 +1,4 @@
+// ResultScreen.tsx
 import React from 'react';
 import {
   View,
@@ -7,10 +8,10 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
+import {useRoute, RouteProp} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {colors, healthNavigations} from '@/constants';
-import type {RouteProp} from '@react-navigation/native';
-import {useRoute} from '@react-navigation/native';
 import type {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -51,8 +52,15 @@ function mapStatus(score: number) {
   }
 }
 
-export default function ResultScreen() {
+export default function HealthResultScreen() {
   const {answers} = useRoute<Route>().params;
+
+  // TODO: 실제 건강 점수로 교체해야 함
+  // 건강 점수 (0~100)
+  const totalScore = 70;
+  const CIRCLE_SIZE = SCREEN_WIDTH * 0.45;
+
+  // 상단 요약 데이터
   const summaryData = CATEGORY_CONFIG.map(cat => {
     const score = answers[cat.key] ?? 0;
     const {text, color} = mapStatus(score);
@@ -61,27 +69,50 @@ export default function ResultScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.summaryList}>
-        {summaryData.map(item => (
-          <View key={item.key} style={styles.summaryItem}>
-            <Ionicons
-              name="notifications-circle-outline"
-              size={48}
-              color={item.color}
-            />
-            <Text style={styles.summaryLabel}>{item.label}</Text>
-            <Text style={[styles.summaryStatus, {color: item.color}]}>
-              {item.status}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
+      {/* 스크롤 */}
+      <View style={styles.summarySection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.summaryList}>
+          {summaryData.map(item => (
+            <View key={item.key} style={styles.summaryItem}>
+              <Ionicons
+                name="notifications-circle-outline"
+                size={40}
+                color={item.color}
+              />
+              <Text style={styles.summaryLabel}>{item.label}</Text>
+              <Text style={[styles.summaryStatus, {color: item.color}]}>
+                {item.status}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* 원형  */}
+      <View style={styles.circleSection}>
+        <AnimatedCircularProgress
+          size={CIRCLE_SIZE}
+          width={12}
+          fill={totalScore}
+          tintColor={colors.MAINBLUE}
+          backgroundColor={colors.OBTN}
+          rotation={0}>
+          {() => (
+            <View style={styles.totalInner}>
+              <Text style={styles.totalScoreText}>{totalScore}</Text>
+              <Text style={styles.totalScoreLabel}>건강 점수</Text>
+            </View>
+          )}
+        </AnimatedCircularProgress>
+      </View>
+
+      {/* 하단 리스트 */}
       <View style={styles.lowerList}>
         {BOTTOM_CONFIG.map(item => {
-          const score = answers[item.key] ?? 0; // 1~5
+          const score = answers[item.key] ?? 0;
           const isFull = score === 5;
           return (
             <View key={item.key} style={styles.row}>
@@ -89,7 +120,7 @@ export default function ResultScreen() {
                 name={item.icon}
                 size={24}
                 color={colors.BLACK}
-                style={{width: 32}}
+                style={styles.rowIcon}
               />
               <Text style={styles.rowLabel}>{item.label}</Text>
               <Text style={styles.rowCount}>{score} / 5</Text>
@@ -118,39 +149,97 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.BACKGRAY,
-    paddingTop: 16,
+  },
+
+  //요약 스크롤
+  summarySection: {
+    marginTop: 16,
+    backgroundColor: colors.WHITE,
+    marginHorizontal: 24,
+    borderRadius: 12,
+    paddingVertical: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   summaryList: {
-    paddingHorizontal: 12,
-    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
   summaryItem: {
-    width: 80,
+    width: 70,
     alignItems: 'center',
     marginRight: 12,
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.BLACK,
     marginTop: 4,
   },
   summaryStatus: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     marginTop: 2,
   },
+
+  // 원형
+  circleSection: {
+    backgroundColor: colors.WHITE,
+    marginTop: 16,
+    marginBottom: 24,
+    marginHorizontal: 24,
+    borderRadius: 12,
+    paddingVertical: 24,
+    elevation: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  totalInner: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  totalScoreText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: colors.BLACK,
+  },
+  totalScoreLabel: {
+    fontSize: 14,
+    color: colors.BLACK,
+    marginTop: 4,
+  },
+
+  // 하단
   lowerList: {
-    marginTop: 24,
-    paddingHorizontal: 16,
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 8,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.WHITE,
+    backgroundColor: '#fff',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     marginBottom: 8,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  rowIcon: {
+    width: 32,
   },
   rowLabel: {
     flex: 1,

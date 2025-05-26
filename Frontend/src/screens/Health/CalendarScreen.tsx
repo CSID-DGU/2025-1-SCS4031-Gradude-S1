@@ -4,7 +4,6 @@ import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import {useNavigation} from '@react-navigation/native';
 import {colors, healthNavigations} from '@/constants';
 
-// 한국어 로케일 설정
 LocaleConfig.locales['kr'] = {
   monthNames: [
     '1월',
@@ -52,6 +51,7 @@ type RootStackParamList = {
   Quiz: {date: string};
 };
 
+// TODO : 오늘 날짜 설정 오류 수정 필요
 export default function CalendarScreen() {
   const navigation = useNavigation<any>();
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
