@@ -48,7 +48,6 @@ export default function MapScreen() {
   const [openId, setOpenId] = useState<string | null>(null);
   usePermission('LOCATION');
   useEffect(() => {
-    // 잠깐 지연을 줘야 mapRef가 붙습니다
     setTimeout(() => {
       mapRef.current?.animateCamera({
         center: {
