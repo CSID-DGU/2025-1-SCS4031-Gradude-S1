@@ -8,7 +8,8 @@ import lombok.Getter;
 public class SelfDiagnosisRequestDTO {
 
     private int alertness;
-    private int orientation;
+    private int orientationMonth;
+    private int orientationAge;
     private int gaze;
     private int visualField;
     private int leftArm;

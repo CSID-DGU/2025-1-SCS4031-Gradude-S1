@@ -68,6 +68,7 @@ public class Diagnosis extends BaseEntity {
     @Min(0) @Max(2)
     private int neglect; // 편측 무시
 
+    @Min(0) @Max(42)
     private int totalScore;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,9 +80,9 @@ public class Diagnosis extends BaseEntity {
         this.speechProbability = speechProbability;
     }
 
-    public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int totalScore) {
+    public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int orientation, int totalScore) {
         this.alertness = dto.getAlertness();
-        this.orientation = dto.getOrientation();
+        this.orientation = orientation;
         this.gaze = dto.getGaze();
         this.visualField = dto.getVisualField();
         this.leftArm = dto.getLeftArm();
