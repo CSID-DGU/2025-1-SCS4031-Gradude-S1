@@ -13,7 +13,7 @@ export type HealthStackParamList = {
   [healthNavigations.HEALTH_HOME]: undefined;
   [healthNavigations.CALENDAR]: undefined;
   [healthNavigations.HEALTH_DAIRY]: undefined;
-  [healthNavigations.HEALTH_RESULT]: undefined;
+  [healthNavigations.HEALTH_RESULT]: {answers: Record<string, number>};
   [healthNavigations.FINAL_RESULT_LIST]: undefined;
   [healthNavigations.STROKE_DETAIL]: undefined;
 };
@@ -57,8 +57,8 @@ function HealthStackNavigator() {
           component={HealthDairyScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
-            headerShown: false,
+            headerBackVisible: true,
+            headerShown: true,
           }}
         />
         <Stack.Screen
@@ -66,8 +66,8 @@ function HealthStackNavigator() {
           component={HealthResultScreen}
           options={{
             headerTitle: '',
-            headerBackVisible: false,
-            headerShown: false,
+            headerShown: true,
+            headerBackVisible: true,
           }}
         />
         <Stack.Screen
