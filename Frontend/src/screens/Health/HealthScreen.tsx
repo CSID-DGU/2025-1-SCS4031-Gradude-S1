@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 24,
   },
-  infoContainer: {paddingVertical: 12, alignItems: 'center'},
+  infoContainer: {paddingVertical: 4, alignItems: 'center'},
   infoBox: {
     backgroundColor: colors.WHITE,
     borderColor: colors.LIGHTGRAY,
@@ -267,6 +267,11 @@ const styles = StyleSheet.create({
   },
   infoBoxActive: {backgroundColor: colors.MAINBLUE},
   infoDate: {fontSize: 14, color: colors.GRAY},
-  infoScore: {fontSize: 14, color: colors.MAINBLUE, marginTop: 4},
+  infoScore: {
+    fontSize: 18,
+    color: colors.MAINBLUE,
+    marginTop: 4,
+    fontWeight: 500,
+  },
   infoTextActive: {color: '#fff'},
 });

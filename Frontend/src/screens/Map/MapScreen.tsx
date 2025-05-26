@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Modal,
@@ -47,7 +47,18 @@ export default function MapScreen() {
   const {userLocation, isUserLocationError} = useUserLocation();
   const [openId, setOpenId] = useState<string | null>(null);
   usePermission('LOCATION');
-
+  useEffect(() => {
+    // 잠깐 지연을 줘야 mapRef가 붙습니다
+    setTimeout(() => {
+      mapRef.current?.animateCamera({
+        center: {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+        },
+        zoom: 14,
+      });
+    }, 500);
+  }, [userLocation]);
   const handlePressUserLocation = () => {
     if (isUserLocationError) {
       Alert.alert('위치 정보를 가져올 수 없습니다.');
