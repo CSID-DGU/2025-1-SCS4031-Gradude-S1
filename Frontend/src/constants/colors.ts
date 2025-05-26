@@ -16,6 +16,7 @@ const colors = {
   XBTN: '#FF8C82',
   OBTN: '#7DBCFF',
   GREEN: '#34C759',
+  DISBLUE: '#A0C4FF',
 };
 
 export {colors};

@@ -37,8 +37,7 @@ function VoiceDisCard({onCallPress, onSelfPress}: VoiceDisCardProps) {
 
       <View style={styles.messageContainer}>
         <Text style={styles.mainmessage}>
-          발화에는 드러나지 않지만 얼굴 표정에 어색함이 있어 {'\n'}
-          각별한 주의가 필요합니다
+          발화에는 드러나지 않지만,{'\n'}얼굴 표정에 어색함이 있어요
         </Text>
         <Text style={styles.message}>
           이러한 증상은 뇌졸중과 관련이 있을 수 있어요{'\n'}
@@ -108,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.RED,
+    textAlign: 'center',
   },
   message: {
     fontSize: 16,

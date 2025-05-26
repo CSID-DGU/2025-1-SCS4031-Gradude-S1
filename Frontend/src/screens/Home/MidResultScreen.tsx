@@ -1,16 +1,18 @@
 import React from 'react';
 import {Linking, SafeAreaView, StyleSheet} from 'react-native';
-import CautionCard from '@/components/home/CautionCard';
-import NormalCard from '@/components/home/NormalCard';
+import CautionCard from '@/components/home/MidResultCard/CautionCard';
+import NormalCard from '@/components/home/MidResultCard/NormalCard';
 import {colors, homeNavigations} from '@/constants';
+import FaceDisCard from '@/components/home/MidResultCard/FaceDisCard';
+import VoiceDisCard from '@/components/home/MidResultCard/VoiceDisCard';
 
 interface MidResultScreenProps {
   navigation: any;
 }
 
 function MidResultScreen({navigation}: MidResultScreenProps) {
-  // 서버 연동 전, 임시 -> true: 정상, false: 위험
-  const isSuccess = true;
+  // TODO: 서버 연동 전, 4가지 버전에 따라 다름
+  const isSuccess = false;
 
   const handleCall119 = () => {
     const url = `tel:119`;
@@ -31,7 +33,7 @@ function MidResultScreen({navigation}: MidResultScreenProps) {
           onSelfPress={() => navigation.navigate(homeNavigations.SELF_DGS)}
         />
       ) : (
-        <CautionCard
+        <VoiceDisCard
           onCallPress={handleCall119}
           onSelfPress={() => navigation.navigate(homeNavigations.SELF_DGS)}
         />

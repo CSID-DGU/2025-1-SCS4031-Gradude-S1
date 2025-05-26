@@ -37,7 +37,7 @@ function FaceDisCard({onCallPress, onSelfPress}: FaceDisCardProps) {
 
       <View style={styles.messageContainer}>
         <Text style={styles.mainmessage}>
-          얼굴로 드러나지 않지만 발음이 어눌하여 주의해야합니다
+          얼굴로 드러나지 않지만 {'\n'}발음이 어눌하여 주의해야합니다
         </Text>
         <Text style={styles.message}>
           이러한 증상은 뇌졸중과 관련이 있을 수 있어요{'\n'}
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.RED,
+    textAlign: 'center',
   },
   message: {
     fontSize: 16,
