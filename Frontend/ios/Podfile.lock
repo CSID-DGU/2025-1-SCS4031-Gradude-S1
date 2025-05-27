@@ -1453,6 +1453,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-vector-icons-material-design-icons (12.0.0)
   - react-native-video (6.13.0):
     - DoubleConversion
     - glog
@@ -2140,6 +2141,7 @@ DEPENDENCIES:
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-vector-icons (from `../node_modules/@react-native-vector-icons/common`)"
+  - "react-native-vector-icons-material-design-icons (from `../node_modules/@react-native-vector-icons/material-design-icons`)"
   - react-native-video (from `../node_modules/react-native-video`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2292,6 +2294,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-vector-icons:
     :path: "../node_modules/@react-native-vector-icons/common"
+  react-native-vector-icons-material-design-icons:
+    :path: "../node_modules/@react-native-vector-icons/material-design-icons"
   react-native-video:
     :path: "../node_modules/react-native-video"
   react-native-webview:
@@ -2435,6 +2439,7 @@ SPEC CHECKSUMS:
   react-native-maps: cb754208646ef20406b41af816a88fd5318a4403
   react-native-safe-area-context: 8870dc3e45c8d241336cd8ee3fa3fc76f3a040ac
   react-native-vector-icons: 84befe4b9115b97e83fd68bfa03393f4e0e981d7
+  react-native-vector-icons-material-design-icons: 56bd797f1fc5746c08370a09f2452e3435915a35
   react-native-video: 38fb719b401f81fa38aa498fe7063855b16cbdf3
   react-native-webview: bfc7322cc9f570bc5b5b2251fb38a08da718d00a
   React-NativeModulesApple: 452b86b29fae99ed0a4015dca3ad9cd222f88abf

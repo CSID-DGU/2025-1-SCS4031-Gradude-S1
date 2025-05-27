@@ -1,6 +1,6 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {StyleSheet, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import {colors, healthNavigations} from '@/constants';
 import HealthScreen from '@/screens/Health/HealthScreen';
 import CalendarScreen from '../../screens/Health/CalendarScreen';
@@ -8,6 +8,7 @@ import HealthDairyScreen from '../../screens/Health/HealthDairyScreen';
 import HealthResultScreen from '@/screens/Health/HealthResultScreen';
 import FinalResultListScreen from '@/screens/Health/FinalResultListScreen';
 import StrokeScreen from '@/screens/Health/StrokeScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export type HealthStackParamList = {
   [healthNavigations.HEALTH_HOME]: undefined;
@@ -17,6 +18,8 @@ export type HealthStackParamList = {
   [healthNavigations.FINAL_RESULT_LIST]: undefined;
   [healthNavigations.STROKE_DETAIL]: undefined;
 };
+
+// TODO : 건강 수첩 결과지에서 캘린더 다시 눌렀을때 < BACK 사라지는지 확인
 
 const Stack = createNativeStackNavigator<HealthStackParamList>();
 function HealthStackNavigator() {
@@ -50,6 +53,9 @@ function HealthStackNavigator() {
           component={CalendarScreen}
           options={{
             headerTitle: '',
+            headerBackTitle: '',
+            headerBackVisible: true,
+            headerShown: true,
           }}
         />
         <Stack.Screen
@@ -64,11 +70,28 @@ function HealthStackNavigator() {
         <Stack.Screen
           name={healthNavigations.HEALTH_RESULT}
           component={HealthResultScreen}
-          options={{
-            headerTitle: '',
-            headerShown: true,
-            headerBackVisible: true,
-          }}
+          options={({navigation}) => ({
+            title: '오늘의 건강 점수',
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.reset({
+                    index: 1,
+                    routes: [
+                      {name: healthNavigations.HEALTH_HOME},
+                      {name: healthNavigations.CALENDAR},
+                    ],
+                  })
+                }
+                style={{marginRight: 16}}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={24}
+                  color={colors.BLACK}
+                />
+              </TouchableOpacity>
+            ),
+          })}
         />
         <Stack.Screen
           name={healthNavigations.FINAL_RESULT_LIST}
