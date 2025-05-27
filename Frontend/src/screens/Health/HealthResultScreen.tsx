@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {useRoute, RouteProp} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {colors, healthNavigations} from '@/constants';
 import type {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
@@ -69,7 +70,7 @@ export default function HealthResultScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 스크롤 */}
+      {/* 스크롤 부분 종들 TODO : 여기 약간 아이콘 바꾸고 싶은데.. 애매 */}
       <View style={styles.summarySection}>
         <ScrollView
           horizontal

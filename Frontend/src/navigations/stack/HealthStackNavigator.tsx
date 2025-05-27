@@ -74,15 +74,10 @@ function HealthStackNavigator() {
             title: '오늘의 건강 점수',
             headerRight: () => (
               <TouchableOpacity
-                onPress={() =>
-                  navigation.reset({
-                    index: 1,
-                    routes: [
-                      {name: healthNavigations.HEALTH_HOME},
-                      {name: healthNavigations.CALENDAR},
-                    ],
-                  })
-                }
+                onPress={() => {
+                  navigation.popToTop();
+                  navigation.navigate(healthNavigations.CALENDAR);
+                }}
                 style={{marginRight: 16}}>
                 <Ionicons
                   name="calendar-outline"

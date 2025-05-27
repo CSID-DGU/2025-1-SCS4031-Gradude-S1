@@ -206,6 +206,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
   },
   searchText: {
+    fontSize: 16,
     textAlign: 'center',
     fontWeight: 'bold',
     color: colors.GRAY,
