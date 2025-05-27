@@ -35,6 +35,7 @@ public enum ErrorCode {
     // Hospital Error
     HOSPITAL_NOT_FOUND(HttpStatus.NOT_FOUND, "HOSPITAL4000", "병원을 찾을 수 없습니다."),
     HOSPITAL_INVALID_SEARCH(HttpStatus.NOT_FOUND, "HOSPITAL4001", "병원 검색어는 두 글자 이상이어야 합니다."),
+    INVALID_HOSPITAL_OPENING_HOURS(HttpStatus.INTERNAL_SERVER_ERROR, "HOSPITAL4002", "병원 데이터 형식이 유효하지 않습니다."),
 
     // AI Error
     AI_PREDICTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI500", "AI 모델 진단 실패입니다."),
