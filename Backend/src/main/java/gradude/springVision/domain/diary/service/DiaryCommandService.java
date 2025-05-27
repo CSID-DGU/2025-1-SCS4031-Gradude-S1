@@ -47,6 +47,6 @@ public class DiaryCommandService {
         Diary diary = diaryRequestDTO.toEntity(user, diaryRequestDTO, healthScore);
         Diary savedDiary = diaryRepository.save(diary);
 
-        return DiaryResponseDTO.of(savedDiary.getId());
+        return DiaryResponseDTO.from(savedDiary);
     }
 }

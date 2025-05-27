@@ -1,8 +1,8 @@
 package gradude.springVision.domain.diary.service;
 
 import gradude.springVision.domain.diary.dto.response.DiaryCalendarResponseDTO;
-import gradude.springVision.domain.diary.dto.response.DiaryDetailResponseDTO;
 import gradude.springVision.domain.diary.dto.response.DiaryGraphResponseDTO;
+import gradude.springVision.domain.diary.dto.response.DiaryResponseDTO;
 import gradude.springVision.domain.diary.entity.Diary;
 import gradude.springVision.domain.diary.repository.DiaryRepository;
 import gradude.springVision.global.common.response.ErrorCode;
@@ -24,7 +24,7 @@ public class DiaryQueryService {
     /**
      * 하루 기록 조회
      */
-    public DiaryDetailResponseDTO getDiary(Long userId, Long diaryId) {
+    public DiaryResponseDTO getDiary(Long userId, Long diaryId) {
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.DIARY_NOT_FOUND));
 
@@ -32,7 +32,7 @@ public class DiaryQueryService {
             throw new GeneralException(ErrorCode.DIARY_ACCESS_DENIED);
         }
 
-        return DiaryDetailResponseDTO.from(diary);
+        return DiaryResponseDTO.from(diary);
     }
 
     /**
