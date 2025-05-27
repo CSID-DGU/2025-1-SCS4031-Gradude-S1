@@ -10,13 +10,15 @@ public class HospitalSearchResponseDTO {
 
     private Long hospitalId;
     private String name;
+    private double distance;
     private double latitude;
     private double longitude;
 
-    public static HospitalSearchResponseDTO from(Hospital hospital) {
+    public static HospitalSearchResponseDTO of(Hospital hospital, double distance) {
         return HospitalSearchResponseDTO.builder()
                 .hospitalId(hospital.getId())
                 .name(hospital.getName())
+                .distance(distance)
                 .latitude(hospital.getLatitude())
                 .longitude(hospital.getLongitude())
                 .build();

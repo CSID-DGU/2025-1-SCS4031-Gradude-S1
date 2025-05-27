@@ -18,6 +18,8 @@ public class HospitalDetailResponseDTO {
     private String phoneNumber;
     private OpeningHour openingHour;
     private Boolean isOpen;
+    private double latitude;
+    private double longitude;
 
     public static HospitalDetailResponseDTO ofMarker(Hospital hospital, double distance, boolean isOpen) {
         return HospitalDetailResponseDTO.builder()

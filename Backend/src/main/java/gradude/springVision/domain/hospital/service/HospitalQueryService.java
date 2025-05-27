@@ -20,13 +20,6 @@ public class HospitalQueryService {
 
     /**
      * TODO
-     * 병원 마커 띄울 목록 리스트 - id, 위경도
-     * 가까운 병원 6개 - id, 이름, 거리
-     * 병원 검색 - id, 이름, 거리
-     *      가까운 병원 6개랑 병원 검색랑 반환값 같음
-     * 병원 모달 조회 (id 입력) - id, 이름, 거리, 주소, 전화번호, 지금 열었는지
-     * 병원 상세 조회 (id 입력) - id, 이름, 거리, 주소, 전화번호, 월~일 시간
-     *
      * 가까운 병원 2개?? (자가진단지용)
      */
 
@@ -43,25 +36,29 @@ public class HospitalQueryService {
     /**
      * 병원 검색
      */
-    public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(String keyword, Pageable pageable) {
+    public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(double latitude, double longitude, String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
             throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
         }
 
-        Page<HospitalSearchResponseDTO> page = hospitalRepository.findByNameContaining(keyword, pageable)
-                .map(HospitalSearchResponseDTO::from);
+        Page<Hospital> hospitalPage = hospitalRepository.findByNameContaining(keyword, pageable);
 
-        return PageResponseDTO.of(page);
+        Page<HospitalSearchResponseDTO> dtoPage = hospitalPage.map(hospital -> {
+            double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
+            return HospitalSearchResponseDTO.of(hospital, distance);
+        });
+
+        return PageResponseDTO.of(dtoPage);
     }
 
     /**
      * 병원 마커 모달 조회
      */
-    public HospitalDetailResponseDTO getHospitalMarkerModal(double lat, double lng, Long hospitalId) {
+    public HospitalDetailResponseDTO getHospitalModal(double latitude, double longitude, Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        double distance = calculateDistance(lat, lng, hospital.getLatitude(), hospital.getLongitude());
+        double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
         boolean isOpen = false;
         if (hospital.getOpeningHour() != null) {
@@ -74,11 +71,11 @@ public class HospitalQueryService {
     /**
      * 병원 상세 조회
      */
-    public HospitalDetailResponseDTO getHospitalDetail(double lat, double lng, Long hospitalId) {
+    public HospitalDetailResponseDTO getHospitalDetail(double latitude, double longitude, Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        double distance = calculateDistance(lat, lng, hospital.getLatitude(), hospital.getLongitude());
+        double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
         return HospitalDetailResponseDTO.ofDetail(hospital, distance);
     }
