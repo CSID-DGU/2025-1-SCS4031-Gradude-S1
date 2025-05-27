@@ -2,7 +2,6 @@ package gradude.springVision.domain.diary.controller;
 
 import gradude.springVision.domain.diary.dto.request.DiaryRequestDTO;
 import gradude.springVision.domain.diary.dto.response.DiaryCalendarResponseDTO;
-import gradude.springVision.domain.diary.dto.response.DiaryDetailResponseDTO;
 import gradude.springVision.domain.diary.dto.response.DiaryGraphResponseDTO;
 import gradude.springVision.domain.diary.dto.response.DiaryResponseDTO;
 import gradude.springVision.domain.diary.service.DiaryCommandService;
@@ -36,7 +35,7 @@ public class DiaryController {
     @Operation(summary = "하루 기록 조회")
     @Parameter(name = "diaryId", description = "하루 기록 생성 및 캘린더 조회에서 받은 diaryId")
     @GetMapping("/{diaryId}")
-    public ApiResponse<DiaryDetailResponseDTO> getDiary(@AuthenticationPrincipal Long userId, @PathVariable("diaryId") Long diaryId) {
+    public ApiResponse<DiaryResponseDTO> getDiary(@AuthenticationPrincipal Long userId, @PathVariable("diaryId") Long diaryId) {
         return ApiResponse.onSuccess(diaryQueryService.getDiary(userId, diaryId));
     }
 
