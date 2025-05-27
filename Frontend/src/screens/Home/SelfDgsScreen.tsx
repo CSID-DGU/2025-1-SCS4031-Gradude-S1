@@ -1,37 +1,34 @@
 import React, {useState} from 'react';
-import {SafeAreaView} from 'react-native';
-import SelfDgsQuiz from '@/components/home/SelfDgsQuiz';
+import {Pressable, SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {colors, homeNavigations} from '@/constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
+import QuestionCard from '@/components/home/QuestionCard';
+import SELFDGSQUESTIONS, {Question} from '@/data/selfDgsQuestion';
+import CustomButton from '@/components/commons/CustomButton';
 
-type SelfDgsScreenProps = StackScreenProps<
+type Props = StackScreenProps<
   HomeStackParamList,
   typeof homeNavigations.SELF_DGS
 >;
 
-function SelfDgsScreen({navigation}: SelfDgsScreenProps) {
-  // dummy
-  const questions = [
-    '시야가 흐려지거나\n물체가 두 개로 보인 적이 있나요?',
-    '어지럼증이\n있었나요?',
-    '발음이 부정확하게\n들린 적이 있나요?',
-    '얼굴에 힘이 빠지거나\n마비된 느낌이 있나요?',
-    '갑자기 한쪽 팔다리에\n힘이 약해진 적이 있나요?',
-    '언어가 어눌하거나\n이해하기 어려웠던 적이 있나요?',
-    '걸을 때 균형을 잃거나\n현저히 흔들린 적이 있나요?',
-  ];
-
+export default function SelfDgsScreen({navigation}: Props) {
+  const [questions, setQuestions] = useState<Question[]>(
+    SELFDGSQUESTIONS.map(q => ({...q, answer: undefined})),
+  );
   const [step, setStep] = useState(1);
-  const [selectedAnswer, setSelectedAnswer] = useState<'O' | 'X' | null>(null);
-  const handleSelect = (value: 'O' | 'X') => {
-    setSelectedAnswer(prev => (prev === value ? null : value));
+  const total = questions.length;
+
+  const current = questions[step - 1];
+  //TODO: 선택된 질문을 request에 담아 서버로 전송
+  const selectOption = (value: number) => {
+    setQuestions(qs =>
+      qs.map(q => (q.id === current.id ? {...q, answer: value} : q)),
+    );
   };
   const handleNext = () => {
-    if (!selectedAnswer) return;
-    // TODO: 답안 저장 로직
-    if (step < questions.length) {
-      setSelectedAnswer(null);
+    if (current.answer === undefined) return;
+    if (step < total) {
       setStep(s => s + 1);
     } else {
       navigation.navigate(homeNavigations.FINAL_RESULT);
@@ -39,17 +36,50 @@ function SelfDgsScreen({navigation}: SelfDgsScreenProps) {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.BACKGRAY}}>
-      <SelfDgsQuiz
+    <SafeAreaView style={styles.safeArea}>
+      <QuestionCard
+        question={current}
+        onSelect={selectOption}
         step={step}
-        totalSteps={questions.length}
-        question={questions[step - 1]}
-        selectedAnswer={selectedAnswer}
-        onSelect={handleSelect}
-        onNext={handleNext}
+        total={total}
       />
+      <View style={styles.nextWrapper}>
+        <CustomButton
+          label={step < total ? '다음' : '완료'}
+          size="large"
+          variant="filled"
+          style={[
+            styles.nextBtn,
+            current.answer === undefined && styles.nextBtnDisabled,
+          ]}
+          textStyle={styles.nextLabel}
+          onPress={handleNext}
+          disabled={current.answer === undefined}
+        />
+      </View>
     </SafeAreaView>
   );
 }
 
-export default SelfDgsScreen;
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.BACKGRAY,
+  },
+  nextWrapper: {
+    padding: 28,
+    backgroundColor: colors.BACKGRAY,
+  },
+  nextBtn: {
+    backgroundColor: colors.MAINBLUE,
+    alignItems: 'center',
+  },
+  nextBtnDisabled: {
+    backgroundColor: colors.DISBLUE,
+  },
+  nextLabel: {
+    color: colors.WHITE,
+    fontSize: 20,
+    fontWeight: '600',
+  },
+});

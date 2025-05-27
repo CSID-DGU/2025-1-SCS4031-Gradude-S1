@@ -12,12 +12,12 @@ const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_W * 0.85;
 const CARD_HEIGHT = SCREEN_H * 0.65;
 
-interface CautionCardProps {
+interface VoiceDisCardProps {
   onCallPress: () => void;
   onSelfPress: () => void;
 }
 
-function CautionCard({onCallPress, onSelfPress}: CautionCardProps) {
+function VoiceDisCard({onCallPress, onSelfPress}: VoiceDisCardProps) {
   // 애니메이션 상태
   const rotateY = useSharedValue(90);
 
@@ -36,6 +36,9 @@ function CautionCard({onCallPress, onSelfPress}: CautionCardProps) {
       <Text style={styles.title}>주의가 필요합니다</Text>
 
       <View style={styles.messageContainer}>
+        <Text style={styles.mainmessage}>
+          발화에는 드러나지 않지만,{'\n'}얼굴 표정에 어색함이 있어요
+        </Text>
         <Text style={styles.message}>
           이러한 증상은 뇌졸중과 관련이 있을 수 있어요{'\n'}
           갑작스럽게 증상 발생하였다면{'\n'}
@@ -100,6 +103,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  mainmessage: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.RED,
+    textAlign: 'center',
+  },
   message: {
     fontSize: 16,
     color: colors.BLACK,
@@ -142,4 +151,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CautionCard;
+export default VoiceDisCard;

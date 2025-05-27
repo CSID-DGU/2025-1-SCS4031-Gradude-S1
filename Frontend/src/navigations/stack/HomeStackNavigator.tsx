@@ -9,7 +9,7 @@ import LoadingScreen from '@/screens/Home/LoadingScreen';
 import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
 import MidResultScreen from '@/screens/Home/MidResultScreen';
 import FinalResultScreen from '@/screens/Home/FinalResultScreen';
-import VideoPlayerScreen from '@/screens/Home/VideoPlayerScreen';
+
 import type {ImageSourcePropType} from 'react-native';
 import CameraScreen from '@/screens/Home/CameraScreen';
 
@@ -18,8 +18,8 @@ export type HomeStackParamList = {
   [homeNavigations.FACE_SMILE]: undefined;
   [homeNavigations.CAMERA]: undefined;
   [homeNavigations.RECORD]: {CameraUri: string};
-  [homeNavigations.LOADING]: undefined;
-  [homeNavigations.MID_RESULT]: {AudioUri: string};
+  [homeNavigations.LOADING]: {AudioUri: string};
+  [homeNavigations.MID_RESULT]: undefined;
   [homeNavigations.SELF_DGS]: undefined;
   [homeNavigations.FINAL_RESULT]: undefined;
   [homeNavigations.EXERCISE_LIST]: undefined;
@@ -109,14 +109,6 @@ function HomeStackNavigator() {
           component={FinalResultScreen}
           options={{
             headerTitle: '진단 결과',
-          }}
-        />
-        <Stack.Screen
-          name={homeNavigations.VIDEO_PLAYER}
-          component={VideoPlayerScreen}
-          options={{
-            headerTitle: '',
-            headerShown: false,
           }}
         />
       </Stack.Navigator>

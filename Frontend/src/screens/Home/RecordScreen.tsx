@@ -102,7 +102,7 @@ export default function RecordScreen({navigation}: RecordScreenProps) {
 
   // 다음 이동
   const handleNext = () => {
-    navigation.navigate(homeNavigations.MID_RESULT, {AudioUri: recordedPath!});
+    navigation.navigate(homeNavigations.LOADING, {AudioUri: recordedPath!});
   };
 
   // 다시 녹음

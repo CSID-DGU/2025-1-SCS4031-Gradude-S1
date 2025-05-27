@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
   ScrollView,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {LineChart} from 'react-native-chart-kit';
 import {colors, healthNavigations} from '@/constants';
 import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
@@ -19,10 +19,10 @@ import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const OUTER_PAD = 24; // SafeAreaView horizontal padding
-const INNER_PAD = 16; // card padding
+const OUTER_PAD = 24;
+const INNER_PAD = 16;
 const CHART_HEIGHT = 300;
-const CHART_WIDTH = SCREEN_WIDTH - OUTER_PAD * 2 - INNER_PAD * 2;
+const CHART_WIDTH = SCREEN_WIDTH - OUTER_PAD * 2 - INNER_PAD * 1.5;
 
 const BUTTON_MARGIN = 8;
 const BUTTON_COUNT = 3;
@@ -42,8 +42,7 @@ export default function HealthScreen() {
       >
     >();
 
-  // 원본 데이터 (오름차순)
-  // TODO : chart 컴포넌트로 빼기
+  // 예시 데이터
   const response = [
     {date: '2025-05-15', healthScore: 94},
     {date: '2025-05-16', healthScore: 56},
@@ -54,15 +53,10 @@ export default function HealthScreen() {
 
   const labels = response.map(r => r.date.slice(5).replace('-', '.'));
   const data = response.map(r => r.healthScore);
-
-  // ScrollView 최신순(역순)으로 보여줌
   const reversed = [...response].reverse();
 
   const [selectedIndex, setSelectedIndex] = useState(data.length - 1);
   const scrollRef = useRef<ScrollView>(null);
-
-  // x 간격 (renderDotContent 에서도 쓰일 수 있음)
-  const stepX = CHART_WIDTH / (data.length - 1);
 
   const onSelect = (origIdx: number) => {
     setSelectedIndex(origIdx);
@@ -74,17 +68,17 @@ export default function HealthScreen() {
 
   const buttons = [
     {
-      icon: 'calendar-clear-outline',
+      icon: 'calendar-check',
       label: '하루 기록',
       screen: healthNavigations.CALENDAR,
     },
     {
-      icon: 'pie-chart-outline',
+      icon: 'medical-bag',
       label: '진단 결과',
       screen: healthNavigations.FINAL_RESULT_LIST,
     },
     {
-      icon: 'information-circle-outline',
+      icon: 'brain',
       label: '뇌졸중이란?',
       screen: healthNavigations.STROKE_DETAIL,
     },
@@ -92,37 +86,55 @@ export default function HealthScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* TODO : 유저 이름 넣기 */}
+      {/* 헤더 */}
       <View style={styles.header}>
         <Text style={styles.title}>홍길동님의 건강 수첩</Text>
       </View>
+
+      {/* 하루 확인 */}
       <View style={styles.row}>
-        <Icon name="checkbox" size={25} color={colors.BLUE} />
+        <MaterialCommunityIcons
+          name="checkbox-marked-circle-outline"
+          size={25}
+          color={colors.BLUE}
+        />
         <Text style={styles.sectionTitle}>하루 한 번, 건강 확인</Text>
       </View>
+
+      {/* 버튼 액션 */}
       <View style={styles.actions}>
         {buttons.map(b => (
-          <TouchableOpacity
+          <Pressable
             key={b.label}
             onPress={() => navigation.navigate(b.screen)}
-            style={[
+            style={({pressed}) => [
               styles.actionBtn,
               {width: BUTTON_SIZE, height: BUTTON_SIZE},
+              {transform: [{scale: pressed ? 0.96 : 1}]},
             ]}>
             <LinearGradient
               colors={[colors.PURPLE, colors.MAINBLUE]}
               start={{x: 0.2, y: 0}}
               end={{x: 0, y: 1.4}}
               style={styles.gradient}>
-              <Icon name={b.icon} size={42} color={colors.WHITE} />
+              <MaterialCommunityIcons
+                name={b.icon}
+                size={42}
+                color={colors.WHITE}
+              />
               <Text style={styles.actionLabel}>{b.label}</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </Pressable>
         ))}
       </View>
 
+      {/* 차트 섹션 */}
       <View style={styles.sectionHeader}>
-        <Icon name="bar-chart" size={25} color={colors.BLUE} />
+        <MaterialCommunityIcons
+          name="chart-timeline-variant"
+          size={25}
+          color={colors.BLUE}
+        />
         <Text style={styles.sectionTitle}>나의 건강 점수</Text>
       </View>
 
@@ -134,25 +146,19 @@ export default function HealthScreen() {
           chartConfig={{
             backgroundGradientFrom: colors.WHITE,
             backgroundGradientTo: colors.WHITE,
-            backgroundGradientFromOpacity: 1,
-            backgroundGradientToOpacity: 1,
             decimalPlaces: 0,
             color: () => colors.MAINBLUE,
             labelColor: () => colors.BLACK,
-            fillShadowGradient: 'transparent',
-            fillShadowGradientOpacity: 0,
             propsForBackgroundLines: {
               stroke: colors.LIGHTGRAY,
               strokeDasharray: '4',
             },
-
             propsForDots: {r: '0'},
           }}
-          style={{alignSelf: 'center'}}
+          style={{marginHorizontal: -INNER_PAD}}
+          withShadow={false}
           withInnerLines
           withVerticalLines={false}
-          withHorizontalLabels
-          withVerticalLabels
           yLabelsOffset={10}
           yAxisSuffix="점"
           fromZero
@@ -161,7 +167,7 @@ export default function HealthScreen() {
           onDataPointClick={({index}) => onSelect(index)}
           renderDotContent={({x, y, index}) => {
             const isSelected = index === selectedIndex;
-            const size = isSelected ? 12 : 12;
+            const size = 12;
             return (
               <View
                 key={index}
@@ -172,9 +178,9 @@ export default function HealthScreen() {
                   width: size,
                   height: size,
                   borderRadius: size / 2,
-                  backgroundColor: isSelected
-                    ? colors.MAINBLUE
-                    : colors.LIGHTGRAY,
+                  backgroundColor: isSelected ? colors.MAINBLUE : colors.WHITE,
+                  borderWidth: isSelected ? 0 : 2,
+                  borderColor: isSelected ? 'transparent' : colors.MAINBLUE,
                 }}
               />
             );
@@ -182,6 +188,7 @@ export default function HealthScreen() {
         />
       </View>
 
+      {/* 날짜 리스트 */}
       <ScrollView
         horizontal
         ref={scrollRef}
@@ -197,21 +204,21 @@ export default function HealthScreen() {
             .toString()
             .padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`;
           return (
-            <TouchableOpacity
+            <Pressable
               key={origIdx}
+              onPress={() => onSelect(origIdx)}
               style={[
                 styles.infoBox,
                 {width: BOX_WIDTH, marginHorizontal: BOX_MARGIN},
                 active && styles.infoBoxActive,
-              ]}
-              onPress={() => onSelect(origIdx)}>
+              ]}>
               <Text style={[styles.infoDate, active && styles.infoTextActive]}>
                 {dateLabel}
               </Text>
               <Text style={[styles.infoScore, active && styles.infoTextActive]}>
                 {item.healthScore}점
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </ScrollView>
@@ -229,8 +236,27 @@ const styles = StyleSheet.create({
   header: {marginBottom: 16},
   title: {fontSize: 20, fontWeight: 'bold'},
   row: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
-  actions: {flexDirection: 'row', marginBottom: 24},
-  actionBtn: {marginHorizontal: BUTTON_MARGIN},
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {marginLeft: 8, fontSize: 18},
+  actions: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    justifyContent: 'space-between',
+  },
+  actionBtn: {
+    marginHorizontal: BUTTON_MARGIN,
+    // iOS 그림자
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    // Android elevation
+    elevation: 4,
+  },
   gradient: {
     flex: 1,
     alignItems: 'center',
@@ -243,12 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {marginLeft: 8, fontSize: 18},
   card: {
     backgroundColor: colors.WHITE,
     borderRadius: 16,
@@ -256,7 +276,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 24,
   },
-  infoContainer: {paddingVertical: 12, alignItems: 'center'},
+  infoContainer: {paddingVertical: 4, alignItems: 'center'},
   infoBox: {
     backgroundColor: colors.WHITE,
     borderColor: colors.LIGHTGRAY,
@@ -267,6 +287,11 @@ const styles = StyleSheet.create({
   },
   infoBoxActive: {backgroundColor: colors.MAINBLUE},
   infoDate: {fontSize: 14, color: colors.GRAY},
-  infoScore: {fontSize: 14, color: colors.MAINBLUE, marginTop: 4},
+  infoScore: {
+    fontSize: 18,
+    color: colors.MAINBLUE,
+    marginTop: 4,
+    fontWeight: '500',
+  },
   infoTextActive: {color: '#fff'},
 });
