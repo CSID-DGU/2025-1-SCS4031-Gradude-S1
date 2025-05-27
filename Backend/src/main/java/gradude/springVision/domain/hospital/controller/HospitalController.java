@@ -1,9 +1,9 @@
 package gradude.springVision.domain.hospital.controller;
-
 import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
 import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.service.HospitalQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
+import gradude.springVision.global.common.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -30,7 +30,7 @@ public class HospitalController {
     })
     @GetMapping("/{hospitalId}/marker")
     public ApiResponse<HospitalDetailResponseDTO> getHospitalMarkerDetail(@RequestParam double lat, @RequestParam double lng, @PathVariable Long hospitalId) {
-        return ApiResponse.onSuccess(hospitalQueryService.getHospitalMarkerDetail(lat, lng, hospitalId));
+        return ApiResponse.onSuccess(hospitalQueryService.getHospitalMarkerModal(lat, lng, hospitalId));
     }
 
     @Operation(summary = "병원 상세 조회", description = "isOpen: null 고정")
@@ -51,8 +51,8 @@ public class HospitalController {
             @Parameter(name = "size", description = "페이지 크기", example = "6")
     })
     @GetMapping("/search")
-    public ApiResponse<Page<HospitalSearchResponseDTO>> searchHospital(@RequestParam String keyword,
-                                                                       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "6") int size) {
+    public ApiResponse<PageResponseDTO<HospitalSearchResponseDTO>> searchHospital(@RequestParam String keyword,
+                                                                                  @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "6") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.onSuccess(hospitalQueryService.searchHospital(keyword, pageable));
     }

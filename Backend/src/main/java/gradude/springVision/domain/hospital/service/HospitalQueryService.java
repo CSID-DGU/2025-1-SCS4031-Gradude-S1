@@ -5,6 +5,7 @@ import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
 import gradude.springVision.global.common.response.ErrorCode;
+import gradude.springVision.global.common.response.PageResponseDTO;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,18 @@ import org.springframework.stereotype.Service;
 public class HospitalQueryService {
 
     private final HospitalRepository hospitalRepository;
+
+    /**
+     * TODO
+     * 병원 마커 띄울 목록 리스트 - id, 위경도
+     * 가까운 병원 6개 - id, 이름, 거리
+     * 병원 검색 - id, 이름, 거리
+     *      가까운 병원 6개랑 병원 검색랑 반환값 같음
+     * 병원 모달 조회 (id 입력) - id, 이름, 거리, 주소, 전화번호, 지금 열었는지
+     * 병원 상세 조회 (id 입력) - id, 이름, 거리, 주소, 전화번호, 월~일 시간
+     *
+     * 가까운 병원 2개?? (자가진단지용)
+     */
 
     /**
      * 지도 마커 기준 병원 리스트 조회
@@ -30,20 +43,21 @@ public class HospitalQueryService {
     /**
      * 병원 검색
      */
-    public Page<HospitalSearchResponseDTO> searchHospital(String keyword, Pageable pageable) {
+    public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
             throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
         }
 
-        Page<Hospital> page = hospitalRepository.findByNameContaining(keyword, pageable);
+        Page<HospitalSearchResponseDTO> page = hospitalRepository.findByNameContaining(keyword, pageable)
+                .map(HospitalSearchResponseDTO::from);
 
-        return page.map(HospitalSearchResponseDTO::from);
+        return PageResponseDTO.of(page);
     }
 
     /**
-     * 병원 마커 상세 조회
+     * 병원 마커 모달 조회
      */
-    public HospitalDetailResponseDTO getHospitalMarkerDetail(double lat, double lng, Long hospitalId) {
+    public HospitalDetailResponseDTO getHospitalMarkerModal(double lat, double lng, Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
 
@@ -51,7 +65,7 @@ public class HospitalQueryService {
 
         boolean isOpen = false;
         if (hospital.getOpeningHour() != null) {
-            isOpen = hospital.getOpeningHour().isOpenNow();
+            isOpen = hospital.isOpenNow();
         }
 
         return HospitalDetailResponseDTO.ofMarker(hospital, distance, isOpen);
