@@ -4,13 +4,16 @@ import gradude.springVision.domain.user.dto.response.LoginResponseDTO;
 import gradude.springVision.domain.user.dto.request.SignupRequestDTO;
 import gradude.springVision.domain.user.dto.request.TokenRequestDTO;
 import gradude.springVision.domain.user.dto.response.TokenResponseDTO;
+import gradude.springVision.domain.user.dto.response.UserResponseDTO;
 import gradude.springVision.domain.user.service.AuthCommandService;
+import gradude.springVision.domain.user.service.UserQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthCommandService authCommandService;
+    private final UserQueryService userQueryService;
 
     @Operation(summary = "카카오 로그인")
     @Parameter(name = "code", description = "query string parameter, 카카오에서 발급 받은 인가코드")
@@ -38,5 +42,11 @@ public class AuthController {
     @PostMapping("/reissue")
     public ApiResponse<TokenResponseDTO> reissue(@RequestBody TokenRequestDTO tokenRequestDTO) {
         return ApiResponse.onSuccess(authCommandService.reissue(tokenRequestDTO));
+    }
+
+    @Operation(summary = "프로필 조회")
+    @PostMapping("/profile")
+    public ApiResponse<UserResponseDTO> getUserInfo(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(userQueryService.getUserInfo(userId));
     }
 }
