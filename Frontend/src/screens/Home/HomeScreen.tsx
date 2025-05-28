@@ -103,7 +103,7 @@ function HomeScreen() {
               }}
               onPressOut={() => {
                 btnScale.value = withTiming(1, {duration: 100});
-                navigation.navigate(homeNavigations.RECORD);
+                navigation.navigate(homeNavigations.FACE_SMILE);
               }}
             />
           </Animated.View>

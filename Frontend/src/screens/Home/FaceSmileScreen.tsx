@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import SmileEmoji from '@/assets/Home/SmileEmoji.svg';
 import StraightEmoji from '@/assets/Home/StraightEmoji.svg';
-import BlinkEmoji from '@/assets/Home/BlinkEmoji.svg';
+import CloseEyeEmoji from '@/assets/Home/CloseEyeEmoji.svg';
 import CustomButton from '@/components/commons/CustomButton';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
@@ -65,7 +65,7 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
   }));
 
   // 1→2 구간에서는 윙크
-  const blinkStyle = useAnimatedStyle(() => ({
+  const CloseEyeStyle = useAnimatedStyle(() => ({
     opacity: emojiProgress.value >= 1 && emojiProgress.value < 2 ? 1 : 0,
   }));
 
@@ -98,8 +98,8 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
           <Animated.View style={[styles.emojiContainer, straight1Style]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
-          <Animated.View style={[styles.emojiContainer, blinkStyle]}>
-            <BlinkEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
+          <Animated.View style={[styles.emojiContainer, CloseEyeStyle]}>
+            <CloseEyeEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
           <Animated.View style={[styles.emojiContainer, straight2Style]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
