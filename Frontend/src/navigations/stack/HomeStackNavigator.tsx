@@ -17,7 +17,7 @@ export type HomeStackParamList = {
   [homeNavigations.MAIN_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
   [homeNavigations.CAMERA]: undefined;
-  [homeNavigations.RECORD]: {CameraUri: string};
+  [homeNavigations.RECORD]: undefined; // 추후에 추가
   [homeNavigations.LOADING]: {AudioUri: string};
   [homeNavigations.MID_RESULT]: undefined;
   [homeNavigations.SELF_DGS]: undefined;

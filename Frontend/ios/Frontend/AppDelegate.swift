@@ -3,6 +3,9 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import GoogleMaps    
+import AVFoundation
+
+
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,6 +18,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    let session = AVAudioSession.sharedInstance()
+    do {
+      try session.setCategory(.playAndRecord, options: .defaultToSpeaker)
+      // try session.setMode(.measurement)
+      try session.setActive(true)
+    } catch {
+      print("⚠️ AVAudioSession 설정 실패:", error)
+    }
     let apiKey = RNCConfig.env(for: "GOOGLE_MAPS_API_KEY")!
     GMSServices.provideAPIKey(apiKey)
     let delegate = ReactNativeDelegate()

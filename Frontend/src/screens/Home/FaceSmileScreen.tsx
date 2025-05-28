@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import SmileEmoji from '@/assets/Home/SmileEmoji.svg';
 import StraightEmoji from '@/assets/Home/StraightEmoji.svg';
-import BlinkEmoji from '@/assets/Home/BlinkEmoji.svg';
+import CloseEyeEmoji from '@/assets/Home/CloseEyeEmoji.svg';
 import CustomButton from '@/components/commons/CustomButton';
 import {colors, homeNavigations} from '@/constants';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
@@ -65,7 +65,7 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
   }));
 
   // 1→2 구간에서는 윙크
-  const blinkStyle = useAnimatedStyle(() => ({
+  const CloseEyeStyle = useAnimatedStyle(() => ({
     opacity: emojiProgress.value >= 1 && emojiProgress.value < 2 ? 1 : 0,
   }));
 
@@ -86,10 +86,9 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.card, cardStyle]}>
         <Text style={styles.title}>
-          정면을 바라본 채 무표정으로{'\n'}
-          1초간 유지한 뒤,{'\n'}
-          마지막 2초 동안 “이~” 소리를 내며{'\n'}
-          천천히 미소 지어주세요
+          3초 동안 정면을 바라본 채 {`\n`}
+          무표정으로 눈을 감았다 뜨고{`\n`}
+          천천히 미소를 지어주세요
         </Text>
         <Text style={styles.subtitle}>
           아래 그림대로 준비가 완료되면{'\n'}
@@ -99,8 +98,8 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
           <Animated.View style={[styles.emojiContainer, straight1Style]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
-          <Animated.View style={[styles.emojiContainer, blinkStyle]}>
-            <BlinkEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
+          <Animated.View style={[styles.emojiContainer, CloseEyeStyle]}>
+            <CloseEyeEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
           </Animated.View>
           <Animated.View style={[styles.emojiContainer, straight2Style]}>
             <StraightEmoji width={EMOJI_SIZE} height={EMOJI_SIZE} />
