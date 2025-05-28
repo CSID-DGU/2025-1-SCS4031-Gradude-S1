@@ -5,6 +5,7 @@ import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
 import gradude.springVision.global.common.response.ErrorCode;
+import gradude.springVision.global.common.response.PageResponseDTO;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,11 @@ import org.springframework.stereotype.Service;
 public class HospitalQueryService {
 
     private final HospitalRepository hospitalRepository;
+
+    /**
+     * TODO
+     * 가까운 병원 2개?? (자가진단지용)
+     */
 
     /**
      * 지도 마커 기준 병원 리스트 조회
@@ -30,28 +36,33 @@ public class HospitalQueryService {
     /**
      * 병원 검색
      */
-    public Page<HospitalSearchResponseDTO> searchHospital(String keyword, Pageable pageable) {
+    public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(double latitude, double longitude, String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
             throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
         }
 
-        Page<Hospital> page = hospitalRepository.findByNameContaining(keyword, pageable);
+        Page<Hospital> hospitalPage = hospitalRepository.findByNameContaining(keyword, pageable);
 
-        return page.map(HospitalSearchResponseDTO::from);
+        Page<HospitalSearchResponseDTO> dtoPage = hospitalPage.map(hospital -> {
+            double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
+            return HospitalSearchResponseDTO.of(hospital, distance);
+        });
+
+        return PageResponseDTO.of(dtoPage);
     }
 
     /**
-     * 병원 마커 상세 조회
+     * 병원 마커 모달 조회
      */
-    public HospitalDetailResponseDTO getHospitalMarkerDetail(double lat, double lng, Long hospitalId) {
+    public HospitalDetailResponseDTO getHospitalModal(double latitude, double longitude, Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        double distance = calculateDistance(lat, lng, hospital.getLatitude(), hospital.getLongitude());
+        double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
         boolean isOpen = false;
         if (hospital.getOpeningHour() != null) {
-            isOpen = hospital.getOpeningHour().isOpenNow();
+            isOpen = hospital.isOpenNow();
         }
 
         return HospitalDetailResponseDTO.ofMarker(hospital, distance, isOpen);
@@ -60,11 +71,11 @@ public class HospitalQueryService {
     /**
      * 병원 상세 조회
      */
-    public HospitalDetailResponseDTO getHospitalDetail(double lat, double lng, Long hospitalId) {
+    public HospitalDetailResponseDTO getHospitalDetail(double latitude, double longitude, Long hospitalId) {
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        double distance = calculateDistance(lat, lng, hospital.getLatitude(), hospital.getLongitude());
+        double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
         return HospitalDetailResponseDTO.ofDetail(hospital, distance);
     }

@@ -11,15 +11,19 @@ import lombok.Getter;
 @AllArgsConstructor
 public class HospitalDetailResponseDTO {
 
+    private Long id;
     private String name;
     private double distance;
     private String address;
     private String phoneNumber;
     private OpeningHour openingHour;
     private Boolean isOpen;
+    private double latitude;
+    private double longitude;
 
     public static HospitalDetailResponseDTO ofMarker(Hospital hospital, double distance, boolean isOpen) {
         return HospitalDetailResponseDTO.builder()
+                .id(hospital.getId())
                 .name(hospital.getName())
                 .address(hospital.getAddress())
                 .phoneNumber(hospital.getPhoneNumber())
