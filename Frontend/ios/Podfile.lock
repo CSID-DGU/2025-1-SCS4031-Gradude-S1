@@ -1879,6 +1879,8 @@ PODS:
     - Yoga
   - RNDateTimePicker (8.3.0):
     - React-Core
+  - RNFS (2.20.0):
+    - React-Core
   - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
@@ -2054,6 +2056,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNSound (0.11.2):
+    - React-Core
+    - RNSound/Core (= 0.11.2)
+  - RNSound/Core (0.11.2):
+    - React-Core
   - RNSVG (15.12.0):
     - React-Core
   - SocketRocket (0.7.1)
@@ -2179,10 +2186,12 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSound (from `../node_modules/react-native-sound`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - SplashView (from `../node_modules/react-native-splash-view`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
@@ -2370,6 +2379,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNPermissions:
@@ -2378,6 +2389,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSound:
+    :path: "../node_modules/react-native-sound"
   RNSVG:
     :path: "../node_modules/react-native-svg"
   SplashView:
@@ -2477,10 +2490,12 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: addfc2cb6511dbe199c56c6b26ede383b6c38919
   RNCMaskedView: dc63cbc7b2f614b8b4526e11ed677b36e92cd9fb
   RNDateTimePicker: a793ed8822283f576dd0a205a0916c5098c2611f
+  RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 1070e4e691b23028309d796cc30652d9875138c7
   RNPermissions: 3d8a74b3822f9496795ed115a56dbfde13521021
   RNReanimated: d5e68954fe8409a6555f33551c9297ef1648543e
   RNScreens: 4561eef339c3ebe8176b27e01af7ac494780f678
+  RNSound: 6c156f925295bdc83e8e422e7d8b38d33bc71852
   RNSVG: 769d0a2e79162d08639e1fbb43031adac58ed24c
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   SplashView: 153fb6488ffbac3e54b3b54b778497be5b39c1d8

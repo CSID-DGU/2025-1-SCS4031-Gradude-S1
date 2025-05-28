@@ -86,10 +86,9 @@ function FaceSmileScreen({navigation}: FaceSmileScreenProps) {
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.card, cardStyle]}>
         <Text style={styles.title}>
-          정면을 바라본 채 무표정으로{'\n'}
-          1초간 유지한 뒤,{'\n'}
-          마지막 2초 동안 “이~” 소리를 내며{'\n'}
-          천천히 미소 지어주세요
+          3초 동안 정면을 바라본 채 {`\n`}
+          무표정으로 눈을 감았다 뜨고{`\n`}
+          천천히 미소를 지어주세요
         </Text>
         <Text style={styles.subtitle}>
           아래 그림대로 준비가 완료되면{'\n'}
