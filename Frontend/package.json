@@ -41,6 +41,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-maps": "1.20.0",
     "react-native-modal-datetime-picker": "^18.0.0",
+    "react-native-pager-view": "^6.8.0",
     "react-native-permissions": "^5.4.0",
     "react-native-progress": "^5.0.1",
     "react-native-reanimated": "^3.17.5",
