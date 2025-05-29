@@ -60,3 +60,7 @@ cloud:
 external:
   facial-api-url: ${FACIAL_API_URL}
   speech-api-url: ${SPEECH_API_URL}
+
+openai:
+  secret-key: ${OPENAI_SECRET_KEY}
+  model: gpt-4o

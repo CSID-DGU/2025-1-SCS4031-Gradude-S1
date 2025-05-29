@@ -1,7 +1,7 @@
 package gradude.springVision.domain.diagnosis.service;
 
 import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO;
-import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResposneDTO;
+import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.entity.Diagnosis;
 import gradude.springVision.domain.diagnosis.repository.DiagnosisRepository;
@@ -24,6 +24,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Map;
 
 @Transactional
@@ -40,75 +41,62 @@ public class DiagnosisCommandService {
     private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
 
-    // TODO - 중복 코드 정리!!!!!!!!!!!!!!!!!
+    private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4"};
+    private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm"};
 
     /**
-     * 안면 자가 진단
+     * 안면+음성 자가 진단
      */
-    public AiDiagnosisResposneDTO faceDiagnosis(Long userId, MultipartFile file) {
+    public AiDiagnosisResponseDTO aiDiagnosis(Long userId, MultipartFile mp4File, MultipartFile wavFile) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
-        s3Service.uploadFile(userId, file, "video");
+        // 파일 확장자 검사
+        validateExtension(mp4File, ALLOWED_VIDEO_EXTENSIONS);
+        validateExtension(wavFile, ALLOWED_AUDIO_EXTENSIONS);
 
-        RestTemplate restTemplate = new RestTemplate();
+        // s3에 저장
+        s3Service.uploadFile(userId, mp4File, "video");
+        s3Service.uploadFile(userId, wavFile, "audio");
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(); // Multipart/form-data
-        try {
-            body.add("file", new ByteArrayResource(file.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return file.getOriginalFilename();
-                }
-            });
-        } catch (IOException e) {
-            throw new GeneralException(ErrorCode.FILE_UPLOAD_FAILED);
-        }
+        // 안면 자가진단
+        Map<String, Object> faceResult = callAiApi(facialApiUrl, mp4File);
+        boolean facePrediction = ((int) faceResult.get("prediction")) == 1;
+        double faceProbability = (double) faceResult.get("probability");
 
-        // TODO - 파일 확장자 영상인지 확인
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        // 음성 자가진단
+        Map<String, Object> speechResult = callAiApi(speechApiUrl, wavFile);
+        boolean speechPrediction = ((int) speechResult.get("prediction")) == 1;
+        double speechProbability = (double) speechResult.get("probability");
 
-        // TODO - 예외처리 단계별로!!! ai 응답 결과도 고려하기
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(facialApiUrl, requestEntity, Map.class); // API 호출
+        // 진단 엔티티 생성 및 저장
+        Diagnosis diagnosis = Diagnosis.builder()
+                .user(user)
+                .face(facePrediction)
+                .faceProbability(faceProbability)
+                .speech(speechPrediction)
+                .speechProbability(speechProbability)
+                .build();
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> respBody = response.getBody();
+        diagnosisRepository.save(diagnosis);
 
-                boolean isFacePositive = ((int) respBody.get("prediction")) == 1;
-                double probability = (double) respBody.get("probability");
-
-                // 진단 엔티티 생성 및 저장
-                Diagnosis diagnosis = Diagnosis.builder()
-                        .user(user)
-                        .face(isFacePositive)
-                        .faceProbability(probability)
-                        .build();
-
-                diagnosisRepository.save(diagnosis);
-                return AiDiagnosisResposneDTO.of(isFacePositive, probability);
-            } else {
-                throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
-            }
-        } catch (Exception e) {
-            throw new GeneralException(ErrorCode.AI_CALL_FAILED);
-        }
+        return AiDiagnosisResponseDTO.of(facePrediction, faceProbability, speechPrediction, speechProbability);
     }
 
     /**
-     * 음성 자가 진단
+     * 파일 확장자 검사
      */
-    public AiDiagnosisResposneDTO speechDiagnosis(Long userId, MultipartFile file) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+    private void validateExtension(MultipartFile file, String[] allowedExtensions) {
+        String filename = file.getOriginalFilename();
+        if (filename == null ||
+                Arrays.stream(allowedExtensions)
+                        .noneMatch(ext -> filename.toLowerCase().endsWith("." + ext))) {
+            throw new GeneralException(ErrorCode.FILE_EXTENSION_NOT_SUPPORTED);
+        }
+    }
 
-        Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
-                .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
-
-        s3Service.uploadFile(userId, file, "audio");
-
+    // 자가진단 AI API 호출
+    private Map<String, Object> callAiApi(String apiUrl, MultipartFile file) {
         RestTemplate restTemplate = new RestTemplate();
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(); // Multipart/form-data
@@ -123,23 +111,14 @@ public class DiagnosisCommandService {
             throw new GeneralException(ErrorCode.FILE_UPLOAD_FAILED);
         }
 
-        // TODO - 파일 확장자 음성인지 확인
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(speechApiUrl, requestEntity, Map.class); // API 호출
-
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, requestEntity, Map.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> respBody = response.getBody();
-
-                boolean isSpeechPositive = ((int) respBody.get("prediction")) == 1;
-                double probability = (double) respBody.get("probability");
-
-                diagnosis.updateDiagnosis(isSpeechPositive, probability);
-
-                return AiDiagnosisResposneDTO.of(isSpeechPositive, probability);
+                return response.getBody();
             } else {
                 throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
             }
