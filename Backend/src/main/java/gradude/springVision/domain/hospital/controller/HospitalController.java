@@ -70,6 +70,8 @@ public class HospitalController {
 
     @Operation(summary = "병원 검색", description = "2글자 이상 입력 -> 페이지네이션 병원 리스트")
     @Parameters({
+            @Parameter(name = "latitude", description = "현위치 위도"),
+            @Parameter(name = "longitude", description = "현위치 경도"),
             @Parameter(name = "keyword", description = "검색 키워드 (2자 이상)" ),
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
             @Parameter(name = "size", description = "페이지 크기", example = "6")
