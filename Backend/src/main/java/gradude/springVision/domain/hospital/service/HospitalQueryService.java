@@ -1,6 +1,7 @@
 package gradude.springVision.domain.hospital.service;
 
 import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
 import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
@@ -25,9 +26,21 @@ public class HospitalQueryService {
     // TODO - 뇌졸중 인증센터 여부 넣기
 
     /**
-     * TODO - 지도 중심 좌표와 반경(km) 기준으로 병원 마커 리스트 조회 - List<HospitalMarkerResponseDTO>
-     *    북동, 남서 모서리 위경도 받아오기?
+     * 병원 지도 마커 좌표 리스트 조회
+     * 지도 화면의 북동, 남서 모서리 좌표를 기준
      */
+    public List<HospitalMarkerResponseDTO> getHospitalMarkers(double neLatitude, double neLongitude, double swLatitude, double swLongitude) {
+        List<Object[]> rows = hospitalRepository.findHospitalsWithinBounds(neLatitude, neLongitude, swLatitude, swLongitude);
+
+        return rows.stream()
+                .map(row -> {
+                    Long id = ((Number) row[0]).longValue();
+                    double latitude = ((Number) row[1]).doubleValue();
+                    double longitude = ((Number) row[2]).doubleValue();
+                    return HospitalMarkerResponseDTO.of(id, latitude, longitude);
+                })
+                .toList();
+    }
 
     /**
      * 현위치로부터 가까운 병원 (6개) 가까운 순 정렬

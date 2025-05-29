@@ -38,4 +38,12 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
     LIMIT 6
     """, nativeQuery = true)
     List<Object[]> findHospitalsWithinRadius(@Param("lat") double lat, @Param("lng") double lng, @Param("radius") double radius);
+
+    @Query(value = """
+    SELECT h.id, h.latitude, h.longitude
+    FROM hospital h
+    WHERE h.latitude BETWEEN :swLat AND :neLat
+      AND h.longitude BETWEEN :swLng AND :neLng
+    """, nativeQuery = true)
+    List<Object[]> findHospitalsWithinBounds(@Param("neLat") double neLat, @Param("neLng") double neLng, @Param("swLat") double swLat, @Param("swLng") double swLng);
 }
