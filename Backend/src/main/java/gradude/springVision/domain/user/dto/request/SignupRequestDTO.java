@@ -34,7 +34,7 @@ public class SignupRequestDTO {
 
     @NotNull
     @AssertTrue
-    private boolean isFaceRecognitionAgreed;
+    private boolean faceRecognitionAgreed;
 
     private String profileImageUrl;
 
@@ -44,7 +44,7 @@ public class SignupRequestDTO {
                 .nickname(this.nickname)
                 .gender(this.gender)
                 .birth(this.birth)
-                .isFaceRecognitionAgreed(this.isFaceRecognitionAgreed)
+                .faceRecognitionAgreed(this.faceRecognitionAgreed)
                 .profileImageUrl(this.profileImageUrl)
                 .build();
     }

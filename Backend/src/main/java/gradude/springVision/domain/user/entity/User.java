@@ -36,7 +36,7 @@ public class User extends BaseEntity {
     private LocalDate birth;
 
     @Column(nullable = false)
-    private boolean isFaceRecognitionAgreed;
+    private boolean faceRecognitionAgreed;
 
     private String profileImageUrl;
 
