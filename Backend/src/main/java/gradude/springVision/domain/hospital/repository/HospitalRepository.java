@@ -35,7 +35,6 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
         )
     ) <= :radius
     ORDER BY distance
-    LIMIT 6
     """, nativeQuery = true)
     List<Object[]> findHospitalsWithinRadius(@Param("lat") double lat, @Param("lng") double lng, @Param("radius") double radius);
 

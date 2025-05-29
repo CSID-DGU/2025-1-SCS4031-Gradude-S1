@@ -28,4 +28,17 @@ public class OpeningHour {
             case SUNDAY -> sunday;
         };
     }
+
+    public static OpeningHour alwaysOpen() {
+        OpeningHour hour = new OpeningHour();
+        String time = "00:00~24:00";
+        hour.monday = time;
+        hour.tuesday = time;
+        hour.wednesday = time;
+        hour.thursday = time;
+        hour.friday = time;
+        hour.saturday = time;
+        hour.sunday = time;
+        return hour;
+    }
 }
