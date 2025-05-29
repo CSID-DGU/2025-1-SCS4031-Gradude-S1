@@ -31,7 +31,7 @@ public class HospitalController {
             @Parameter(name = "swLatitude", description = "남서 위도"),
             @Parameter(name = "swLongitude", description = "남서 경도")
     })
-    @GetMapping("/nearest")
+    @GetMapping
     public ApiResponse<List<HospitalMarkerResponseDTO>> getHospitalMarkers(@RequestParam double neLatitude, double neLongitude, double swLatitude, double swLongitude) {
         return ApiResponse.onSuccess(hospitalQueryService.getHospitalMarkers(neLatitude, neLongitude, swLatitude, swLongitude));
     }
