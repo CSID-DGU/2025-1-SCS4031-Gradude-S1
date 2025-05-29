@@ -40,7 +40,7 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
     List<Object[]> findHospitalsWithinRadius(@Param("lat") double lat, @Param("lng") double lng, @Param("radius") double radius);
 
     @Query(value = """
-    SELECT h.id, h.latitude, h.longitude
+    SELECT h.id, h.latitude, h.longitude, h.stroke_center    
     FROM hospital h
     WHERE h.latitude BETWEEN :swLat AND :neLat
       AND h.longitude BETWEEN :swLng AND :neLng

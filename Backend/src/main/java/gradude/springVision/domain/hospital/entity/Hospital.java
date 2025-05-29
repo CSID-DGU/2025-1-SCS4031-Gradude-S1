@@ -43,6 +43,9 @@ public class Hospital extends BaseEntity {
     @Embedded
     private OpeningHour openingHour;
 
+    @Column(nullable = false)
+    private boolean strokeCenter;
+
     /**
      * 현재 시간 기준 병원 운영 여부
      */

@@ -16,8 +16,9 @@ public class HospitalDetailResponseDTO {
     private double distance;
     private String address;
     private String phoneNumber;
+    private boolean isOpen;
     private OpeningHour openingHour;
-    private Boolean isOpen;
+    private boolean strokeCenter;
     private double latitude;
     private double longitude;
 
@@ -25,20 +26,27 @@ public class HospitalDetailResponseDTO {
         return HospitalDetailResponseDTO.builder()
                 .hospitalId(hospital.getId())
                 .name(hospital.getName())
+                .distance(distance)
                 .address(hospital.getAddress())
                 .phoneNumber(hospital.getPhoneNumber())
-                .distance(distance)
                 .isOpen(isOpen)
+                .strokeCenter(hospital.isStrokeCenter())
+                .latitude(hospital.getLatitude())
+                .longitude(hospital.getLongitude())
                 .build();
     }
 
     public static HospitalDetailResponseDTO ofDetail(Hospital hospital, double distance) {
         return HospitalDetailResponseDTO.builder()
+                .hospitalId(hospital.getId())
                 .name(hospital.getName())
+                .distance(distance)
                 .address(hospital.getAddress())
                 .phoneNumber(hospital.getPhoneNumber())
-                .distance(distance)
                 .openingHour(hospital.getOpeningHour())
+                .strokeCenter(hospital.isStrokeCenter())
+                .latitude(hospital.getLatitude())
+                .longitude(hospital.getLongitude())
                 .build();
     }
 }

@@ -23,8 +23,6 @@ public class HospitalQueryService {
 
     private final double EARTH_RADIUS = 6371.0;
 
-    // TODO - 뇌졸중 인증센터 여부 넣기
-
     /**
      * 병원 지도 마커 좌표 리스트 조회
      * 지도 화면의 북동, 남서 모서리 좌표를 기준
@@ -37,7 +35,8 @@ public class HospitalQueryService {
                     Long id = ((Number) row[0]).longValue();
                     double latitude = ((Number) row[1]).doubleValue();
                     double longitude = ((Number) row[2]).doubleValue();
-                    return HospitalMarkerResponseDTO.of(id, latitude, longitude);
+                    boolean strokeCenter = (boolean) row[3];
+                    return HospitalMarkerResponseDTO.of(id, latitude, longitude, strokeCenter);
                 })
                 .toList();
     }
