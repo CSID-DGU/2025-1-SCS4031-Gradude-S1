@@ -10,17 +10,27 @@ public class HospitalSearchResponseDTO {
 
     private Long hospitalId;
     private String name;
-    private double distance;
     private double latitude;
     private double longitude;
+    private double distance;
 
-    public static HospitalSearchResponseDTO of(Hospital hospital, double distance) {
+    public static HospitalSearchResponseDTO ofSearch(Hospital hospital, double distance) {
         return HospitalSearchResponseDTO.builder()
                 .hospitalId(hospital.getId())
                 .name(hospital.getName())
-                .distance(distance)
                 .latitude(hospital.getLatitude())
                 .longitude(hospital.getLongitude())
+                .distance(distance)
+                .build();
+    }
+
+    public static HospitalSearchResponseDTO ofNearest(Long id, String name, double latitude, double longitude, double distance) {
+        return HospitalSearchResponseDTO.builder()
+                .hospitalId(id)
+                .name(name)
+                .latitude(latitude)
+                .longitude(longitude)
+                .distance(distance)
                 .build();
     }
 }

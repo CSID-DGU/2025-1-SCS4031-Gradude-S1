@@ -1,5 +1,6 @@
 package gradude.springVision.domain.hospital.controller;
 import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
 import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.service.HospitalQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Tag(name = "병원 API", description = "병원 관련 API")
 @RequestMapping("/api/hospital")
@@ -21,10 +24,32 @@ public class HospitalController {
 
     private final HospitalQueryService hospitalQueryService;
 
-    @Operation(summary = "병원 마커 상세 조회", description = "openingHour: null 고정")
+    @Operation(summary = "병원 지도 마커 좌표 리스트 조회")
     @Parameters({
-            @Parameter(name = "latitude", description = "위도"),
-            @Parameter(name = "longitude", description = "경도"),
+            @Parameter(name = "neLatitude", description = "북동 위도"),
+            @Parameter(name = "neLongitude", description = "북동 경도"),
+            @Parameter(name = "swLatitude", description = "남서 위도"),
+            @Parameter(name = "swLongitude", description = "남서 경도")
+    })
+    @GetMapping
+    public ApiResponse<List<HospitalMarkerResponseDTO>> getHospitalMarkers(@RequestParam double neLatitude, double neLongitude, double swLatitude, double swLongitude) {
+        return ApiResponse.onSuccess(hospitalQueryService.getHospitalMarkers(neLatitude, neLongitude, swLatitude, swLongitude));
+    }
+
+    @Operation(summary = "가까운 병원 6개 조회(검색창 눌렀을 때 뜨는거)")
+    @Parameters({
+            @Parameter(name = "latitude", description = "현위치 위도"),
+            @Parameter(name = "longitude", description = "현위치 경도")
+    })
+    @GetMapping("/nearest")
+    public ApiResponse<List<HospitalSearchResponseDTO>> getNearestHospital(@RequestParam double latitude, @RequestParam double longitude) {
+        return ApiResponse.onSuccess(hospitalQueryService.getNearestHospitals(latitude, longitude));
+    }
+
+    @Operation(summary = "병원 마커 모달 조회", description = "openingHour: null 고정")
+    @Parameters({
+            @Parameter(name = "latitude", description = "현위치 위도"),
+            @Parameter(name = "longitude", description = "현위치 경도"),
             @Parameter(name = "hospitalId", description = "병원id")
     })
     @GetMapping("/{hospitalId}/marker")
@@ -34,8 +59,8 @@ public class HospitalController {
 
     @Operation(summary = "병원 상세 조회", description = "isOpen: null 고정")
     @Parameters({
-            @Parameter(name = "latitude", description = "위도"),
-            @Parameter(name = "longitude", description = "경도"),
+            @Parameter(name = "latitude", description = "현위치 위도"),
+            @Parameter(name = "longitude", description = "현위치 경도"),
             @Parameter(name = "hospitalId", description = "병원id")
     })
     @GetMapping("/{hospitalId}/detail")
