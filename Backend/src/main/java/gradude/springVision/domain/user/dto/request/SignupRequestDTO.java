@@ -34,7 +34,7 @@ public class SignupRequestDTO {
 
     @NotNull
     @AssertTrue
-    private Boolean isFaceRecognitionAgreed;
+    private boolean isFaceRecognitionAgreed;
 
     private String profileImageUrl;
 
