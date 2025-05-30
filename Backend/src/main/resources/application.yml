@@ -64,3 +64,9 @@ external:
 openai:
   secret-key: ${OPENAI_SECRET_KEY}
   model: gpt-4o
+
+frontend:
+  local: ${FRONTEND_LOCAL}
+
+backend:
+  dev: ${BACKEND_DEV}
