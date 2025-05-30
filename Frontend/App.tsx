@@ -16,7 +16,6 @@ function App() {
       hideSplash();
     }, 500);
   }, []);
-
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

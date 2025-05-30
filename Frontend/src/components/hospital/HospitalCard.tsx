@@ -1,23 +1,53 @@
 import React from 'react';
-import {SafeAreaView, View, Text, StyleSheet, FlatList} from 'react-native';
-import {colors} from '@/constants';
-import {Hospital} from '@/types/hospital';
+import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {colors} from '@/constants';
+import {useHospitalMarker} from '@/hooks/queries/useHospitals';
 
-interface HospitalCardProps {
-  item: Hospital;
+interface HospitalMarkerCardProps {
+  hospitalId: string;
+  userLatitude: number;
+  userLongitude: number;
 }
-function HospitalCard({item}: HospitalCardProps) {
+
+export default function HospitalCard({
+  hospitalId,
+  userLatitude,
+  userLongitude,
+}: HospitalMarkerCardProps) {
+  const {data, isLoading, isError} = useHospitalMarker(
+    hospitalId,
+    userLatitude,
+    userLongitude,
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </View>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>병원 정보를 불러오지 못했습니다.</Text>
+      </View>
+    );
+  }
+
+  // data: HospitalDetail
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{item.name}</Text>
-        <Text style={styles.distance}>{item.distance}km</Text>
+        <Text style={styles.title}>{data.name}</Text>
+        <Text style={styles.distance}>{data.distance.toFixed(1)}km</Text>
       </View>
-      <Text style={styles.address}>{item.address}</Text>
+      <Text style={styles.address}>{data.address}</Text>
       <View style={styles.infoRow}>
         <Ionicons name="call" size={16} color={colors.GRAY} />
-        <Text style={styles.infoText}>{item.phoneNumber}</Text>
+        <Text style={styles.infoText}>{data.phoneNumber}</Text>
         <Ionicons
           name="time"
           size={16}
@@ -27,9 +57,9 @@ function HospitalCard({item}: HospitalCardProps) {
         <Text
           style={[
             styles.infoText,
-            item.isOpen ? styles.openText : styles.closedText,
+            data.open ? styles.openText : styles.closedText,
           ]}>
-          {item.isOpen ? '진료 중' : '진료 마감'}
+          {data.open ? '진료 중' : '진료 마감'}
         </Text>
       </View>
     </View>
@@ -37,6 +67,20 @@ function HospitalCard({item}: HospitalCardProps) {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.RED,
+  },
   card: {
     height: 110,
     backgroundColor: colors.WHITE,
@@ -94,5 +138,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default HospitalCard;
