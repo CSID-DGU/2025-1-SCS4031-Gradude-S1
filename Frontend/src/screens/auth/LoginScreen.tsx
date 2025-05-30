@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Dimensions, StyleSheet, Text, View} from 'react-native';
+import {Dimensions, StyleSheet, Text, View} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
@@ -7,7 +7,6 @@ import CustomButton from '@/components/commons/CustomButton';
 import {authNavigations, colors} from '@/constants';
 import MainIconBlue from '@/assets/icons/MainIconBlue.svg';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Config from 'react-native-config';
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,

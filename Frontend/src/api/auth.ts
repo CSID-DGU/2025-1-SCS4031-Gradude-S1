@@ -1,4 +1,4 @@
-import axiosInstance from 'axios';
+import axiosInstance from '@/api/axios';
 import {getEncryptStorage} from '@/utils';
 import type {
   KakaoLoginResponse,
@@ -27,7 +27,6 @@ export const postSignup = async (
 export const getAccessToken = async (): Promise<TokenResponse> => {
   const refreshToken = await getEncryptStorage(storageKeys.REFRESH_TOKEN);
 
-  // ❶ 빈 바디를 두고 ❷ 헤더는 세 번째 인자로 전달
   const {data} = await axiosInstance.post(
     '/api/auth/reissue',
     {}, // 빈 바디
@@ -40,7 +39,6 @@ export const getAccessToken = async (): Promise<TokenResponse> => {
 
   // 만약 API가 { result: TokenResponse } 형태라면:
   // return data.result;
-
   // 아니라 data가 곧 TokenResponse라면:
   return data;
 };

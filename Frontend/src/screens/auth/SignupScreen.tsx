@@ -14,12 +14,13 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {StackScreenProps} from '@react-navigation/stack';
 import useForm from '@/hooks/useForm';
 import useAuth from '@/hooks/queries/useAuth';
-import {useGetProfile} from '@/hooks/queries/useAuthHelpers';
 import {validateSignup} from '@/utils/validate';
 import {authNavigations, colors, homeNavigations} from '@/constants';
 import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
 import GenderToggle from '@/components/GenderToggle';
 import CustomButton from '@/components/commons/CustomButton';
+import type {SignupRequest} from '@/types/auth';
+import {Profile} from '@/types/profile';
 
 type SignupProps = StackScreenProps<
   AuthStackParamList,
@@ -27,12 +28,23 @@ type SignupProps = StackScreenProps<
 >;
 
 export default function SignupScreen({navigation}: SignupProps) {
-  const {data: profile, isLoading, isError} = useGetProfile();
-  const {signupMutation} = useAuth();
+  const {preSignupUserInfo, signupMutation} = useAuth();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-  const form = useForm({
+  console.log('🟡 SignupScreen preSignupUserInfo:', preSignupUserInfo);
+  // 카카오 로그인 직후 userInfo 가 로드될 때까지 로딩 상태
+  if (!preSignupUserInfo) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </SafeAreaView>
+    );
+  }
+  const form = useForm<Profile>({
     initialValue: {
+      kakaoId: preSignupUserInfo.kakaoId,
+      nickname: preSignupUserInfo.nickname,
+      profileImageUrl: preSignupUserInfo.profileImageUrl,
       gender: 'MALE',
       birth: '',
       isFaceRecognitionAgreed: false,
@@ -48,17 +60,17 @@ export default function SignupScreen({navigation}: SignupProps) {
   };
 
   const handleSignup = () => {
-    if (!profile) return;
     signupMutation.mutate(
       {
-        kakaoId: profile.kakaoId,
-        nickname: profile.nickname,
-        profileImageUrl: profile.profileImageUrl,
-        ...form.values,
+        kakaoId: preSignupUserInfo.kakaoId,
+        nickname: preSignupUserInfo.nickname,
+        profileImageUrl: preSignupUserInfo.profileImageUrl,
+        gender: form.values.gender,
+        birth: form.values.birth,
+        isFaceRecognitionAgreed: form.values.isFaceRecognitionAgreed,
       },
       {
         onSuccess: () => {
-          // 가입 성공 시 Main 탭으로 이동
           navigation.getParent()?.reset({
             index: 0,
             routes: [{name: homeNavigations.MAIN_HOME}],
@@ -68,43 +80,22 @@ export default function SignupScreen({navigation}: SignupProps) {
     );
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.MAINBLUE} />
-      </SafeAreaView>
-    );
-  }
-
-  if (isError || !profile) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={{color: colors.RED, textAlign: 'center'}}>
-          프로필 정보를 불러오는 데 실패했습니다.
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.form}>
-        {/* 아바타·닉네임 */}
         <View style={styles.inputContainer}>
           <Image
-            source={{uri: profile.profileImageUrl}}
+            source={{uri: preSignupUserInfo.profileImageUrl}}
             style={styles.avatar}
           />
-          <Text style={styles.nicknameText}>{profile.nickname}</Text>
+          <Text style={styles.nicknameText}>{preSignupUserInfo.nickname}</Text>
 
-          {/* 성별 */}
           <Text style={styles.label}>성별</Text>
           <GenderToggle
             value={form.values.gender}
             onChange={g => form.getFieldProps('gender').onChange(g)}
           />
 
-          {/* 생년월일 */}
           <Text style={styles.label}>생년월일</Text>
           <TouchableOpacity onPress={showDatePicker} activeOpacity={0.8}>
             <View style={[styles.dateInputContainer, styles.dateinput]}>
@@ -123,7 +114,6 @@ export default function SignupScreen({navigation}: SignupProps) {
             locale="ko"
           />
 
-          {/* 동의 토글 */}
           <View style={styles.consentContainer}>
             <Text style={styles.consentTitle}>안면 인식 이용 동의 (필수)</Text>
             <View style={styles.consentDescriptionWrapper}>
@@ -145,22 +135,45 @@ export default function SignupScreen({navigation}: SignupProps) {
             </View>
           </View>
         </View>
-
         <CustomButton
           label="완료"
           variant="filled"
           size="large"
           onPress={handleSignup}
+          disabled={signupMutation.status === 'pending'}
         />
+        {signupMutation.status === 'pending' && (
+          <ActivityIndicator
+            style={styles.loadingIndicator}
+            size="small"
+            color={colors.MAINBLUE}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, padding: 20, justifyContent: 'center'},
-  form: {flex: 1, margin: 20, justifyContent: 'center'},
-  inputContainer: {flex: 1, marginVertical: 40},
+  container: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  form: {
+    flex: 1,
+    margin: 20,
+    justifyContent: 'center',
+  },
+  inputContainer: {
+    flex: 1,
+    marginVertical: 40,
+  },
   avatar: {
     width: 100,
     height: 100,
@@ -174,7 +187,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 50,
   },
-  label: {fontSize: 15, marginBottom: 10},
+  label: {
+    fontSize: 15,
+    marginBottom: 10,
+  },
   dateinput: {
     borderBottomWidth: 1,
     borderColor: colors.LIGHTGRAY,
@@ -187,20 +203,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  dateText: {fontSize: 16},
-  consentContainer: {marginBottom: 32},
-  consentTitle: {fontSize: 16, fontWeight: '600', marginBottom: 8},
+  dateText: {
+    fontSize: 16,
+  },
+  consentContainer: {
+    marginBottom: 32,
+  },
+  consentTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
   consentDescriptionWrapper: {
     backgroundColor: colors.ALERTBACK,
     borderRadius: 10,
     padding: 5,
     marginBottom: 12,
   },
-  consentDescription: {fontSize: 14, color: colors.GRAY, lineHeight: 22},
+  consentDescription: {
+    fontSize: 14,
+    color: colors.GRAY,
+    lineHeight: 22,
+  },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  switchLabel: {fontSize: 15},
+  switchLabel: {
+    fontSize: 15,
+  },
+  loadingIndicator: {
+    marginTop: 10,
+    alignSelf: 'center',
+  },
 });

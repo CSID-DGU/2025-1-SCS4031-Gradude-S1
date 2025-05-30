@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -29,21 +34,9 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>디버깅을 위해 로컬 네트워크 접근이 필요합니다.</string>
-	<key>NSBonjourServices</key>
-	<array>
-	<string>_http._tcp</string>
-	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-		<key>NSAllowsArbitraryLoadsInWebContent</key>
-    	<true/>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
+	
+	
+
 	<key>NSCameraUsageDescription</key>
 	<string>'다시 봄'이 카메라를 사용하여 사진을 촬영하기 위해 필요합니다.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

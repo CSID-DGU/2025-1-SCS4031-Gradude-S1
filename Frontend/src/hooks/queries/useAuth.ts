@@ -17,27 +17,19 @@ import queryClient from '@/api/queryClient';
 import {queryKeys, storageKeys} from '@/constants';
 import {
   useGetRefreshToken,
-  useGetProfile,
   useLogout,
   useDeleteAccount,
 } from '@/hooks/queries/useAuthHelpers';
 
-function useAuth() {
+export default function useAuth() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [profileComplete, setProfileComplete] = useState(false);
 
-  // 1) 회원가입: 성공 시 profileComplete = true
-  const signupMutation = useMutation<SignupResponse, Error, SignupRequest>({
-    mutationFn: postSignup,
-    onSuccess: () => {
-      setProfileComplete(true);
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.AUTH, queryKeys.GET_PROFILE],
-      });
-    },
-  });
+  // **카카오 로그인 직후 받은 userInfo를 저장**
+  const [preSignupUserInfo, setPreSignupUserInfo] = useState<UserInfo | null>(
+    null,
+  );
 
-  // 2) 카카오 로그인: firstLogin 기반으로 profileComplete 세팅
   const kakaoLoginMutation = useMutation<KakaoLoginResponse, any, string>({
     mutationFn: kakaoLogin,
     onSuccess: res => {
@@ -51,21 +43,25 @@ function useAuth() {
         );
       }
 
-      // 첫 로그인(false) 이 아닌 경우 existing user → profileComplete true
+      // 기존 회원이면 바로 프로필 완료
       setProfileComplete(!firstLogin);
 
-      // 첫 로그인 시, 닉네임·이미지 미리 세팅
+      // 첫 로그인일 땐 userInfo를 preSignupUserInfo에 보관
       if (firstLogin && userInfo) {
-        queryClient.setQueryData<UserInfo>(
-          [queryKeys.AUTH, queryKeys.GET_PROFILE],
-          userInfo,
-        );
+        setPreSignupUserInfo(userInfo);
       }
     },
     onSettled: () => {
       queryClient.refetchQueries({
         queryKey: [queryKeys.AUTH, queryKeys.GET_ACCESS_TOKEN],
       });
+    },
+  });
+
+  const signupMutation = useMutation<SignupResponse, Error, SignupRequest>({
+    mutationFn: postSignup,
+    onSuccess: () => {
+      setProfileComplete(true);
       queryClient.invalidateQueries({
         queryKey: [queryKeys.AUTH, queryKeys.GET_PROFILE],
       });
@@ -73,31 +69,30 @@ function useAuth() {
   });
 
   const refreshQuery = useGetRefreshToken();
-  const profileQuery = useGetProfile(); // UI용 프로필 조회
   const logoutMutation = useLogout();
   const deleteAccountMutation = useDeleteAccount();
 
-  // 로그아웃·탈퇴 시 profileComplete 리셋
-  useEffect(() => {
-    if (logoutMutation.isSuccess || deleteAccountMutation.isSuccess) {
-      setProfileComplete(false);
-      removeHeader('Authorization');
-      removeEncryptStorage(storageKeys.REFRESH_TOKEN);
-    }
-  }, [logoutMutation.isSuccess, deleteAccountMutation.isSuccess]);
-
-  // 토큰확인 로딩 끝나면 초기 로딩 false
   useEffect(() => {
     if (!refreshQuery.isLoading) {
       setIsInitialLoading(false);
     }
   }, [refreshQuery.isLoading]);
 
+  useEffect(() => {
+    if (logoutMutation.isSuccess || deleteAccountMutation.isSuccess) {
+      setProfileComplete(false);
+      removeHeader('Authorization');
+      removeEncryptStorage(storageKeys.REFRESH_TOKEN);
+      setPreSignupUserInfo(null);
+    }
+  }, [logoutMutation.isSuccess, deleteAccountMutation.isSuccess]);
+
   return {
-    signupMutation,
+    preSignupUserInfo,
+    // 위에거 회원가입용
     kakaoLoginMutation,
+    signupMutation,
     refreshQuery,
-    profileQuery,
     logoutMutation,
     deleteAccountMutation,
     isAuthenticated: refreshQuery.isSuccess,
@@ -105,5 +100,3 @@ function useAuth() {
     isLoading: isInitialLoading,
   };
 }
-
-export default useAuth;
