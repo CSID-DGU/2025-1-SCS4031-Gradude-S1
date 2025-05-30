@@ -15,7 +15,6 @@ export interface LoginResult {
   userInfo: UserInfo | null;
   firstLogin: boolean;
 }
-
 /** 공통 응답 래퍼 */
 export interface ApiResponse<T> {
   isSuccess: boolean;
@@ -28,10 +27,7 @@ export interface ApiResponse<T> {
 export type KakaoLoginResponse = ApiResponse<LoginResult>;
 
 /** 회원가입 요청 페이로드 */
-export type SignupRequest = Pick<
-  Profile,
-  'gender' | 'birth' | 'isFaceRecognitionAgreed'
->;
+export type SignupRequest = Profile;
 
 /** 회원가입 응답 타입 */
 export interface SignupResponse {

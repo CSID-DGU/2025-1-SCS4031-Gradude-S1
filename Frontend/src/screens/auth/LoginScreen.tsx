@@ -8,7 +8,6 @@ import {authNavigations, colors} from '@/constants';
 import MainIconBlue from '@/assets/icons/MainIconBlue.svg';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Config from 'react-native-config';
-const TEST_CODE = Config.KAKAO_TEST_CODE;
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -40,13 +39,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
           variant="filled"
           size="large"
           onPress={() => {
-            if (__DEV__ && TEST_CODE) {
-              navigation.replace(authNavigations.SIGNUP, {
-                authCode: TEST_CODE,
-              });
-            } else {
-              navigation.navigate(authNavigations.KAKAO_LOGIN);
-            }
+            navigation.navigate(authNavigations.KAKAO_LOGIN);
           }}
           style={styles.kakaoButtonContainer}
           textStyle={styles.kakaoButtonText}

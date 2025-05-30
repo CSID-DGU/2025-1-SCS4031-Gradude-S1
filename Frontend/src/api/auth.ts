@@ -7,10 +7,11 @@ import type {
   SignupRequest,
   SignupResponse,
 } from '@/types/auth';
+import {storageKeys} from '@/constants';
 
 export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
   const endpoint = `/api/auth/login?code=${encodeURIComponent(code)}`;
-  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint, {});
+  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint);
   return data;
 };
 
@@ -23,22 +24,30 @@ export const postSignup = async (
   );
   return data;
 };
-
 export const getAccessToken = async (): Promise<TokenResponse> => {
-  const refreshToken = await getEncryptStorage('refreshToken');
+  const refreshToken = await getEncryptStorage(storageKeys.REFRESH_TOKEN);
 
-  const {data} = await axiosInstance.get('/api/auth/reissue', {
-    headers: {
-      Authorization: `Bearer ${refreshToken}`,
+  // ❶ 빈 바디를 두고 ❷ 헤더는 세 번째 인자로 전달
+  const {data} = await axiosInstance.post(
+    '/api/auth/reissue',
+    {}, // 빈 바디
+    {
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
+      },
     },
-  });
+  );
 
+  // 만약 API가 { result: TokenResponse } 형태라면:
+  // return data.result;
+
+  // 아니라 data가 곧 TokenResponse라면:
   return data;
 };
 
-export const getProfile = async (authCode: string): Promise<UserInfo> => {
-  const {data} = await axiosInstance.post<UserInfo>('/api/auth/signup');
-  return data;
+export const getProfile = async (): Promise<UserInfo> => {
+  const {data} = await axiosInstance.post('/api/auth/profile');
+  return data.result;
 };
 
 export const logout = async (): Promise<void> => {

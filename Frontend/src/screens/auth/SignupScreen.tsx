@@ -7,35 +7,29 @@ import {
   TouchableOpacity,
   Image,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import {format} from 'date-fns';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {StackScreenProps} from '@react-navigation/stack';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import InputField from '@/components/commons/InputField';
-import CustomButton from '@/components/commons/CustomButton';
 import useForm from '@/hooks/useForm';
-import useAuth, {useGetProfile} from '@/hooks/queries/useAuth';
+import useAuth from '@/hooks/queries/useAuth';
+import {useGetProfile} from '@/hooks/queries/useAuthHelpers';
 import {validateSignup} from '@/utils/validate';
-import {authNavigations, colors} from '@/constants';
+import {authNavigations, colors, homeNavigations} from '@/constants';
 import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
 import GenderToggle from '@/components/GenderToggle';
+import CustomButton from '@/components/commons/CustomButton';
 
 type SignupProps = StackScreenProps<
   AuthStackParamList,
   typeof authNavigations.SIGNUP
 >;
 
-function SignupScreen({navigation}: SignupProps) {
-  const {data: profile} = useGetProfile({enabled: true});
+export default function SignupScreen({navigation}: SignupProps) {
+  const {data: profile, isLoading, isError} = useGetProfile();
   const {signupMutation} = useAuth();
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
-  const dummyProfile = {
-    nickname: '홍길동',
-    profileImageUrl: 'https://picsum.photos/200',
-  };
-  const profileToUse = profile ?? dummyProfile;
 
   const form = useForm({
     initialValue: {
@@ -45,51 +39,80 @@ function SignupScreen({navigation}: SignupProps) {
     },
     validate: validateSignup,
   });
-  // 생일 선택 부분
+
   const showDatePicker = () => setDatePickerVisibility(true);
   const hideDatePicker = () => setDatePickerVisibility(false);
   const handleConfirm = (date: Date) => {
-    const formatted = format(date, 'yyyy-MM-dd');
-    form.getFieldProps('birth').onChange(formatted);
+    form.getFieldProps('birth').onChange(format(date, 'yyyy-MM-dd'));
     hideDatePicker();
   };
 
   const handleSignup = () => {
-    signupMutation.mutate(form.values);
+    if (!profile) return;
+    signupMutation.mutate(
+      {
+        kakaoId: profile.kakaoId,
+        nickname: profile.nickname,
+        profileImageUrl: profile.profileImageUrl,
+        ...form.values,
+      },
+      {
+        onSuccess: () => {
+          // 가입 성공 시 Main 탭으로 이동
+          navigation.getParent()?.reset({
+            index: 0,
+            routes: [{name: homeNavigations.MAIN_HOME}],
+          });
+        },
+      },
+    );
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </SafeAreaView>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{color: colors.RED, textAlign: 'center'}}>
+          프로필 정보를 불러오는 데 실패했습니다.
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.form}>
+        {/* 아바타·닉네임 */}
         <View style={styles.inputContainer}>
           <Image
-            source={{uri: profileToUse.profileImageUrl}}
+            source={{uri: profile.profileImageUrl}}
             style={styles.avatar}
           />
-          <Text style={styles.nicknameText}>{profileToUse.nickname}</Text>
+          <Text style={styles.nicknameText}>{profile.nickname}</Text>
 
+          {/* 성별 */}
           <Text style={styles.label}>성별</Text>
-
           <GenderToggle
             value={form.values.gender}
             onChange={g => form.getFieldProps('gender').onChange(g)}
           />
 
+          {/* 생년월일 */}
           <Text style={styles.label}>생년월일</Text>
           <TouchableOpacity onPress={showDatePicker} activeOpacity={0.8}>
             <View style={[styles.dateInputContainer, styles.dateinput]}>
               <Text style={styles.dateText}>
                 {form.values.birth || 'YYYY-MM-DD'}
               </Text>
-
-              <Ionicons
-                name="calendar-outline"
-                size={25}
-                color={colors.MAINBLUE}
-              />
             </View>
           </TouchableOpacity>
-
           <DateTimePickerModal
             isVisible={isDatePickerVisible}
             mode="date"
@@ -99,6 +122,8 @@ function SignupScreen({navigation}: SignupProps) {
             cancelTextIOS="취소"
             locale="ko"
           />
+
+          {/* 동의 토글 */}
           <View style={styles.consentContainer}>
             <Text style={styles.consentTitle}>안면 인식 이용 동의 (필수)</Text>
             <View style={styles.consentDescriptionWrapper}>
@@ -109,7 +134,6 @@ function SignupScreen({navigation}: SignupProps) {
                 {'\n'}이에 동의하십니까?
               </Text>
             </View>
-
             <View style={styles.switchRow}>
               <Text style={styles.switchLabel}>동의합니다</Text>
               <Switch
@@ -134,12 +158,9 @@ function SignupScreen({navigation}: SignupProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, padding: 20},
+  container: {flex: 1, padding: 20, justifyContent: 'center'},
   form: {flex: 1, margin: 20, justifyContent: 'center'},
-  inputContainer: {
-    flex: 1,
-    marginVertical: 40,
-  },
+  inputContainer: {flex: 1, marginVertical: 40},
   avatar: {
     width: 100,
     height: 100,
@@ -153,49 +174,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 50,
   },
-  label: {
-    fontSize: 15,
-    marginBottom: 10,
-  },
-  radio: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginBottom: 24,
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderColor: colors.LIGHTGRAY,
-    marginBottom: 24,
-    paddingVertical: 8,
-  },
-  consentContainer: {
-    marginBottom: 32,
-  },
-  consentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  consentDescriptionWrapper: {
-    backgroundColor: colors.ALERTBACK,
-    borderRadius: 10,
-    padding: 5,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  consentDescription: {
-    fontSize: 14,
-    color: colors.GRAY,
-    lineHeight: 22,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  switchLabel: {
-    fontSize: 15,
-  },
+  label: {fontSize: 15, marginBottom: 10},
   dateinput: {
     borderBottomWidth: 1,
     borderColor: colors.LIGHTGRAY,
@@ -208,9 +187,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  dateText: {
-    fontSize: 16,
+  dateText: {fontSize: 16},
+  consentContainer: {marginBottom: 32},
+  consentTitle: {fontSize: 16, fontWeight: '600', marginBottom: 8},
+  consentDescriptionWrapper: {
+    backgroundColor: colors.ALERTBACK,
+    borderRadius: 10,
+    padding: 5,
+    marginBottom: 12,
   },
+  consentDescription: {fontSize: 14, color: colors.GRAY, lineHeight: 22},
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  switchLabel: {fontSize: 15},
 });
-
-export default SignupScreen;

@@ -1,5 +1,4 @@
-// src/navigations/root/RootNavigator.tsx
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {Text, View, ActivityIndicator} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AuthStackNavigator from '../stack/AuthStackNavigator';
@@ -10,7 +9,6 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {authNavigations} from '@/constants';
 import {hideSplash, showSplash} from 'react-native-splash-view';
 
-// 연동 시, 아래 코드 주석 해제
 export type AuthStackParamList = {
   [authNavigations.SIGNUP]: {authCode: string};
 };
@@ -19,16 +17,19 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function RootNavigator() {
   const {isAuthenticated, isProfileComplete, isLoading} = useAuth();
-
-  showSplash();
+  const didShowSplash = useRef(false);
 
   useEffect(() => {
-    setTimeout(() => {
-      hideSplash();
-    }, 300);
+    showSplash();
+    didShowSplash.current = true;
   }, []);
 
-  // 0) 아직 토큰 확인 중
+  useEffect(() => {
+    if (didShowSplash.current && !isLoading) {
+      hideSplash();
+    }
+  }, [isLoading]);
+
   if (isLoading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -37,12 +38,10 @@ export default function RootNavigator() {
     );
   }
 
-  // 1) 토큰이 없으면 → 로그인/카카오로그인/회원가입 스택
   if (!isAuthenticated) {
     return <AuthStackNavigator />;
   }
 
-  // 2) 토큰은 있는데, 프로필(추가정보) 없으면 → SignupScreen
   if (!isProfileComplete) {
     return (
       <Stack.Navigator screenOptions={{headerShown: false}}>
@@ -57,7 +56,6 @@ export default function RootNavigator() {
     );
   }
 
-  // 3) 모두 완료된 회원 → 메인 탭 네비게이터
   return <TapNavigator />;
 }
 
