@@ -24,6 +24,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -137,14 +138,7 @@ public class DiagnosisCommandService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
-        int orientation = 0;
-
-        LocalDate today = LocalDate.now(); // 오늘 날짜
-
-        // 월 확인 (입력값 == 오늘 월)
-        if (selfDiagnosisRequestDTO.getOrientationMonth() != today.getDayOfMonth()) {
-            orientation += 1;
-        }
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul")); // 오늘 날짜 ex) 2025-05-31
 
         // 만나이 계산
         LocalDate birth = user.getBirth();
@@ -155,16 +149,16 @@ public class DiagnosisCommandService {
             age--;
         }
 
-        // 입력한 만 나이와 비교
-        if (selfDiagnosisRequestDTO.getOrientationAge() != age) {
-            orientation += 1;
+        // 입력한 월(입력값 == 오늘 월), 만 나이 확인
+        int orientation = 0;
+        if (selfDiagnosisRequestDTO.getOrientationMonth() != today.getMonthValue()) {
+            if (selfDiagnosisRequestDTO.getOrientationAge() != age) {
+                orientation = 1;
+            }
         }
 
-        int totalScore = selfDiagnosisRequestDTO.getAlertness() + orientation + selfDiagnosisRequestDTO.getGaze()
-                        + selfDiagnosisRequestDTO.getVisualField() + selfDiagnosisRequestDTO.getLeftArm() + selfDiagnosisRequestDTO.getRightArm()
-                        + selfDiagnosisRequestDTO.getLeftLeg() + selfDiagnosisRequestDTO.getRightLeg() + selfDiagnosisRequestDTO.getLimbAtaxia()
-                        + selfDiagnosisRequestDTO.getSensory() + selfDiagnosisRequestDTO.getAphasia() + selfDiagnosisRequestDTO.getNeglect()
-                        + (diagnosis.isFace() ? 2 : 0) + (diagnosis.isSpeech() ? 2 : 0);
+        int totalScore = orientation + selfDiagnosisRequestDTO.getGaze() + selfDiagnosisRequestDTO.getArm()
+                        + (diagnosis.isFace() ? 1 : 0) + (diagnosis.isSpeech() ? 1 : 0);
 
         diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore);
 

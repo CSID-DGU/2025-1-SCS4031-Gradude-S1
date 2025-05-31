@@ -4,7 +4,6 @@ import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO
 import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.service.DiagnosisCommandService;
-import gradude.springVision.domain.diagnosis.service.FinalDiagnosisService;
 import gradude.springVision.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +28,7 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisCommandService.aiDiagnosis(userId, faceFile, speechFile));
     }
 
-    @Operation(summary = "설문 자가 진단")
+    @Operation(summary = "설문 자가 진단", description = "gaze와 arm은 증상이 있으면 1, 없으면 0 으로 입력 받습니다.")
     @PostMapping(value = "/survey")
     public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, @RequestBody SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
         return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO));

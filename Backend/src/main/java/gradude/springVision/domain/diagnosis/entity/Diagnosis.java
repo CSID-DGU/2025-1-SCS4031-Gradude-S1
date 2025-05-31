@@ -24,75 +24,36 @@ public class Diagnosis extends BaseEntity {
     private boolean face;
 
     @Column(nullable = false)
+    @Min(0) @Max(1)
     private double faceProbability;
 
     @Column(nullable = false)
     private boolean speech;
 
     @Column(nullable = false)
+    @Min(0) @Max(1)
     private double speechProbability;
 
-    @Min(0) @Max(3)
-    private int alertness; // 의식 수준
-
-    @Min(0) @Max(2)
+    @Min(0) @Max(1)
+    private int gaze; // 시선
+    
+    @Min(0) @Max(1)
     private int orientation; // 의식 질문
 
-    @Min(0) @Max(2)
-    private int gaze; // 시선
+    @Min(0) @Max(1)
+    private int arm; // 팔
 
-    @Min(0) @Max(3)
-    private int visualField; // 시야
-
-    @Min(0) @Max(4)
-    private int leftArm; // 왼쪽 팔 운동
-
-    @Min(0) @Max(4)
-    private int rightArm; // 오른쪽 팔 운동
-
-    @Min(0) @Max(4)
-    private int leftLeg;  // 왼쪽 다리 운동
-
-    @Min(0) @Max(4)
-    private int rightLeg; // 오른쪽 다리 운동
-
-    @Min(0) @Max(2)
-    private int limbAtaxia; // 운동 실조
-
-    @Min(0) @Max(2)
-    private int sensory; // 감각
-
-    @Min(0) @Max(3)
-    private int aphasia; // 언어
-
-    @Min(0) @Max(2)
-    private int neglect; // 편측 무시
-
-    @Min(0) @Max(42)
+    @Min(0) @Max(5)
     private int totalScore;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public void updateDiagnosis(boolean speech, double speechProbability) {
-        this.speech = speech;
-        this.speechProbability = speechProbability;
-    }
-
     public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int orientation, int totalScore) {
-        this.alertness = dto.getAlertness();
         this.orientation = orientation;
         this.gaze = dto.getGaze();
-        this.visualField = dto.getVisualField();
-        this.leftArm = dto.getLeftArm();
-        this.rightArm = dto.getRightArm();
-        this.leftLeg = dto.getLeftLeg();
-        this.rightLeg = dto.getRightLeg();
-        this.limbAtaxia = dto.getLimbAtaxia();
-        this.sensory = dto.getSensory();
-        this.aphasia = dto.getAphasia();
-        this.neglect = dto.getNeglect();
+        this.arm = dto.getArm();
         this.totalScore = totalScore;
     }
 }
