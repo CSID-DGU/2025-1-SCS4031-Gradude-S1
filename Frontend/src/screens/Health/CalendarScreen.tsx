@@ -5,6 +5,7 @@ import * as Animatable from 'react-native-animatable';
 import {colors, healthNavigations} from '@/constants';
 import {useNavigation} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useGetProfile} from '@/hooks/queries/useAuthHelpers';
 
 LocaleConfig.locales['kr'] = {
   monthNames: [
@@ -50,6 +51,13 @@ LocaleConfig.locales['kr'] = {
 LocaleConfig.defaultLocale = 'kr';
 
 export default function CalendarScreen() {
+  const {
+    data: user, // UserInfo | undefined
+    isLoading, // boolean
+    isError, // boolean
+    error, // Error | null
+  } = useGetProfile();
+
   const navigation = useNavigation<any>();
   const today = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
 
@@ -63,10 +71,18 @@ export default function CalendarScreen() {
     }
   };
 
+  if (isError || !user) {
+    return (
+      <SafeAreaView>
+        <Text>프로필 정보를 불러올 수 없습니다.</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>홍길동님의 건강 수첩</Text>
+        <Text style={styles.title}> {`${user.nickname}님의 건강 수첩`}</Text>
       </View>
       <View style={styles.row}>
         <MaterialCommunityIcons
