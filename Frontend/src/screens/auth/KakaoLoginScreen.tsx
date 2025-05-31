@@ -1,64 +1,88 @@
-import React, {useState} from 'react';
-import {
-  ActivityIndicator,
-  SafeAreaView,
-  StyleSheet,
-  View,
-  Dimensions,
-} from 'react-native';
+import React, {useState, useRef} from 'react';
+import {ActivityIndicator, SafeAreaView, StyleSheet, View} from 'react-native';
 import {WebView, WebViewNavigation} from 'react-native-webview';
-import Config from 'react-native-config';
-import useAuth from '@/hooks/queries/useAuth';
-import {authNavigations, colors} from '@/constants';
+import type {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
-import {StackScreenProps} from '@react-navigation/stack';
+import {authNavigations, colors} from '@/constants';
+import useAuth from '@/hooks/queries/useAuth';
+import Config from 'react-native-config';
+import {useDispatch} from 'react-redux';
+import {setPreSignupUserInfo} from '@/store/slices/authSlice';
+import {AppDispatch} from '@/store';
 
-const CLIENT_ID = Config.KAKAO_CLIENT_ID as string;
-const REDIRECT_URI = Config.KAKAO_REDIRECT_URI as string;
-type KakaoLoginScreenProps = StackScreenProps<
+type Props = StackScreenProps<
   AuthStackParamList,
   typeof authNavigations.KAKAO_LOGIN
 >;
-function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
+
+export default function KakaoLoginScreen({navigation}: Props) {
   const {kakaoLoginMutation} = useAuth();
   const [loading, setLoading] = useState(false);
+  const handledRef = useRef(false);
 
-  const handleNavChange = (event: WebViewNavigation) => {
-    const {url, loading: navLoading} = event;
-    // console.log('URLsfdfsfs:', event.url);
+  const dispatch = useDispatch<AppDispatch>();
 
-    if (!navLoading && url.startsWith(`${REDIRECT_URI}?code=`)) {
-      const code = url.split('?code=')[1];
+  const handleShouldStartLoad = (request: {url: string}) => {
+    const {url} = request;
+    console.log('⏳ shouldStartLoad:', url);
+
+    if (
+      !handledRef.current &&
+      url.startsWith(`${Config.KAKAO_REDIRECT_URI}?code=`)
+    ) {
+      handledRef.current = true;
+      const code = url.split('code=')[1]!;
+      console.log('✅ [WebView] intercept code:', code);
+
       setLoading(true);
 
+      console.log(
+        '➡️ [Mutate] calling kakaoLoginMutation.mutate with code:',
+        code,
+      );
       kakaoLoginMutation.mutate(code, {
-        onSettled: () => setLoading(false),
-      });
-    }
-  };
+        onSuccess: res => {
+          console.log('✅ [API] kakaoLogin SUCCESS, response:', res);
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.BLACK} />
-      </View>
-    );
-  }
+          // res.result 안에 firstLogin, userInfo가 들어 있음
+          const {firstLogin, userInfo} = res.result;
+
+          if (firstLogin && userInfo) {
+            // 카카오 로그인 직후 userInfo를 Redux 전역 상태에 저장
+            dispatch(setPreSignupUserInfo(userInfo));
+          }
+
+          navigation.replace(authNavigations.SIGNUP, {authCode: code});
+        },
+        onError: err => {
+          console.error('❌ [API] kakaoLogin ERROR:', err);
+          setLoading(false);
+          handledRef.current = false;
+        },
+      });
+
+      return false;
+    }
+
+    return true; // 그 외의 URL은 정상 로드
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={colors.BLACK} />
+        </View>
+      )}
+
       <WebView
+        style={styles.container}
         source={{
-          uri:
-            `https://kauth.kakao.com/oauth/authorize` +
-            `?response_type=code` +
-            `&client_id=${CLIENT_ID}` +
-            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`,
+          uri: `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${Config.KAKAO_CLIENT_ID}&redirect_uri=${Config.KAKAO_REDIRECT_URI}`,
         }}
-        // recaptcha 안뜨게 하는 코드
-        userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
-        onNavigationStateChange={handleNavChange}
-        startInLoadingState
+        onShouldStartLoadWithRequest={handleShouldStartLoad}
+        javaScriptEnabled
+        domStorageEnabled
       />
     </SafeAreaView>
   );
@@ -67,12 +91,9 @@ function KakaoLoginScreen({navigation}: KakaoLoginScreenProps) {
 const styles = StyleSheet.create({
   container: {flex: 1},
   loader: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.WHITE,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });
-// KakaoLoginScreen;
-
-export default KakaoLoginScreen;
