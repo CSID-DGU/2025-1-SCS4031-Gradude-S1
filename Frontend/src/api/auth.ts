@@ -7,38 +7,45 @@ import type {
   SignupRequest,
   SignupResponse,
 } from '@/types/auth';
+import {storageKeys} from '@/constants';
 
 export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
   const endpoint = `/api/auth/login?code=${encodeURIComponent(code)}`;
-  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint, {});
+  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint);
   return data;
 };
 
 export const postSignup = async (
   payload: SignupRequest,
 ): Promise<SignupResponse> => {
+  console.log('▶️ [postSignup] payload:', payload);
+
   const {data} = await axiosInstance.post<SignupResponse>(
     '/api/auth/signup',
     payload,
   );
+  console.log('◀️ [postSignup] response data:', data);
   return data;
 };
 
 export const getAccessToken = async (): Promise<TokenResponse> => {
-  const refreshToken = await getEncryptStorage('refreshToken');
+  const refreshToken = await getEncryptStorage(storageKeys.REFRESH_TOKEN);
 
-  const {data} = await axiosInstance.get('/api/auth/reissue', {
-    headers: {
-      Authorization: `Bearer ${refreshToken}`,
+  const {data} = await axiosInstance.post(
+    '/api/auth/reissue',
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
+      },
     },
-  });
-
+  );
   return data;
 };
 
-export const getProfile = async (authCode: string): Promise<UserInfo> => {
-  const {data} = await axiosInstance.post<UserInfo>('/api/auth/signup');
-  return data;
+export const getProfile = async (): Promise<UserInfo> => {
+  const {data} = await axiosInstance.post('/api/auth/profile');
+  return data.result;
 };
 
 export const logout = async (): Promise<void> => {

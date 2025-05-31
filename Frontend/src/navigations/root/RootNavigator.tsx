@@ -1,63 +1,69 @@
-// src/navigations/root/RootNavigator.tsx
-import React from 'react';
-import {Text, View, ActivityIndicator} from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+// navigations/root/RootNavigator.tsx
+import React, {useEffect, useRef} from 'react';
+import {View, ActivityIndicator} from 'react-native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import AuthStackNavigator from '../stack/AuthStackNavigator';
 import SignupScreen from '@/screens/Auth/SignupScreen';
 import TapNavigator from '../tab/TabNavigator';
 import useAuth from '@/hooks/queries/useAuth';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {authNavigations} from '@/constants';
+import {hideSplash, showSplash} from 'react-native-splash-view';
 
-// 연동 시, 아래 코드 주석 해제
-// export type AuthStackParamList = {
-//   [authNavigations.SIGNUP]: {authCode: string};
-// };
+export type RootStackParamList = {
+  AuthStack: undefined; // 로그인 흐름 전체
+  [authNavigations.SIGNUP]: {authCode: string};
+  TapNavigator: undefined; // 로그인 후 BottomTabs 전체
+};
 
-// const Stack = createNativeStackNavigator<AuthStackParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
-// export default function RootNavigator() {
-//   const {isAuthenticated, isProfileComplete, isLoading} = useAuth();
+export default function RootNavigator() {
+  const {isAuthenticated, isProfileComplete, isLoading} = useAuth();
+  const didShowSplash = useRef(false);
 
-//   // 0) 아직 토큰 확인 중
-//   if (isLoading) {
-//     return (
-//       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-//         <ActivityIndicator size="large" />
-//       </View>
-//     );
-//   }
+  // Splash 처리
+  useEffect(() => {
+    showSplash();
+    didShowSplash.current = true;
+  }, []);
 
-//   // 1) 토큰이 없으면 → 로그인/카카오로그인/회원가입 스택
-//   if (!isAuthenticated) {
-//     return <AuthStackNavigator />;
-//   }
+  useEffect(() => {
+    if (didShowSplash.current && !isLoading) {
+      hideSplash();
+    }
+  }, [isLoading]);
 
-//   // 2) 토큰은 있는데, 프로필(추가정보) 없으면 → SignupScreen
-//   if (!isProfileComplete) {
-//     return (
-//     <Stack.Navigator screenOptions={{headerShown: false}}>
-//       <Stack.Screen
-//         name={authNavigations.SIGNUP}
-//         component={SignupScreen}
-//         options={{
-//           headerTitle: '회원가입',
-//         }}
-//       />
-//     </Stack.Navigator>;
-//   }
-
-//   // 3) 모두 완료된 회원 → 메인 탭 네비게이터
-//   return <TapNavigator />;
-// }
-
-// 아래 코드로 테스트
-
-export default RootNavigator;
-function RootNavigator() {
-  const isLogin = true;
-  if (isLogin === undefined) {
-    return <Text>로딩중…</Text>;
+  // 로딩 중이라면 로딩 인디케이터만 띄우고, 네비게이터는 아직 렌더링하지 않음
+  if (isLoading) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
-  return isLogin ? <TapNavigator /> : <AuthStackNavigator />;
+
+  return (
+    <RootStack.Navigator
+      screenOptions={{headerShown: false}}
+      // 초기 진입할 화면을 isAuthenticated / isProfileComplete 에 따라 선택
+      initialRouteName={
+        !isAuthenticated
+          ? 'AuthStack'
+          : !isProfileComplete
+          ? authNavigations.SIGNUP
+          : 'TapNavigator'
+      }>
+      {/* 1) 로그인 전 흐름 전체를 담고 있는 네비게이터 */}
+      <RootStack.Screen name="AuthStack" component={AuthStackNavigator} />
+
+      {/* 2) 프로필이 완성되지 않아 회원가입(Signup) 화면으로 가야 할 때 */}
+      <RootStack.Screen
+        name={authNavigations.SIGNUP}
+        component={SignupScreen}
+      />
+
+      {/* 3) 로그인 & 프로필 완료된 뒤 보여줄 BottomTabs 전체 */}
+      <RootStack.Screen name="TapNavigator" component={TapNavigator} />
+    </RootStack.Navigator>
+  );
 }

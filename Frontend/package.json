@@ -22,6 +22,7 @@
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/native-stack": "^7.3.10",
     "@react-navigation/stack": "^7.2.10",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.74.4",
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
@@ -54,7 +55,8 @@
     "react-native-video-controls": "^2.8.1",
     "react-native-video-player": "^0.16.3",
     "react-native-vision-camera": "^4.6.4",
-    "react-native-webview": "^13.13.5"
+    "react-native-webview": "^13.13.5",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
