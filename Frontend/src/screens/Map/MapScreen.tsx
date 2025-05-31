@@ -1,4 +1,3 @@
-// src/screens/MapScreen.tsx
 import React, {useEffect, useRef, useState} from 'react';
 import {
   StyleSheet,
@@ -34,17 +33,18 @@ import usePermission from '@/hooks/usePermisson';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import HospitalCard from '@/components/hospital/HospitalCard';
 
+import {useQueries} from '@tanstack/react-query';
+import {fetchHospitalMarker} from '@/api/hospitals';
+
 export default function MapScreen() {
   const mapRef = useRef<MapView | null>(null);
   const markerRefs = useRef<
     Record<string, {showCallout(): void; hideCallout(): void}>
   >({});
 
-  // 사용자 위치 훅
   const {latitude, longitude, isUserLocationError} = useUserLocation();
   usePermission('LOCATION');
 
-  // 초기 region 설정
   const [region, setRegion] = useState<Region | null>(null);
   useEffect(() => {
     if (!isUserLocationError && latitude != null && longitude != null) {
@@ -57,17 +57,16 @@ export default function MapScreen() {
     }
   }, [latitude, longitude, isUserLocationError]);
 
-  // bounds 계산
-  const bounds = region
-    ? {
-        neLatitude: region.latitude + region.latitudeDelta / 2,
-        neLongitude: region.longitude + region.longitudeDelta / 2,
-        swLatitude: region.latitude - region.latitudeDelta / 2,
-        swLongitude: region.longitude - region.longitudeDelta / 2,
-      }
-    : undefined;
+  const bounds =
+    region != null
+      ? {
+          neLatitude: region.latitude + region.latitudeDelta / 2,
+          neLongitude: region.longitude + region.longitudeDelta / 2,
+          swLatitude: region.latitude - region.latitudeDelta / 2,
+          swLongitude: region.longitude - region.longitudeDelta / 2,
+        }
+      : undefined;
 
-  // 마커 훅
   const {
     data: markers = [],
     isLoading: loadingMarkers,
@@ -75,20 +74,6 @@ export default function MapScreen() {
     error: markersErrorObj,
   } = useHospitalMarkers(bounds);
 
-  // 디버그 로그
-  useEffect(() => {
-    console.log('[MapScreen] bounds =', bounds);
-
-    if (markersError && markersErrorObj) {
-      console.log('[MapScreen] markers fetch error =', markersErrorObj);
-      console.log(
-        '[MapScreen] status code =',
-        (markersErrorObj as any).response?.status,
-      );
-    }
-  }, [bounds, markersError, markersErrorObj]);
-
-  // 리스트용 훅
   const {data: nearest = [], isLoading: loadingNearest} = useNearestHospitals(
     latitude,
     longitude,
@@ -102,33 +87,79 @@ export default function MapScreen() {
   const listData: HospitalSummaryDto[] =
     searchTerm.length >= 2 ? searched : nearest;
 
-  // 모달 상태
   const [listVisible, setListVisible] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  // 내 위치 버튼
+  const hospitalDetailQueries = useQueries({
+    queries:
+      region != null && latitude != null && longitude != null
+        ? markers.map(h => ({
+            queryKey: ['hospitalMarker', h.hospitalId, latitude, longitude],
+            queryFn: () =>
+              fetchHospitalMarker(
+                h.hospitalId.toString(),
+                latitude as number,
+                longitude as number,
+              ),
+            enabled: latitude != null && longitude != null,
+          }))
+        : [],
+  });
+
+  if (isUserLocationError) {
+    return (
+      <View style={styles.center}>
+        <Text>위치 정보를 가져올 수 없습니다.</Text>
+      </View>
+    );
+  }
+  if (!region) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </View>
+    );
+  }
+
   const handlePressUserLocation = () => {
     if (isUserLocationError) {
       Alert.alert('위치 정보를 가져올 수 없습니다.');
       return;
     }
-    mapRef.current?.animateCamera({center: {latitude, longitude}, zoom: 14});
+    mapRef.current?.animateCamera(
+      {center: {latitude, longitude}, zoom: 14},
+      {duration: 300},
+    );
   };
 
-  // 마커/지도 핸들러
+  // 기존 오류 수정 부분
   const handleMapPress = (_: MapPressEvent) =>
     Object.values(markerRefs.current).forEach(ref => ref.hideCallout());
 
+  // 10) 마커/지도 터치 핸들러
   const handleMarkerPress = (h: HospitalMarkerDto) => (_: MarkerPressEvent) => {
-    mapRef.current?.animateCamera({
-      center: {latitude: h.latitude, longitude: h.longitude},
-      zoom: 15,
-    });
+    // 1) 카메라를 해당 병원으로 이동
+    mapRef.current?.animateCamera(
+      {
+        center: {latitude: h.latitude, longitude: h.longitude},
+        zoom: 15,
+      },
+      {duration: 300},
+    );
+
+    // 2) 다른 콜아웃 숨기기
     Object.entries(markerRefs.current).forEach(([id, ref]) => {
-      if (id !== h.hospitalId.toString()) ref.hideCallout();
+      if (id !== h.hospitalId.toString()) {
+        ref.hideCallout();
+      }
     });
-    markerRefs.current[h.hospitalId.toString()]?.showCallout();
+
+    // 3) 애니메이션이 끝나고 충분히 안정된 뒤에 showCallout 호출
+    //    (300ms 애니메이션 + 50ms 버퍼 정도)
+    setTimeout(() => {
+      markerRefs.current[h.hospitalId.toString()]?.showCallout();
+    }, 350);
   };
 
   const openDetail = (h: {hospitalId: string | number}) => {
@@ -136,20 +167,7 @@ export default function MapScreen() {
     setDetailVisible(true);
   };
 
-  // 로딩/에러 처리
-  if (isUserLocationError)
-    return (
-      <View style={styles.center}>
-        <Text>위치 정보를 가져올 수 없습니다.</Text>
-      </View>
-    );
-  if (!region)
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.MAINBLUE} />
-      </View>
-    );
-
+  // 11) JSX 반환
   return (
     <>
       <MapView
@@ -161,28 +179,39 @@ export default function MapScreen() {
         followsUserLocation
         onPress={handleMapPress}
         onRegionChangeComplete={r => setRegion(r)}>
+        {/* ─── 실제병원 마커들 ─── */}
         {!loadingMarkers &&
-          markers.map(h => (
-            <Marker
-              key={h.hospitalId.toString()}
-              coordinate={{latitude: h.latitude, longitude: h.longitude}}
-              pinColor={h.strokeCenter ? colors.RED : colors.MAINBLUE}
-              ref={ref => {
-                if (ref) markerRefs.current[h.hospitalId.toString()] = ref;
-              }}
-              onPress={handleMarkerPress(h)}>
-              <Callout tooltip onPress={() => openDetail(h)}>
-                <HospitalCard
-                  hospitalId={h.hospitalId.toString()}
-                  userLatitude={latitude}
-                  userLongitude={longitude}
-                />
-              </Callout>
-            </Marker>
-          ))}
+          markers.map((h, i) => {
+            const detailQuery = hospitalDetailQueries[i];
+            return (
+              <Marker
+                key={h.hospitalId.toString()}
+                coordinate={{latitude: h.latitude, longitude: h.longitude}}
+                pinColor={h.strokeCenter ? colors.RED : colors.MAINBLUE}
+                ref={ref => {
+                  if (ref) {
+                    markerRefs.current[h.hospitalId.toString()] = ref;
+                  }
+                }}
+                onPress={handleMarkerPress(h)}>
+                <Callout onPress={() => openDetail(h)}>
+                  {detailQuery?.isLoading && (
+                    <ActivityIndicator size="small" color={colors.MAINBLUE} />
+                  )}
+                  {detailQuery?.isError && (
+                    <Text style={styles.errorText}>
+                      정보를 불러올 수 없습니다.
+                    </Text>
+                  )}
+                  {detailQuery?.data && (
+                    <HospitalCard data={detailQuery.data} />
+                  )}
+                </Callout>
+              </Marker>
+            );
+          })}
       </MapView>
-
-      {/* 검색/리스트 버튼 */}
+      {/* ===== 검색 / 리스트 버튼 ===== */}
       <TouchableOpacity
         style={styles.searchBtn}
         onPress={() => setListVisible(true)}>
@@ -190,14 +219,14 @@ export default function MapScreen() {
         <Ionicons name="search" size={20} color={colors.GRAY} />
       </TouchableOpacity>
 
-      {/* 내 위치 버튼 */}
+      {/* ===== 내 위치 버튼 ===== */}
       <View style={styles.buttonList}>
         <Pressable style={styles.mapButton} onPress={handlePressUserLocation}>
           <Ionicons name="locate-outline" size={25} color={colors.WHITE} />
         </Pressable>
       </View>
 
-      {/* 리스트/검색 모달 */}
+      {/* ===== 리스트/검색 모달 ===== */}
       <ModalWrapper
         visible={listVisible}
         onClose={() => {
@@ -223,13 +252,16 @@ export default function MapScreen() {
                   style={styles.listItem}
                   onPress={() => {
                     setListVisible(false);
-                    mapRef.current?.animateCamera({
-                      center: {
-                        latitude: item.latitude,
-                        longitude: item.longitude,
+                    mapRef.current?.animateCamera(
+                      {
+                        center: {
+                          latitude: item.latitude,
+                          longitude: item.longitude,
+                        },
+                        zoom: 15,
                       },
-                      zoom: 15,
-                    });
+                      {duration: 300},
+                    );
                     setTimeout(
                       () =>
                         markerRefs.current[
@@ -246,15 +278,15 @@ export default function MapScreen() {
         </View>
       </ModalWrapper>
 
-      {/* 마커 상세 모달 */}
+      {/* ===== 마커 상세 모달 ===== */}
       <ModalWrapper
         visible={detailVisible}
         onClose={() => setDetailVisible(false)}>
         {detailId && (
           <HospitalDetail
             hospitalId={detailId}
-            userLatitude={latitude}
-            userLongitude={longitude}
+            userLatitude={latitude as number}
+            userLongitude={longitude as number}
           />
         )}
       </ModalWrapper>
@@ -315,5 +347,11 @@ const styles = StyleSheet.create({
     bottom: 30,
     right: 15,
     alignItems: 'center',
+  },
+
+  errorText: {
+    fontSize: 14,
+    color: colors.RED,
+    textAlign: 'center',
   },
 });

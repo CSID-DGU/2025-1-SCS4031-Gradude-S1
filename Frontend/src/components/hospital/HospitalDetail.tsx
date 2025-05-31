@@ -57,7 +57,7 @@ export default function HospitalDetail({
     );
   }
 
-  // DTO 그대로 구조분해
+  // DTO에서 데이터 분해
   const {
     name,
     distance,
@@ -89,7 +89,8 @@ export default function HospitalDetail({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    // SafeAreaView로 최상단 노치 영역까지 흰색 배경을 채워줍니다.
+    <View style={styles.safeArea}>
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.title}>{name}</Text>
@@ -152,19 +153,28 @@ export default function HospitalDetail({
           <Text style={styles.btnText}>응급실 전화걸기</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.WHITE},
+  safeArea: {
+    backgroundColor: colors.WHITE, // 모달 최상단까지 흰색으로 채움
+  },
   loaderContainer: {
     height: 110,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainer: {height: 110, justifyContent: 'center', alignItems: 'center'},
-  errorText: {fontSize: 14, color: colors.RED},
+  errorContainer: {
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.RED,
+  },
   card: {
     backgroundColor: colors.WHITE,
     padding: 16,
@@ -176,14 +186,43 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginBottom: 16,
   },
-  row: {flexDirection: 'row', alignItems: 'center'},
-  title: {flex: 1, fontSize: 20, fontWeight: 'bold', color: colors.BLACK},
-  distance: {fontSize: 16, fontWeight: '600', color: colors.MAINBLUE},
-  address: {marginTop: 8, fontSize: 16, color: colors.BLACK},
-  infoText: {marginLeft: 8, marginRight: 16, fontSize: 14, color: colors.BLACK},
-  iconSpacing: {marginLeft: 0},
-  openText: {color: colors.GREEN, fontWeight: 'bold'},
-  closedText: {color: colors.RED, fontWeight: 'bold'},
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  title: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.BLACK,
+  },
+  distance: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.MAINBLUE,
+  },
+  address: {
+    marginTop: 8,
+    fontSize: 16,
+    color: colors.BLACK,
+  },
+  infoText: {
+    marginLeft: 8,
+    marginRight: 16,
+    fontSize: 14,
+    color: colors.BLACK,
+  },
+  iconSpacing: {
+    marginLeft: 0,
+  },
+  openText: {
+    color: colors.GREEN,
+    fontWeight: 'bold',
+  },
+  closedText: {
+    color: colors.RED,
+    fontWeight: 'bold',
+  },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,5 +232,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     justifyContent: 'center',
   },
-  btnText: {color: colors.WHITE, fontSize: 16, fontWeight: '600'},
+  btnText: {
+    color: colors.WHITE,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

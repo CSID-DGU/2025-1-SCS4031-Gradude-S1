@@ -72,8 +72,10 @@ export default function CalendarScreen() {
   };
 
   if (isError || !user) {
+    // ← 에러 상태 또는 user가 없을 때 로그를 찍습니다.
+    console.log('CalendarScreen: isError || !user →', {isError, user, error});
     return (
-      <SafeAreaView>
+      <SafeAreaView style={styles.container}>
         <Text>프로필 정보를 불러올 수 없습니다.</Text>
       </SafeAreaView>
     );
