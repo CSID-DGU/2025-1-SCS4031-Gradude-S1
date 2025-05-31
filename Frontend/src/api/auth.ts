@@ -18,29 +18,29 @@ export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
 export const postSignup = async (
   payload: SignupRequest,
 ): Promise<SignupResponse> => {
+  console.log('▶️ [postSignup] payload:', payload);
+
   const {data} = await axiosInstance.post<SignupResponse>(
     '/api/auth/signup',
     payload,
   );
+  console.log('◀️ [postSignup] response data:', data);
   return data;
 };
+
 export const getAccessToken = async (): Promise<TokenResponse> => {
   const refreshToken = await getEncryptStorage(storageKeys.REFRESH_TOKEN);
 
   const {data} = await axiosInstance.post(
     '/api/auth/reissue',
-    {}, // 빈 바디
+    {},
     {
       headers: {
         Authorization: `Bearer ${refreshToken}`,
       },
     },
   );
-
-  // 만약 API가 { result: TokenResponse } 형태라면:
-  // return data.result;
-  // 아니라 data가 곧 TokenResponse라면:
-  return data;
+  return data.result;
 };
 
 export const getProfile = async (): Promise<UserInfo> => {

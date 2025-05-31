@@ -13,7 +13,7 @@ export function validateSignup(values: Profile): Record<keyof Profile, string> {
     profileImageUrl: '',
     gender: '',
     birth: '',
-    isFaceRecognitionAgreed: '',
+    faceRecognitionAgreed: '',
   };
 
   // 성별
@@ -27,8 +27,8 @@ export function validateSignup(values: Profile): Record<keyof Profile, string> {
   }
 
   // 안면 인식 동의
-  if (!values.isFaceRecognitionAgreed) {
-    errors.isFaceRecognitionAgreed = '안면인식 동의가 필요합니다.';
+  if (!values.faceRecognitionAgreed) {
+    errors.faceRecognitionAgreed = '안면인식 동의가 필요합니다.';
   }
 
   // nickname/profileImageUrl/kakaoId는 수정 불필요하니 빈 문자열 유지

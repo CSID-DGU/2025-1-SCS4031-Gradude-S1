@@ -11,7 +11,7 @@ interface Profile {
   nickname: string;
   gender: 'MALE' | 'FEMALE';
   birth: string;
-  isFaceRecognitionAgreed: boolean;
+  faceRecognitionAgreed: boolean;
   profileImageUrl: string;
 }
 

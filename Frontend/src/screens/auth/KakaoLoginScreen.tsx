@@ -6,6 +6,9 @@ import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
 import {authNavigations, colors} from '@/constants';
 import useAuth from '@/hooks/queries/useAuth';
 import Config from 'react-native-config';
+import {useDispatch} from 'react-redux';
+import {setPreSignupUserInfo} from '@/store/slices/authSlice';
+import {AppDispatch} from '@/store';
 
 type Props = StackScreenProps<
   AuthStackParamList,
@@ -16,6 +19,8 @@ export default function KakaoLoginScreen({navigation}: Props) {
   const {kakaoLoginMutation} = useAuth();
   const [loading, setLoading] = useState(false);
   const handledRef = useRef(false);
+
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleShouldStartLoad = (request: {url: string}) => {
     const {url} = request;
@@ -38,7 +43,16 @@ export default function KakaoLoginScreen({navigation}: Props) {
       kakaoLoginMutation.mutate(code, {
         onSuccess: res => {
           console.log('✅ [API] kakaoLogin SUCCESS, response:', res);
-          navigation.replace(authNavigations.SIGNUP, {authCode: code} as any);
+
+          // res.result 안에 firstLogin, userInfo가 들어 있음
+          const {firstLogin, userInfo} = res.result;
+
+          if (firstLogin && userInfo) {
+            // 카카오 로그인 직후 userInfo를 Redux 전역 상태에 저장
+            dispatch(setPreSignupUserInfo(userInfo));
+          }
+
+          navigation.replace(authNavigations.SIGNUP, {authCode: code});
         },
         onError: err => {
           console.error('❌ [API] kakaoLogin ERROR:', err);
