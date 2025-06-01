@@ -58,6 +58,10 @@ public class Hospital extends BaseEntity {
         DayOfWeek today = LocalDate.now().getDayOfWeek(); // 오늘 요일
         String hours = openingHour.getByDay(today);
 
+        if (hours == null) {
+            return false;
+        }
+
         try {
             // 운영 시간 데이터 "09:00~18:00" 형식
             String[] hour = hours.split("~");
