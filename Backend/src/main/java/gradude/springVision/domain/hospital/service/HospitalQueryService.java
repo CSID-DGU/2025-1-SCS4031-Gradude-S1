@@ -1,8 +1,8 @@
 package gradude.springVision.domain.hospital.service;
 
-import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalMarkerResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
 import gradude.springVision.global.common.response.ErrorCode;
@@ -75,21 +75,18 @@ public class HospitalQueryService {
 
     /**
      * 병원 검색
-     * TODO - 거리순 정렬
      */
     public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(double latitude, double longitude, String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
             throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
         }
 
-        Page<Hospital> hospitalPage = hospitalRepository.findByNameContaining(keyword, pageable);
-
-        Page<HospitalSearchResponseDTO> dtoPage = hospitalPage.map(hospital -> {
+        Page<Hospital> hospitals = hospitalRepository.findByNameContainingOrderByDistance(keyword, latitude, longitude, pageable);
+        Page<HospitalSearchResponseDTO> hospitalSearchResponseDTO = hospitals.map(hospital -> {
             double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
             return HospitalSearchResponseDTO.ofSearch(hospital, distance);
         });
-
-        return PageResponseDTO.of(dtoPage);
+        return PageResponseDTO.of(hospitalSearchResponseDTO);
     }
 
     /**
@@ -118,7 +115,12 @@ public class HospitalQueryService {
 
         double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
-        return HospitalDetailResponseDTO.ofDetail(hospital, distance);
+        boolean isOpen = false;
+        if (hospital.getOpeningHour() != null) {
+            isOpen = hospital.isOpenNow();
+        }
+
+        return HospitalDetailResponseDTO.ofDetail(hospital, distance, isOpen);
     }
 
     /**

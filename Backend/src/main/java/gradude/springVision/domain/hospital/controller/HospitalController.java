@@ -1,7 +1,7 @@
 package gradude.springVision.domain.hospital.controller;
-import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalMarkerResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.service.HospitalQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
 import gradude.springVision.global.common.response.PageResponseDTO;
@@ -57,7 +57,7 @@ public class HospitalController {
         return ApiResponse.onSuccess(hospitalQueryService.getHospitalModal(latitude, longitude, hospitalId));
     }
 
-    @Operation(summary = "병원 상세 조회", description = "isOpen: null 고정")
+    @Operation(summary = "병원 상세 조회")
     @Parameters({
             @Parameter(name = "latitude", description = "현위치 위도"),
             @Parameter(name = "longitude", description = "현위치 경도"),

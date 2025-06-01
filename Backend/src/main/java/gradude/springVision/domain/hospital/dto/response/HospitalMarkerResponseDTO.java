@@ -1,4 +1,4 @@
-package gradude.springVision.domain.hospital.dto;
+package gradude.springVision.domain.hospital.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

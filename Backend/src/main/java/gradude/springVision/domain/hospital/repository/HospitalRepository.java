@@ -11,7 +11,20 @@ import java.util.List;
 
 public interface HospitalRepository extends JpaRepository<Hospital, Long> {
 
-    Page<Hospital> findByNameContaining(String keyword, Pageable pageable);
+    @Query(value = """
+    SELECT h.*,
+        (
+            6371 * acos(
+                cos(radians(:lat)) * cos(radians(h.latitude)) *
+                cos(radians(h.longitude) - radians(:lng)) +
+                sin(radians(:lat)) * sin(radians(h.latitude))
+            )
+        ) AS distance
+    FROM hospital h
+    WHERE h.name LIKE CONCAT('%', :keyword, '%')
+    ORDER BY distance
+    """, nativeQuery = true)
+    Page<Hospital> findByNameContainingOrderByDistance(@Param("keyword") String keyword, @Param("lat") double lat, @Param("lng") double lng, Pageable pageable);
 
     @Query(value = """
     SELECT 
