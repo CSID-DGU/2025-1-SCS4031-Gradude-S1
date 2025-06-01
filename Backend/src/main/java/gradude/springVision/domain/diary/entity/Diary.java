@@ -20,24 +20,24 @@ public class Diary extends BaseEntity {
     private Long id;
 
     @Column(nullable = false)
-    @Min(1) @Max(5)
+    @Min(1) @Max(4)
     private int drinking;
 
     @Column(nullable = false)
-    @Min(1) @Max(5)
-    private int exercise;
-
-    @Column(nullable = false)
-    @Min(1) @Max(5)
+    @Min(1) @Max(4)
     private int smoking;
 
     @Column(nullable = false)
-    @Min(1) @Max(5)
-    private int snack;
+    @Min(1) @Max(3)
+    private int exercise;
 
     @Column(nullable = false)
-    @Min(1) @Max(5)
-    private int vegetable;
+    @Min(1) @Max(2)
+    private int diet;
+
+    @Column(nullable = false)
+    @Min(1) @Max(3)
+    private int sleep;
 
     @Column(nullable = false)
     @Min(0) @Max(100)

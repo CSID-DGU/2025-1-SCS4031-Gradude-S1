@@ -10,19 +10,19 @@ import lombok.Getter;
 public class DiaryRequestDTO {
 
     private int drinking;
-    private int exercise;
     private int smoking;
-    private int snack;
-    private int vegetable;
+    private int exercise;
+    private int diet;
+    private int sleep;
 
     public Diary toEntity(User user, DiaryRequestDTO diaryRequestDTO, int healthScore) {
         return Diary.builder()
                 .user(user)
                 .drinking(diaryRequestDTO.getDrinking())
-                .exercise(diaryRequestDTO.getExercise())
                 .smoking(diaryRequestDTO.getSmoking())
-                .snack(diaryRequestDTO.getSnack())
-                .vegetable(diaryRequestDTO.getVegetable())
+                .exercise(diaryRequestDTO.getExercise())
+                .diet(diaryRequestDTO.getDiet())
+                .sleep(diaryRequestDTO.getSleep())
                 .healthScore(healthScore)
                 .build();
     }

@@ -14,10 +14,10 @@ public class DiaryResponseDTO {
     private LocalDate date;
     private int healthScore;
     private int drinking;
-    private int exercise;
     private int smoking;
-    private int snack;
-    private int vegetable;
+    private int exercise;
+    private int diet;
+    private int sleep;
 
     public static DiaryResponseDTO from(Diary diary) {
         return DiaryResponseDTO.builder()
@@ -25,10 +25,10 @@ public class DiaryResponseDTO {
                 .date(diary.getCreatedAt().toLocalDate())
                 .healthScore(diary.getHealthScore())
                 .drinking(diary.getDrinking())
-                .exercise(diary.getExercise())
                 .smoking(diary.getSmoking())
-                .snack(diary.getSnack())
-                .vegetable(diary.getVegetable())
+                .exercise(diary.getExercise())
+                .diet(diary.getDiet())
+                .sleep(diary.getSleep())
                 .build();
     }
 }
