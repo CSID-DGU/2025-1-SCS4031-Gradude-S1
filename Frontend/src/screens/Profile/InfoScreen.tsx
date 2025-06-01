@@ -24,7 +24,7 @@ function InfoScreen({navigation}: InfoScreenProps) {
   useEffect(() => {
     // 화면 진입 시 페이드인 애니메이션
     opacity.value = withTiming(1, {duration: 500});
-  }, []);
+  }, [opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -218,7 +218,7 @@ function InfoScreen({navigation}: InfoScreenProps) {
             9. 개인정보 보호책임자 및 문의처
           </Text>
           <Text style={styles.bullet}>• 소속 : 동국대학교 Gradude팀</Text>
-          <Text style={styles.bullet}>• 이메일: donggukGradude@gamil.com</Text>
+          <Text style={styles.bullet}>• 이메일: donggukGradude@gmail.com</Text>
           <Text style={styles.note}>
             사용자는 개인정보 보호 관련 문의 사항이 있을 경우 위 연락처로 문의할
             수 있으며, 본 앱은 신속·성실하게 답변드립니다.

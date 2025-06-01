@@ -1,10 +1,9 @@
-// navigations/root/RootNavigator.tsx
 import React, {useEffect, useRef} from 'react';
 import {View, ActivityIndicator} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import AuthStackNavigator from '../stack/AuthStackNavigator';
 import SignupScreen from '@/screens/Auth/SignupScreen';
-import TapNavigator from '../tab/TabNavigator';
+import TabNavigator from '../tab/TabNavigator';
 import useAuth from '@/hooks/queries/useAuth';
 import {authNavigations} from '@/constants';
 import {hideSplash, showSplash} from 'react-native-splash-view';
@@ -12,7 +11,7 @@ import {hideSplash, showSplash} from 'react-native-splash-view';
 export type RootStackParamList = {
   AuthStack: undefined; // 로그인 흐름 전체
   [authNavigations.SIGNUP]: {authCode: string};
-  TapNavigator: undefined; // 로그인 후 BottomTabs 전체
+  TabNavigator: undefined; // 로그인 후 BottomTabs 전체
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -51,7 +50,7 @@ export default function RootNavigator() {
           ? 'AuthStack'
           : !isProfileComplete
           ? authNavigations.SIGNUP
-          : 'TapNavigator'
+          : 'TabNavigator'
       }>
       {/* 1) 로그인 전 흐름 전체를 담고 있는 네비게이터 */}
       <RootStack.Screen name="AuthStack" component={AuthStackNavigator} />
@@ -63,7 +62,7 @@ export default function RootNavigator() {
       />
 
       {/* 3) 로그인 & 프로필 완료된 뒤 보여줄 BottomTabs 전체 */}
-      <RootStack.Screen name="TapNavigator" component={TapNavigator} />
+      <RootStack.Screen name="TabNavigator" component={TabNavigator} />
     </RootStack.Navigator>
   );
 }

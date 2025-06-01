@@ -55,7 +55,7 @@ export default function KakaoLoginScreen({navigation}: Props) {
               index: 0, // RootNavigator에서 첫 번째(route)로 TabNavigator를 선택
               routes: [
                 {
-                  name: 'TapNavigator',
+                  name: 'TabNavigator',
                   state: {
                     index: 0,
                     routes: [
