@@ -162,8 +162,6 @@ public class DiagnosisCommandService {
         int totalScore = orientation + selfDiagnosisRequestDTO.getGaze() + selfDiagnosisRequestDTO.getArm()
                         + (diagnosis.isFace() ? 1 : 0) + (diagnosis.isSpeech() ? 1 : 0);
 
-        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore);
-
         // 증상 문장 생성
         String symptoms = String.format(
                 "환자는 시선 이상 %s, 팔 움직임 이상 %s, 안면 마비 %s, 구음 장애 %s, 시간 인지 이상 %s, 나이 인지 이상 %s",
@@ -177,6 +175,8 @@ public class DiagnosisCommandService {
 
         // LLM 진단 결과
         String llmResult = llmDiagnosisService.analyzeSymptoms(symptoms).getResult();
+
+        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore, llmResult);
 
         return DiagnosisResponseDTO.from(diagnosis, llmResult);
     }

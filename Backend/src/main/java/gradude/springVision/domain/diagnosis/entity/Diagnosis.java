@@ -46,14 +46,19 @@ public class Diagnosis extends BaseEntity {
     @Min(0) @Max(5)
     private int totalScore;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String llmResult;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int orientation, int totalScore) {
+    public void updateDiagnosis(SelfDiagnosisRequestDTO dto, int orientation, int totalScore, String llmResult) {
         this.orientation = orientation;
         this.gaze = dto.getGaze();
         this.arm = dto.getArm();
         this.totalScore = totalScore;
+        this.llmResult = llmResult;
     }
 }
