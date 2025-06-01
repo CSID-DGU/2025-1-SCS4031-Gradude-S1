@@ -1,12 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import type {UserInfo} from '@/types/auth';
-
-// 토큰 구조가 다음과 같다고 가정합니다.
-// 필요하다면 실제 API 응답 필드에 맞게 이름을 변경하세요.
-interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+import type {UserInfo, TokenResponse} from '@/types/auth';
 
 interface AuthState {
   preSignupUserInfo: UserInfo | null;

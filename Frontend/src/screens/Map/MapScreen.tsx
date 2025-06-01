@@ -29,11 +29,10 @@ import {
   useHospitalSearch,
 } from '@/hooks/queries/useHospitals';
 import useUserLocation from '@/hooks/useUserLocation';
-import usePermission from '@/hooks/usePermisson';
+import usePermission from '@/hooks/usePermission';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import ModalWrapper from '@/components/commons/ModalWrapper';
-
 import {useQueries} from '@tanstack/react-query';
 import {fetchHospitalMarker} from '@/api/hospitals';
 
@@ -93,21 +92,34 @@ export default function MapScreen() {
   const [detailId, setDetailId] = useState<string | null>(null);
 
   /* 4) 각 마커별 상세 데이터 미리 fetch (useQueries) */
-  const hospitalDetailQueries = useQueries({
-    queries:
-      region != null && latitude != null && longitude != null
-        ? markers.map(h => ({
-            queryKey: ['hospitalMarker', h.hospitalId, latitude, longitude],
-            queryFn: () =>
-              fetchHospitalMarker(
-                h.hospitalId.toString(),
-                latitude as number,
-                longitude as number,
-              ),
-            enabled: latitude != null && longitude != null,
-          }))
-        : [],
+  // const hospitalDetailQueries = useQueries({
+  //   queries:
+  //     region != null && latitude != null && longitude != null
+  //       ? markers.map(h => ({
+  //           queryKey: ['hospitalMarker', h.hospitalId, latitude, longitude],
+  //           queryFn: () =>
+  //             fetchHospitalMarker(
+  //               h.hospitalId.toString(),
+  //               latitude as number,
+  //               longitude as number,
+  //             ),
+  //           enabled: latitude != null && longitude != null,
+  //         }))
+  //       : [],
+  // });
+  const detailQueries = useQueries({
+    queries: markers.map(({hospitalId}) => ({
+      queryKey: ['hospitalMarker', hospitalId, latitude, longitude],
+      queryFn: () =>
+        fetchHospitalMarker(String(hospitalId), latitude!, longitude!),
+      enabled: !!latitude && !!longitude,
+    })),
   });
+
+  // 2) detailQueries와 markers를 묶어 { [hospitalId]: query } 객체로 변환
+  const detailMap = Object.fromEntries(
+    detailQueries.map((q, idx) => [markers[idx].hospitalId, q]),
+  );
 
   /* 위치 정보 가져오기 실패 처리 */
   if (isUserLocationError) {
@@ -207,7 +219,7 @@ export default function MapScreen() {
         {/* 실제 병원 마커들 */}
         {!loadingMarkers &&
           markers.map((h, i) => {
-            const detailQuery = hospitalDetailQueries[i];
+            const detailQuery = detailMap[h.hospitalId];
             return (
               <Marker
                 key={h.hospitalId.toString()}
@@ -405,7 +417,6 @@ const styles = StyleSheet.create({
     maxHeight: 350,
   },
   listItem: {},
-
   legendContainer: {
     position: 'absolute',
     bottom: 110,
@@ -418,6 +429,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3,
+    zIndex: 1, // 범례는 zIndex 낮게
+  },
+  buttonList: {
+    position: 'absolute',
+    bottom: 30,
+    right: 15,
+    alignItems: 'center',
+
+    zIndex: 5, // 버튼이 범례 위에 오도록
   },
   legendItem: {
     flexDirection: 'row',
@@ -447,12 +467,6 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 1, height: 2},
     shadowOpacity: 0.5,
     elevation: 2,
-  },
-  buttonList: {
-    position: 'absolute',
-    bottom: 30,
-    right: 15,
-    alignItems: 'center',
   },
 
   errorText: {

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors} from '@/constants';

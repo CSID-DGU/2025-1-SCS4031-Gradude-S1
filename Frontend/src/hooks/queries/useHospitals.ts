@@ -12,7 +12,6 @@ import {
   HospitalDetailDto,
 } from '@/types/hospital';
 
-// 지도 마커용 DTO
 export const useHospitalMarkers = (bounds?: {
   neLatitude: number;
   neLongitude: number;
@@ -20,11 +19,16 @@ export const useHospitalMarkers = (bounds?: {
   swLongitude: number;
 }) =>
   useQuery<HospitalMarkerDto[]>({
-    queryKey: ['hospitalMarkers', bounds],
+    queryKey: [
+      'hospitalMarkers',
+      bounds?.neLatitude,
+      bounds?.neLongitude,
+      bounds?.swLatitude,
+      bounds?.swLongitude,
+    ],
     queryFn: () => fetchHospitalMarkers(bounds!),
     enabled: Boolean(bounds),
   });
-
 // 근처 병원 리스트용 DTO
 export const useNearestHospitals = (latitude?: number, longitude?: number) =>
   useQuery<HospitalSummaryDto[]>({

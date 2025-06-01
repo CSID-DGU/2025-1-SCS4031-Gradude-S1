@@ -42,6 +42,9 @@ export const fetchHospitalSearch = async (
   >('/api/hospital/search', {
     params: {latitude, longitude, keyword, page, size},
   });
+  if (!data.result || !Array.isArray(data.result.content)) {
+    throw new Error('잘못된 서버 응답 형식입니다.');
+  }
   return data.result.content;
 };
 
