@@ -2,7 +2,7 @@ package gradude.springVision.domain.diary.service;
 
 import gradude.springVision.domain.diary.dto.request.DiaryRequestDTO;
 import gradude.springVision.domain.diary.dto.response.DiaryResponseDTO;
-import gradude.springVision.domain.diary.entity.Diary;
+import gradude.springVision.domain.diary.entity.*;
 import gradude.springVision.domain.diary.repository.DiaryRepository;
 import gradude.springVision.domain.user.entity.User;
 import gradude.springVision.domain.user.repository.UserRepository;
@@ -40,13 +40,23 @@ public class DiaryCommandService {
         }
 
         // 건강 점수 계산
-        int healthScore = (diaryRequestDTO.getDrinking() + diaryRequestDTO.getExercise()
-                + diaryRequestDTO.getSmoking() + diaryRequestDTO.getSnack()
-                + diaryRequestDTO.getVegetable() - 5) * 100 / 20;
+        int healthScore = calculateHealthScore(diaryRequestDTO);
 
         Diary diary = diaryRequestDTO.toEntity(user, diaryRequestDTO, healthScore);
         Diary savedDiary = diaryRepository.save(diary);
 
         return DiaryResponseDTO.from(savedDiary);
+    }
+
+    public int calculateHealthScore(DiaryRequestDTO diaryRequestDTO) {
+        int drinkingScore = Drinking.ofOption(diaryRequestDTO.getDrinking()).getScoreImpact();
+        int smokingScore = Smoking.ofOption(diaryRequestDTO.getSmoking()).getScoreImpact();
+        int exerciseScore = Exercise.ofOption(diaryRequestDTO.getExercise()).getScoreImpact();
+        int dietScore = Diet.ofOption(diaryRequestDTO.getDiet()).getScoreImpact();
+        int sleepScore = Sleep.ofOption(diaryRequestDTO.getSleep()).getScoreImpact();
+
+        int totalScore = drinkingScore + smokingScore + exerciseScore + dietScore + sleepScore;
+
+        return Math.max(0, 100 + totalScore);
     }
 }
