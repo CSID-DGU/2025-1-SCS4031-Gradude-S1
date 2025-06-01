@@ -21,7 +21,7 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
             )
         ) AS distance
     FROM hospital h
-    WHERE h.name LIKE %:keyword%
+    WHERE h.name LIKE CONCAT('%', :keyword, '%')
     ORDER BY distance
     """, nativeQuery = true)
     Page<Hospital> findByNameContainingOrderByDistance(@Param("keyword") String keyword, @Param("lat") double lat, @Param("lng") double lng, Pageable pageable);
