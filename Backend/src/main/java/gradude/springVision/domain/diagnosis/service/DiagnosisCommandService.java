@@ -43,8 +43,8 @@ public class DiagnosisCommandService {
     private final S3Service s3Service;
     private final LlmDiagnosisService llmDiagnosisService;
 
-    private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4"};
-    private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm"};
+    private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4", "mov"};
+    private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm", "m4a"};
 
     /**
      * 안면+음성 자가 진단
