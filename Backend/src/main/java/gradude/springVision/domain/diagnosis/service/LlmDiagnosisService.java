@@ -4,7 +4,7 @@ import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
-import gradude.springVision.domain.diagnosis.dto.response.FinalDiagnosisResponseDTO;
+import gradude.springVision.domain.diagnosis.dto.response.LlmDiagnosisResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,14 +13,28 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class FinalDiagnosisService {
+public class LlmDiagnosisService {
 
     @Value("${openai.model}")
     private String model;
 
     private final OpenAiService openAiService;
 
-    public FinalDiagnosisResponseDTO analyzeSymptoms(String symptoms) {
+    /**
+     * TODO - 프롬프트 수정해야 함
+     * ## 중증뇌졸중분류척도 **CG-FAST** 를 기준으로 뇌졸중척도 진단
+     *
+     * ### CG-FAST 기준
+     *
+     * - 의식수준 질의(나이, 월) → 0 / 1(둘 다 비정상일 경우 )
+     * - 주시편위 → 0 / 1
+     * - 얼굴마비 → 0 / 1
+     * - 팔마비 → 0 / 1
+     * - 구음장애/언어장애 → 0 / 1
+     *
+     * → 3점 이상이면 양성
+     */
+    public LlmDiagnosisResponseDTO analyzeSymptoms(String symptoms) {
         String persona = "당신은 뇌졸중 임상 진단 및 치료 전문가입니다.\n" +
                 "환자가 자연어로 표현한 증상을 바탕으로, 현재 임상적으로 고려해야 할 진단 소견, 관련된 뇌졸중 척도(예: CPSS, LAPSS, FAST 등)의 의미,\n" +
                 "그리고 적절한 치료 권고와 추후 관리 방안을 전문적이면서도 이해하기 쉽게 한국어로 설명해 주세요.";
@@ -46,6 +60,6 @@ public class FinalDiagnosisService {
 
         List<ChatCompletionChoice> choices = openAiService.createChatCompletion(request).getChoices();
         String result = choices.isEmpty() ? "응답이 없습니다." : choices.get(0).getMessage().getContent();
-        return new FinalDiagnosisResponseDTO(result);
+        return new LlmDiagnosisResponseDTO(result);
     }
 }
