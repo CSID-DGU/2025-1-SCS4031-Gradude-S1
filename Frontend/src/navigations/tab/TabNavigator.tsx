@@ -1,5 +1,5 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import ProfileScreen from '@/screens/Profile/ProfileScreen';
+
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors, homeNavigations} from '@/constants';
@@ -7,6 +7,7 @@ import HomeStackNavigator from '../stack/HomeStackNavigator';
 import MapStackNavigator from '../stack/MapStackNavigator';
 import HealthStackNavigator from '../stack/HealthStackNavigator';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import ProfileStackNavigator from '../stack/ProfileStackNavigator';
 
 export const mainTabNavigations = {
   HOME: 'Home',
@@ -80,7 +81,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name={mainTabNavigations.PROFILE}
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{tabBarLabel: '내정보'}}
       />
     </Tab.Navigator>

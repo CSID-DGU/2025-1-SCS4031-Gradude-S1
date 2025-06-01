@@ -40,11 +40,12 @@ export const getAccessToken = async (): Promise<TokenResponse> => {
       },
     },
   );
-  return data.result;
+  return data;
 };
 
 export const getProfile = async (): Promise<UserInfo> => {
   const {data} = await axiosInstance.post('/api/auth/profile');
+  console.log('◀️ [getProfile] response data:', data);
   return data.result;
 };
 

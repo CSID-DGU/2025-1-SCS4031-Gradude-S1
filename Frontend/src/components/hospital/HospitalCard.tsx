@@ -1,35 +1,44 @@
 import React from 'react';
-import {SafeAreaView, View, Text, StyleSheet, FlatList} from 'react-native';
-import {colors} from '@/constants';
-import {Hospital} from '@/types/hospital';
+import {View, Text, StyleSheet} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {colors} from '@/constants';
+import {HospitalDetailDto} from '@/types/hospital';
 
 interface HospitalCardProps {
-  item: Hospital;
+  data: HospitalDetailDto;
 }
-function HospitalCard({item}: HospitalCardProps) {
+
+export default function HospitalCard({data}: HospitalCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{item.name}</Text>
-        <Text style={styles.distance}>{item.distance}km</Text>
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          {data.name}
+        </Text>
+        <Text style={styles.distance}>{data.distance.toFixed(1)}km</Text>
       </View>
-      <Text style={styles.address}>{item.address}</Text>
+
+      <Text style={styles.address} numberOfLines={1} ellipsizeMode="tail">
+        {data.address}
+      </Text>
+
       <View style={styles.infoRow}>
-        <Ionicons name="call" size={16} color={colors.GRAY} />
-        <Text style={styles.infoText}>{item.phoneNumber}</Text>
+        <Ionicons name="call" size={14} color={colors.GRAY} />
+        <Text style={styles.infoText} numberOfLines={1} ellipsizeMode="tail">
+          {data.phoneNumber}
+        </Text>
         <Ionicons
           name="time"
-          size={16}
+          size={14}
           color={colors.GRAY}
           style={styles.iconSpacing}
         />
         <Text
           style={[
             styles.infoText,
-            item.isOpen ? styles.openText : styles.closedText,
+            data.open ? styles.openText : styles.closedText,
           ]}>
-          {item.isOpen ? '진료 중' : '진료 마감'}
+          {data.open ? '진료 중' : '진료 마감'}
         </Text>
       </View>
     </View>
@@ -38,39 +47,34 @@ function HospitalCard({item}: HospitalCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    height: 110,
+    minWidth: 280,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     backgroundColor: colors.WHITE,
-    justifyContent: 'space-evenly',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: colors.BLACK,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 4,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   title: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.BLACK,
+    marginRight: 8,
   },
   distance: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.MAINBLUE,
   },
   address: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.BLACK,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   infoRow: {
     flexDirection: 'row',
@@ -78,8 +82,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     marginLeft: 4,
-    marginRight: 16,
-    fontSize: 14,
+    marginRight: 12,
+    fontSize: 13,
     color: colors.BLACK,
   },
   iconSpacing: {
@@ -94,5 +98,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default HospitalCard;

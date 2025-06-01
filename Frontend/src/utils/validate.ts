@@ -1,9 +1,4 @@
-// src/utils/validate.ts
 import type {Profile} from '@/types/profile';
-
-export function isBlank(value: string) {
-  return value.trim() === '';
-}
 
 export function validateSignup(values: Profile): Record<keyof Profile, string> {
   // 프로필 전체 키에 대해 빈 문자열로 초기화

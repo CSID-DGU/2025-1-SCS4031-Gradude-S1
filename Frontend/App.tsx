@@ -7,8 +7,16 @@ import RootNavigator from './src/navigations/root/RootNavigator';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {Provider as ReduxProvider} from 'react-redux';
 import {store} from './src/store';
+// import {hideSplash, showSplash} from 'react-native-splash-view';
 
 function App() {
+  // showSplash();
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     hideSplash();
+  //   }, 500);
+  // }, []);
   return (
     <ReduxProvider store={store}>
       <SafeAreaProvider>

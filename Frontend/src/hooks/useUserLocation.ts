@@ -3,7 +3,7 @@ import {LatLng} from 'react-native-maps';
 import GeoLocation from '@react-native-community/geolocation';
 
 function useUserLocation() {
-  const [userLocation, setUserLocation] = useState<LatLng>({
+  const [coords, setCoords] = useState<LatLng>({
     latitude: 37.5516032365118,
     longitude: 126.98989626020192,
   });
@@ -12,8 +12,10 @@ function useUserLocation() {
   useEffect(() => {
     GeoLocation.getCurrentPosition(
       info => {
-        const {latitude, longitude} = info.coords;
-        setUserLocation({latitude, longitude});
+        setCoords({
+          latitude: info.coords.latitude,
+          longitude: info.coords.longitude,
+        });
         setIsUserLocationError(false);
       },
       () => {
@@ -25,7 +27,12 @@ function useUserLocation() {
     );
   }, []);
 
-  return {userLocation, isUserLocationError};
+  // 좌표를 바로 분리 반환
+  return {
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    isUserLocationError,
+  };
 }
 
 export default useUserLocation;

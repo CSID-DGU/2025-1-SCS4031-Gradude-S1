@@ -5,58 +5,80 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
-  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors} from '@/constants';
-import type {Hospital, OpeningHours} from '@/types/hospital';
+import {useHospitalDetail} from '@/hooks/queries/useHospitals';
+import type {HospitalDetailDto, OpeningHourDto} from '@/types/hospital';
 
-function getTodaySchedule(openingHours: OpeningHours): string {
-  const dayKeys: Array<keyof OpeningHours> = [
-    'sunday',
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-  ];
-  const todayIndex = new Date().getDay();
-  const key = dayKeys[todayIndex];
-  return openingHours[key];
+interface Props {
+  hospitalId: string;
+  userLatitude: number;
+  userLongitude: number;
 }
 
+// 요일 키 순서 및 한글 요일 배열
+const dayKeys: Array<keyof OpeningHourDto> = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+];
 const korDays = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
-type Props = {hospital: Hospital};
+export default function HospitalDetail({
+  hospitalId,
+  userLatitude,
+  userLongitude,
+}: Props) {
+  const {data, isLoading, isError} = useHospitalDetail(
+    hospitalId,
+    userLatitude,
+    userLongitude,
+  );
 
-function HospitalDetail({hospital}: Props) {
-  const {latitude, longitude, phoneNumber, openingHours} = hospital;
-  const todayIndex = new Date().getDay();
-  const todaySchedule = getTodaySchedule(openingHours);
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </View>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>병원 정보를 불러올 수 없습니다.</Text>
+      </View>
+    );
+  }
+
+  // DTO에서 데이터 분해
+  const {
+    name,
+    distance,
+    address,
+    phoneNumber,
+    openingHour,
+    open,
+    latitude: lat,
+    longitude: lng,
+  } = data as HospitalDetailDto;
 
   const openDirections = () => {
-    const lat = hospital.latitude;
-    const lng = hospital.longitude;
-    const label = encodeURIComponent(hospital.name);
-
+    const label = encodeURIComponent(name);
     const googleUrl = `comgooglemaps://?daddr=${lat},${lng}&q=${label}&directionsmode=driving`;
     const appleUrl = `http://maps.apple.com/?daddr=${lat},${lng}&q=${label}`;
-
     Linking.canOpenURL(googleUrl)
-      .then(supported => {
-        if (supported) {
-          // Google Maps 앱이 설치되어 있으면 구글맵으로 이동
-          Linking.openURL(googleUrl);
-        } else {
-          // 아니면 Apple Maps로 폴백
-          Linking.openURL(appleUrl);
-        }
-      })
+      .then(supported =>
+        supported ? Linking.openURL(googleUrl) : Linking.openURL(appleUrl),
+      )
       .catch(err => console.warn('경로 열기 실패', err));
   };
 
-  // TODO : 응급실 전화 설정
   const callEmergency = () => {
     const digits = phoneNumber.replace(/[^0-9]/g, '');
     const telUrl = `tel:${digits}`;
@@ -66,100 +88,154 @@ function HospitalDetail({hospital}: Props) {
   };
 
   return (
-    <View style={styles.card}>
-      <View style={styles.row}>
-        <Text style={styles.name}>{hospital.name}</Text>
-        <Text style={styles.distance}>{hospital.distance}km</Text>
+    // SafeAreaView로 최상단 노치 영역까지 흰색 배경을 채워줍니다.
+    <View style={styles.safeArea}>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <Text style={styles.title}>{name}</Text>
+          <Text style={styles.distance}>{distance.toFixed(1)}km</Text>
+        </View>
+
+        <Text style={styles.address}>{address}</Text>
+
+        <View style={styles.row}>
+          <Ionicons name="call" size={16} color={colors.GRAY} />
+          <Text style={styles.infoText}>{phoneNumber}</Text>
+          <Ionicons
+            name="time"
+            size={16}
+            color={colors.GRAY}
+            style={styles.iconSpacing}
+          />
+          <Text
+            style={[
+              styles.infoText,
+              open ? styles.openText : styles.closedText,
+            ]}>
+            {open ? '진료 중' : '진료 마감'}
+          </Text>
+        </View>
+
+        <View style={{marginTop: 16, marginBottom: 16}}>
+          {dayKeys.map((day, idx) => (
+            <View key={day} style={[styles.row, idx > 0 && {marginTop: 4}]}>
+              <Ionicons name="time" size={16} color={colors.GRAY} />
+              <Text style={styles.infoText}>
+                {korDays[idx]}요일:{' '}
+                {openingHour[day] !== null && openingHour[day] !== ''
+                  ? openingHour[day]
+                  : '영업 종료'}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.btn, {backgroundColor: colors.MAINBLUE}]}
+          onPress={openDirections}>
+          <Ionicons
+            name="location"
+            size={25}
+            color={colors.WHITE}
+            style={{marginRight: 8}}
+          />
+          <Text style={styles.btnText}>지도에서 경로 탐색</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, {backgroundColor: colors.RED}]}
+          onPress={callEmergency}>
+          <Ionicons
+            name="call"
+            size={25}
+            color={colors.WHITE}
+            style={{marginRight: 8}}
+          />
+          <Text style={styles.btnText}>응급실 전화걸기</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.address}>{hospital.address}</Text>
-
-      <View style={styles.row}>
-        <Ionicons name="call" size={16} color={colors.GRAY} />
-        <Text style={styles.text}>{phoneNumber}</Text>
-      </View>
-
-      <View style={[styles.row, {marginTop: 8, marginBottom: 16}]}>
-        <Ionicons name="time" size={16} color={colors.GRAY} />
-        <Text style={styles.text}>
-          {korDays[todayIndex]}요일: {todaySchedule}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.btn, {backgroundColor: colors.MAINBLUE}]}
-        onPress={openDirections}>
-        <Ionicons
-          name="location"
-          size={25}
-          color={colors.WHITE}
-          style={{marginRight: 8}}
-        />
-        <Text style={styles.btnText}>지도에서 경로 탐색</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.btn, {backgroundColor: colors.RED}]}
-        onPress={callEmergency}>
-        <Ionicons
-          name="call"
-          size={25}
-          color={colors.WHITE}
-          style={{marginRight: 8}}
-        />
-        <Text style={styles.btnText}>응급실 전화걸기</Text>
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: colors.WHITE, // 모달 최상단까지 흰색으로 채움
+  },
+  loaderContainer: {
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    height: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.RED,
+  },
   card: {
-    paddingVertical: 36,
-    marginBottom: 30,
-    paddingHorizontal: 16,
     backgroundColor: colors.WHITE,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: colors.BLACK,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 4},
+    elevation: 4,
+    marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  name: {
+  title: {
     flex: 1,
-    fontSize: 25,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: colors.MAINBLUE,
-    marginBottom: 4,
+    color: colors.BLACK,
   },
   distance: {
-    fontSize: 18,
-    color: colors.BLACK,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.MAINBLUE,
   },
   address: {
-    fontSize: 18,
-    color: colors.BLACK,
-    marginBottom: 12,
-  },
-  text: {
-    marginLeft: 8,
+    marginTop: 8,
     fontSize: 16,
     color: colors.BLACK,
+  },
+  infoText: {
+    marginLeft: 8,
+    marginRight: 16,
+    fontSize: 14,
+    color: colors.BLACK,
+  },
+  iconSpacing: {
+    marginLeft: 0,
+  },
+  openText: {
+    color: colors.GREEN,
+    fontWeight: 'bold',
+  },
+  closedText: {
+    color: colors.RED,
+    fontWeight: 'bold',
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 30,
     marginTop: 12,
-    width: '100%',
     justifyContent: 'center',
   },
   btnText: {
     color: colors.WHITE,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
-
-export default HospitalDetail;

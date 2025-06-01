@@ -34,13 +34,6 @@ type SignupProps = StackScreenProps<
   typeof authNavigations.SIGNUP
 >;
 
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export default function SignupScreen({navigation}: SignupProps) {
   const pre = useSelector((state: RootState) => state.auth.preSignupUserInfo);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);

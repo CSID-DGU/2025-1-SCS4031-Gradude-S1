@@ -1,14 +1,13 @@
+// KakaoLoginScreen.tsx
 import React, {useState, useRef} from 'react';
-import {ActivityIndicator, SafeAreaView, StyleSheet, View} from 'react-native';
-import {WebView, WebViewNavigation} from 'react-native-webview';
+import {SafeAreaView, View, ActivityIndicator, StyleSheet} from 'react-native';
+import {WebView} from 'react-native-webview';
+import {CommonActions} from '@react-navigation/native'; // ← 추가
 import type {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
-import {authNavigations, colors} from '@/constants';
+import {authNavigations, homeNavigations} from '@/constants';
 import useAuth from '@/hooks/queries/useAuth';
 import Config from 'react-native-config';
-import {useDispatch} from 'react-redux';
-import {setPreSignupUserInfo} from '@/store/slices/authSlice';
-import {AppDispatch} from '@/store';
 
 type Props = StackScreenProps<
   AuthStackParamList,
@@ -20,11 +19,8 @@ export default function KakaoLoginScreen({navigation}: Props) {
   const [loading, setLoading] = useState(false);
   const handledRef = useRef(false);
 
-  const dispatch = useDispatch<AppDispatch>();
-
   const handleShouldStartLoad = (request: {url: string}) => {
     const {url} = request;
-    console.log('⏳ shouldStartLoad:', url);
 
     if (
       !handledRef.current &&
@@ -32,27 +28,48 @@ export default function KakaoLoginScreen({navigation}: Props) {
     ) {
       handledRef.current = true;
       const code = url.split('code=')[1]!;
-      console.log('✅ [WebView] intercept code:', code);
 
       setLoading(true);
-
-      console.log(
-        '➡️ [Mutate] calling kakaoLoginMutation.mutate with code:',
-        code,
-      );
       kakaoLoginMutation.mutate(code, {
         onSuccess: res => {
-          console.log('✅ [API] kakaoLogin SUCCESS, response:', res);
+          const {firstLogin} = res.result;
 
-          // res.result 안에 firstLogin, userInfo가 들어 있음
-          const {firstLogin, userInfo} = res.result;
-
-          if (firstLogin && userInfo) {
-            // 카카오 로그인 직후 userInfo를 Redux 전역 상태에 저장
-            dispatch(setPreSignupUserInfo(userInfo));
+          if (firstLogin) {
+            // 첫 로그인이라면 회원가입 화면으로 이동
+            navigation.replace(authNavigations.SIGNUP, {authCode: code});
+            return;
           }
 
-          navigation.replace(authNavigations.SIGNUP, {authCode: code});
+          // RootNavigator를 타고 TabNavigator → HomeStack → MAIN_HOME 으로 진입
+
+          // AuthStackNavigator의 부모인 RootNavigator 객체를 가져옴.
+          const rootNav = navigation.getParent();
+          if (!rootNav) {
+            console.warn('⚠️ RootNavigator를 찾을 수 없습니다.');
+            return;
+          }
+
+          // CommonActions.reset으로 최상위 상태를 한 번에 재설정
+          rootNav.dispatch(
+            CommonActions.reset({
+              index: 0, // RootNavigator에서 첫 번째(route)로 TabNavigator를 선택
+              routes: [
+                {
+                  name: 'TabNavigator',
+                  state: {
+                    index: 0,
+                    routes: [
+                      {
+                        name: homeNavigations.MAIN_HOME,
+                        // ← HomeStackNavigator에 등록된 MAIN_HOME 스크린 이름
+                        // 필요하다면 params: { … } 도 여기에 추가 가능.
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          );
         },
         onError: err => {
           console.error('❌ [API] kakaoLogin ERROR:', err);
@@ -63,18 +80,16 @@ export default function KakaoLoginScreen({navigation}: Props) {
 
       return false;
     }
-
-    return true; // 그 외의 URL은 정상 로드
+    return true;
   };
 
   return (
     <SafeAreaView style={styles.container}>
       {loading && (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.BLACK} />
+          <ActivityIndicator size="large" color="black" />
         </View>
       )}
-
       <WebView
         style={styles.container}
         source={{
@@ -92,7 +107,7 @@ const styles = StyleSheet.create({
   container: {flex: 1},
   loader: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.WHITE,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
   },

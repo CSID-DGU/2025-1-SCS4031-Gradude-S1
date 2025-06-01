@@ -30,7 +30,7 @@ export function useGetRefreshToken() {
       setHeader('Authorization', `Bearer ${data.accessToken}`);
       setEncryptStorage(storageKeys.REFRESH_TOKEN, data.refreshToken);
     }
-  }, [isSuccess]);
+  }, [isSuccess, data]);
 
   useEffect(() => {
     if (isError) {
@@ -49,7 +49,6 @@ export function useGetProfile() {
   return useQuery<UserInfo>({
     queryKey: [queryKeys.AUTH, queryKeys.GET_PROFILE],
     queryFn: getProfile, // UI에서 프로필 조회 용
-    enabled: true,
   });
 }
 
