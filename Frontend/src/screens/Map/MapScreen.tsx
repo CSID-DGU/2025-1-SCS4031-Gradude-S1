@@ -9,6 +9,7 @@ import {
   FlatList,
   Pressable,
   Alert,
+  Keyboard,
 } from 'react-native';
 import MapView, {
   Callout,
@@ -20,7 +21,6 @@ import MapView, {
 } from 'react-native-maps';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors} from '@/constants';
-import ModalWrapper from '@/components/commons/ModalWrapper';
 import HospitalListCard from '@/components/hospital/HospitalListCard';
 import {HospitalMarkerDto, HospitalSummaryDto} from '@/types/hospital';
 import {
@@ -32,6 +32,7 @@ import useUserLocation from '@/hooks/useUserLocation';
 import usePermission from '@/hooks/usePermisson';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import HospitalCard from '@/components/hospital/HospitalCard';
+import ModalWrapper from '@/components/commons/ModalWrapper'; // ← 추가
 
 import {useQueries} from '@tanstack/react-query';
 import {fetchHospitalMarker} from '@/api/hospitals';
@@ -42,6 +43,7 @@ export default function MapScreen() {
     Record<string, {showCallout(): void; hideCallout(): void}>
   >({});
 
+  /* 1) 사용자 위치 가져오기 */
   const {latitude, longitude, isUserLocationError} = useUserLocation();
   usePermission('LOCATION');
 
@@ -67,12 +69,9 @@ export default function MapScreen() {
         }
       : undefined;
 
-  const {
-    data: markers = [],
-    isLoading: loadingMarkers,
-    isError: markersError,
-    error: markersErrorObj,
-  } = useHospitalMarkers(bounds);
+  /* 2) 병원 마커 및 근처 병원/검색 결과 조회 */
+  const {data: markers = [], isLoading: loadingMarkers} =
+    useHospitalMarkers(bounds);
 
   const {data: nearest = [], isLoading: loadingNearest} = useNearestHospitals(
     latitude,
@@ -84,13 +83,16 @@ export default function MapScreen() {
     longitude,
     searchTerm,
   );
+  // 검색어가 2자 이상일 때는 검색 결과, 그렇지 않으면 nearest 목록
   const listData: HospitalSummaryDto[] =
     searchTerm.length >= 2 ? searched : nearest;
 
+  /* 3) 입력창 포커스/리스트 표시 상태, 상세 모달 상태 */
   const [listVisible, setListVisible] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
+  /* 4) 각 마커별 상세 데이터 미리 fetch (useQueries) */
   const hospitalDetailQueries = useQueries({
     queries:
       region != null && latitude != null && longitude != null
@@ -107,6 +109,7 @@ export default function MapScreen() {
         : [],
   });
 
+  /* 위치 정보 가져오기 실패 처리 */
   if (isUserLocationError) {
     return (
       <View style={styles.center}>
@@ -122,6 +125,7 @@ export default function MapScreen() {
     );
   }
 
+  /* 내 위치 버튼 클릭 시 */
   const handlePressUserLocation = () => {
     if (isUserLocationError) {
       Alert.alert('위치 정보를 가져올 수 없습니다.');
@@ -133,41 +137,62 @@ export default function MapScreen() {
     );
   };
 
-  // 기존 오류 수정 부분
-  const handleMapPress = (_: MapPressEvent) =>
+  /* 지도를 눌렀을 때 모든 콜아웃 닫기 + 키보드 내리기 */
+  const handleMapPress = (_: MapPressEvent) => {
     Object.values(markerRefs.current).forEach(ref => ref.hideCallout());
+    Keyboard.dismiss();
+  };
 
-  // 10) 마커/지도 터치 핸들러
+  /* 마커 클릭 시 해당 마커 카메라 이동 + 콜아웃 열기 */
   const handleMarkerPress = (h: HospitalMarkerDto) => (_: MarkerPressEvent) => {
-    // 1) 카메라를 해당 병원으로 이동
     mapRef.current?.animateCamera(
       {
         center: {latitude: h.latitude, longitude: h.longitude},
         zoom: 15,
       },
-      {duration: 300},
+      {duration: 0},
     );
 
-    // 2) 다른 콜아웃 숨기기
     Object.entries(markerRefs.current).forEach(([id, ref]) => {
       if (id !== h.hospitalId.toString()) {
         ref.hideCallout();
       }
     });
 
-    // 3) 애니메이션이 끝나고 충분히 안정된 뒤에 showCallout 호출
-    //    (300ms 애니메이션 + 50ms 버퍼 정도)
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       markerRefs.current[h.hospitalId.toString()]?.showCallout();
-    }, 350);
+    });
   };
 
+  //   const handleMarkerPress = (h: HospitalMarkerDto) => (_: MarkerPressEvent) => {
+  //
+  //   mapRef.current?.animateCamera(
+  //     {
+  //       center: { latitude: h.latitude, longitude: h.longitude },
+  //       zoom: 15,
+  //     },
+  //     { duration: 300 },
+  //   );
+
+  //
+  //   Object.entries(markerRefs.current).forEach(([id, ref]) => {
+  //     if (id !== h.hospitalId.toString()) {
+  //       ref.hideCallout();
+  //     }
+  //   });
+
+  //
+  //   setTimeout(() => {
+  //     markerRefs.current[h.hospitalId.toString()]?.showCallout();
+  //   }, 100);
+  // };
+
+  /* 콜아웃 눌렀을 때 상세 모달 열기 */
   const openDetail = (h: {hospitalId: string | number}) => {
     setDetailId(h.hospitalId.toString());
     setDetailVisible(true);
   };
 
-  // 11) JSX 반환
   return (
     <>
       <MapView
@@ -179,7 +204,7 @@ export default function MapScreen() {
         followsUserLocation
         onPress={handleMapPress}
         onRegionChangeComplete={r => setRegion(r)}>
-        {/* ─── 실제병원 마커들 ─── */}
+        {/* 실제 병원 마커들 */}
         {!loadingMarkers &&
           markers.map((h, i) => {
             const detailQuery = hospitalDetailQueries[i];
@@ -211,38 +236,48 @@ export default function MapScreen() {
             );
           })}
       </MapView>
-      {/* ===== 검색 / 리스트 버튼 ===== */}
-      <TouchableOpacity
-        style={styles.searchBtn}
-        onPress={() => setListVisible(true)}>
-        <Text style={styles.searchText}>병원 리스트 / 검색</Text>
-        <Ionicons name="search" size={20} color={colors.GRAY} />
-      </TouchableOpacity>
 
-      {/* ===== 내 위치 버튼 ===== */}
-      <View style={styles.buttonList}>
-        <Pressable style={styles.mapButton} onPress={handlePressUserLocation}>
-          <Ionicons name="locate-outline" size={25} color={colors.WHITE} />
-        </Pressable>
-      </View>
-
-      {/* ===== 리스트/검색 모달 ===== */}
-      <ModalWrapper
-        visible={listVisible}
-        onClose={() => {
-          setListVisible(false);
-          setSearchTerm('');
-        }}>
-        <View style={{padding: 16}}>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrapper}>
+          <Ionicons
+            name="search"
+            size={18}
+            color={colors.GRAY}
+            style={{marginLeft: 8}}
+          />
           <TextInput
             value={searchTerm}
-            onChangeText={setSearchTerm}
-            placeholder="병원명 검색 (2자 이상)"
-            style={styles.searchInput}
+            onChangeText={text => {
+              setSearchTerm(text);
+              if (!listVisible) setListVisible(true);
+            }}
+            placeholder="병원 리스트 / 검색"
+            style={styles.searchTextInput}
+            returnKeyType="search"
+            onFocus={() => setListVisible(true)}
           />
+
+          <TouchableOpacity
+            onPress={() => {
+              setSearchTerm('');
+              setListVisible(false);
+              Keyboard.dismiss();
+            }}
+            style={styles.clearIcon}>
+            <Ionicons name="close" size={18} color={colors.GRAY} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {listVisible && (
+        <View style={styles.listContainer}>
           {(loadingNearest && !searchTerm) ||
           (loadingSearch && !!searchTerm) ? (
-            <ActivityIndicator size="large" color={colors.MAINBLUE} />
+            <ActivityIndicator
+              size="large"
+              color={colors.MAINBLUE}
+              style={{marginTop: 16}}
+            />
           ) : (
             <FlatList
               data={listData}
@@ -269,16 +304,36 @@ export default function MapScreen() {
                         ]?.showCallout(),
                       500,
                     );
+                    Keyboard.dismiss();
                   }}>
                   <HospitalListCard item={item} />
                 </TouchableOpacity>
               )}
+              style={{maxHeight: 350}}
             />
           )}
         </View>
-      </ModalWrapper>
+      )}
 
-      {/* ===== 마커 상세 모달 ===== */}
+      <View style={styles.legendContainer}>
+        <View style={styles.legendItem}>
+          <View style={[styles.markerColor, {backgroundColor: colors.RED}]} />
+          <Text style={styles.legendText}>뇌졸중 전문 센터</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View
+            style={[styles.markerColor, {backgroundColor: colors.MAINBLUE}]}
+          />
+          <Text style={styles.legendText}>일반병원</Text>
+        </View>
+      </View>
+
+      <View style={styles.buttonList}>
+        <Pressable style={styles.mapButton} onPress={handlePressUserLocation}>
+          <Ionicons name="locate-outline" size={25} color={colors.WHITE} />
+        </Pressable>
+      </View>
+
       <ModalWrapper
         visible={detailVisible}
         onClose={() => setDetailVisible(false)}>
@@ -295,40 +350,91 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
-  center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
-  searchBtn: {
+  container: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  searchContainer: {
     position: 'absolute',
     top: 70,
     left: 20,
     right: 20,
+  },
+  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: colors.WHITE,
-    padding: 12,
-    borderRadius: 25,
-    elevation: 2,
-    shadowColor: colors.GRAY,
-    shadowOffset: {width: 1, height: 2},
-    shadowOpacity: 0.3,
+    borderRadius: 20,
+    height: 40,
+    paddingHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  searchText: {fontSize: 16, fontWeight: 'bold', color: colors.GRAY},
-  searchInput: {
-    borderWidth: 1,
-    borderColor: colors.GRAY,
+  searchTextInput: {
+    flex: 1,
+    height: '100%',
+    marginLeft: 6,
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  clearIcon: {
+    paddingHorizontal: 8,
+  },
+
+  /* ========= 검색 리스트 박스 ========= */
+  listContainer: {
+    position: 'absolute',
+    top: 70 + 40 + 8,
+    left: 20,
+    right: 20,
+    backgroundColor: colors.WHITE,
+    borderRadius: 12,
+    shadowColor: colors.LIGHTGRAY,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    maxHeight: 350,
+  },
+  listItem: {},
+
+  legendContainer: {
+    position: 'absolute',
+    bottom: 110,
+    right: 15,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 8,
     padding: 8,
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  listItem: {
+  legendItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    marginBottom: 4,
   },
+  markerColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: colors.BLACK,
+  },
+
   mapButton: {
     backgroundColor: colors.MAINBLUE,
     marginVertical: 5,
@@ -336,7 +442,7 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 30,
+    borderRadius: 24,
     shadowColor: colors.GRAY,
     shadowOffset: {width: 1, height: 2},
     shadowOpacity: 0.5,

@@ -18,16 +18,21 @@ export default function HospitalListCard({item}: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderColor: '#EEE',
+    borderColor: colors.LIGHTGRAY,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   name: {
+    flex: 1, // 가능한 수평 공간을 다 차지
     fontSize: 16,
+    fontWeight: 'bold',
     color: colors.BLACK,
   },
   distance: {
     fontSize: 14,
-    color: colors.GRAY,
+    color: colors.MAINBLUE,
   },
 });
