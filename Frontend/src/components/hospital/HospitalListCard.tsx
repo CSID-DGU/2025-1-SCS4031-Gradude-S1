@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    flex: 1, // 가능한 수평 공간을 다 차지
+    flex: 1,
     fontSize: 16,
     fontWeight: 'bold',
     color: colors.BLACK,

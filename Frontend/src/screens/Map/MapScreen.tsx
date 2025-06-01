@@ -32,7 +32,7 @@ import useUserLocation from '@/hooks/useUserLocation';
 import usePermission from '@/hooks/usePermisson';
 import HospitalDetail from '@/components/hospital/HospitalDetail';
 import HospitalCard from '@/components/hospital/HospitalCard';
-import ModalWrapper from '@/components/commons/ModalWrapper'; // ← 추가
+import ModalWrapper from '@/components/commons/ModalWrapper';
 
 import {useQueries} from '@tanstack/react-query';
 import {fetchHospitalMarker} from '@/api/hospitals';
@@ -219,7 +219,7 @@ export default function MapScreen() {
                   }
                 }}
                 onPress={handleMarkerPress(h)}>
-                <Callout onPress={() => openDetail(h)}>
+                <Callout onPress={() => openDetail(h)} tooltip={true}>
                   {detailQuery?.isLoading && (
                     <ActivityIndicator size="small" color={colors.MAINBLUE} />
                   )}

@@ -9,13 +9,56 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors} from '@/constants';
+import {colors, profileNavigations} from '@/constants';
+import {CompositeNavigationProp} from '@react-navigation/native';
+import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {MainTabParamList} from '@/navigations/tab/TabNavigator';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {ProfileStackParamList} from '@/navigations/stack/ProfileStackNavigator';
+
+type Navigation = CompositeNavigationProp<
+  StackNavigationProp<ProfileStackParamList>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CIRCLE_DIAMETER = SCREEN_WIDTH * 2;
 const R = CIRCLE_DIAMETER / 2;
 
-export default function ProfileScreen() {
+interface Props {
+  navigation: Navigation;
+}
+
+export default function ProfileScreen({navigation}: Props) {
+  // 메뉴 항목 배열에 onPress 함수 추가
+  const menuItems = [
+    {
+      icon: 'document-text-outline',
+      label: '개인정보약관',
+      onPress: () => navigation.navigate(profileNavigations.INFO),
+    },
+    {
+      icon: 'settings-outline',
+      label: '설정',
+    },
+    {
+      icon: 'log-out-outline',
+      label: '로그 아웃',
+      tint: colors.RED,
+      onPress: () => {
+        /* TODO : 로그아웃 */
+      },
+    },
+    {
+      icon: 'alert-circle-outline',
+      label: '회원 탈퇴',
+      tint: colors.RED,
+      onPress: () => {
+        /* TODO : 회원 탈퇴 */
+      },
+    },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.backgroundLayer} />
@@ -26,7 +69,7 @@ export default function ProfileScreen() {
         style={styles.halfCircle}
       />
 
-      {/* TODO : 아바타 + 이름(연결해야함 ) */}
+      {/* 아바타 + 이름 */}
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={48} color={colors.WHITE} />
@@ -34,16 +77,11 @@ export default function ProfileScreen() {
         <Text style={styles.name}>홍길동</Text>
       </View>
 
-      {/*  TODO : 각각 기능 연결  ONPESS*/}
+      {/* 카드 메뉴 */}
       <View style={styles.card}>
-        {[
-          {icon: 'document-text-outline', label: '개인정보약관'},
-          {icon: 'settings-outline', label: '설정'},
-          {icon: 'log-out-outline', label: '로그 아웃', tint: colors.RED},
-          {icon: 'alert-circle-outline', label: '회원 탈퇴', tint: colors.RED},
-        ].map((item, i, arr) => (
+        {menuItems.map((item, i, arr) => (
           <React.Fragment key={item.label}>
-            <TouchableOpacity style={styles.cardItem}>
+            <TouchableOpacity style={styles.cardItem} onPress={item.onPress}>
               <View
                 style={[
                   styles.itemIconBg,

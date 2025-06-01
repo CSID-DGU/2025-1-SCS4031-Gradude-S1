@@ -29,4 +29,15 @@ const healthNavigations = {
   FINAL_RESULT_LIST: 'FinalResultList',
 } as const;
 
-export {authNavigations, homeNavigations, mapNavigations, healthNavigations};
+const profileNavigations = {
+  PROFILE_HOME: 'ProfileHome',
+  INFO: 'Info',
+} as const;
+
+export {
+  authNavigations,
+  homeNavigations,
+  mapNavigations,
+  healthNavigations,
+  profileNavigations,
+};

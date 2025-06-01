@@ -117,13 +117,15 @@ export default function HospitalDetail({
           </Text>
         </View>
 
-        {/* 전체 요일 스케줄 */}
         <View style={{marginTop: 16, marginBottom: 16}}>
           {dayKeys.map((day, idx) => (
             <View key={day} style={[styles.row, idx > 0 && {marginTop: 4}]}>
               <Ionicons name="time" size={16} color={colors.GRAY} />
               <Text style={styles.infoText}>
-                {korDays[idx]}요일: {openingHour[day]}
+                {korDays[idx]}요일:{' '}
+                {openingHour[day] !== null && openingHour[day] !== ''
+                  ? openingHour[day]
+                  : '영업 종료'}
               </Text>
             </View>
           ))}
