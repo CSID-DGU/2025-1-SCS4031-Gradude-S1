@@ -14,6 +14,7 @@ public class DiagnosisResponseDTO {
     private int gaze;
     private int arm;
     private int totalScore;
+    private int totalScorePercentage;
     private String llmResult;
 
     public static DiagnosisResponseDTO from(Diagnosis diagnosis, String llmResult) {
@@ -24,6 +25,7 @@ public class DiagnosisResponseDTO {
                 .gaze(diagnosis.getGaze())
                 .arm(diagnosis.getArm())
                 .totalScore(diagnosis.getTotalScore())
+                .totalScorePercentage(diagnosis.getTotalScore() * 20)
                 .llmResult(llmResult)
                 .build();
     }
