@@ -1,6 +1,8 @@
 package gradude.springVision.domain.hospital.repository;
 
 import gradude.springVision.domain.hospital.entity.Hospital;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +11,20 @@ import java.util.List;
 
 public interface HospitalRepository extends JpaRepository<Hospital, Long> {
 
-    List<Hospital> findByNameContaining(String keyword);
+    @Query(value = """
+    SELECT h.*,
+        (
+            6371 * acos(
+                cos(radians(:lat)) * cos(radians(h.latitude)) *
+                cos(radians(h.longitude) - radians(:lng)) +
+                sin(radians(:lat)) * sin(radians(h.latitude))
+            )
+        ) AS distance
+    FROM hospital h
+    WHERE h.name LIKE %:keyword%
+    ORDER BY distance
+    """, nativeQuery = true)
+    Page<Hospital> findByNameContainingOrderByDistance(@Param("keyword") String keyword, @Param("lat") double lat, @Param("lng") double lng, Pageable pageable);
 
     @Query(value = """
     SELECT 
