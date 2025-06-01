@@ -1,8 +1,8 @@
 package gradude.springVision.domain.hospital.service;
 
-import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalMarkerResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.entity.Hospital;
 import gradude.springVision.domain.hospital.repository.HospitalRepository;
 import gradude.springVision.global.common.response.ErrorCode;

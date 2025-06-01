@@ -1,7 +1,7 @@
 package gradude.springVision.domain.hospital.controller;
-import gradude.springVision.domain.hospital.dto.HospitalDetailResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalMarkerResponseDTO;
-import gradude.springVision.domain.hospital.dto.HospitalSearchResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalMarkerResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalSearchResponseDTO;
 import gradude.springVision.domain.hospital.service.HospitalQueryService;
 import gradude.springVision.global.common.response.ApiResponse;
 import gradude.springVision.global.common.response.PageResponseDTO;
