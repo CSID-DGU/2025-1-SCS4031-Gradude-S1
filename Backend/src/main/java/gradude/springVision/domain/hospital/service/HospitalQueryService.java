@@ -10,6 +10,7 @@ import gradude.springVision.global.common.response.PageResponseDTO;
 import gradude.springVision.global.common.response.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -75,21 +76,30 @@ public class HospitalQueryService {
 
     /**
      * 병원 검색
-     * TODO - 거리순 정렬
      */
     public PageResponseDTO<HospitalSearchResponseDTO> searchHospital(double latitude, double longitude, String keyword, Pageable pageable) {
         if (keyword == null || keyword.isBlank() || keyword.length() < 2) {
             throw new GeneralException(ErrorCode.HOSPITAL_INVALID_SEARCH);
         }
 
-        Page<Hospital> hospitalPage = hospitalRepository.findByNameContaining(keyword, pageable);
+        List<Hospital> hospitals = hospitalRepository.findByNameContaining(keyword);
 
-        Page<HospitalSearchResponseDTO> dtoPage = hospitalPage.map(hospital -> {
-            double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
-            return HospitalSearchResponseDTO.ofSearch(hospital, distance);
-        });
+        // 현위치로부터 병원 거리 계산 후 오름차순으로 DTO 반환
+        List<HospitalSearchResponseDTO> sortedHospitals = hospitals.stream()
+                .map(hospital -> {
+                    double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
+                    return HospitalSearchResponseDTO.ofSearch(hospital, distance);
+                })
+                .sorted(Comparator.comparingDouble(HospitalSearchResponseDTO::getDistance))
+                .toList();
 
-        return PageResponseDTO.of(dtoPage);
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), sortedHospitals.size());
+        List<HospitalSearchResponseDTO> pageContent = sortedHospitals.subList(start, end);
+
+        Page<HospitalSearchResponseDTO> hospitalSearchResponseDTO = new PageImpl<>(pageContent, pageable, sortedHospitals.size());
+
+        return PageResponseDTO.of(hospitalSearchResponseDTO);
     }
 
     /**
