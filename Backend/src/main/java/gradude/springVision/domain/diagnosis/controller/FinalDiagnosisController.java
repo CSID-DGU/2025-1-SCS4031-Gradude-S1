@@ -1,8 +1,8 @@
 package gradude.springVision.domain.diagnosis.controller;
 
 import gradude.springVision.domain.diagnosis.dto.request.FinalDiagnosisRequestDTO;
-import gradude.springVision.domain.diagnosis.dto.response.FinalDiagnosisResponseDTO;
-import gradude.springVision.domain.diagnosis.service.FinalDiagnosisService;
+import gradude.springVision.domain.diagnosis.dto.response.LlmDiagnosisResponseDTO;
+import gradude.springVision.domain.diagnosis.service.LlmDiagnosisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class FinalDiagnosisController {
 
-    private final FinalDiagnosisService finalDiagnosisService;
+    private final LlmDiagnosisService llmDiagnosisService;
 
     @PostMapping("/final")
-    public FinalDiagnosisResponseDTO analyzeSymptoms(@RequestBody FinalDiagnosisRequestDTO request) {
-        return finalDiagnosisService.analyzeSymptoms(request.getSymptoms());
+    public LlmDiagnosisResponseDTO analyzeSymptoms(@RequestBody FinalDiagnosisRequestDTO request) {
+        return llmDiagnosisService.analyzeSymptoms(request.getSymptoms());
     }
 }

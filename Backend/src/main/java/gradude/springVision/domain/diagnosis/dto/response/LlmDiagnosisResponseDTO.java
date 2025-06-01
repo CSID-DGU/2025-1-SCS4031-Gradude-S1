@@ -7,6 +7,6 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class FinalDiagnosisResponseDTO {
+public class LlmDiagnosisResponseDTO {
     private String result;
 }

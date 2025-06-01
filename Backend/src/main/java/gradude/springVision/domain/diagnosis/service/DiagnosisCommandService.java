@@ -41,9 +41,10 @@ public class DiagnosisCommandService {
     private final UserRepository userRepository;
     private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
+    private final LlmDiagnosisService llmDiagnosisService;
 
-    private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4"};
-    private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm"};
+    private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4", "mov"};
+    private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm", "m4a"};
 
     /**
      * 안면+음성 자가 진단
@@ -96,7 +97,9 @@ public class DiagnosisCommandService {
         }
     }
 
-    // 자가진단 AI API 호출
+    /**
+     * 자가진단 AI API 호출
+     */
     private Map<String, Object> callAiApi(String apiUrl, MultipartFile file) {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -150,18 +153,31 @@ public class DiagnosisCommandService {
         }
 
         // 입력한 월(입력값 == 오늘 월), 만 나이 확인
-        int orientation = 0;
-        if (selfDiagnosisRequestDTO.getOrientationMonth() != today.getMonthValue()) {
-            if (selfDiagnosisRequestDTO.getOrientationAge() != age) {
-                orientation = 1;
-            }
-        }
+        boolean isMonthCorrect = selfDiagnosisRequestDTO.getOrientationMonth() == today.getMonthValue();
+        boolean isAgeCorrect = selfDiagnosisRequestDTO.getOrientationAge() == age;
+
+        // 둘 다 틀렸을 경우만 orientation 이상
+        int orientation = (!isMonthCorrect && !isAgeCorrect) ? 1 : 0;
 
         int totalScore = orientation + selfDiagnosisRequestDTO.getGaze() + selfDiagnosisRequestDTO.getArm()
                         + (diagnosis.isFace() ? 1 : 0) + (diagnosis.isSpeech() ? 1 : 0);
 
-        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore);
+        // 증상 문장 생성
+        String symptoms = String.format(
+                "환자는 시선 이상 %s, 팔 움직임 이상 %s, 안면 마비 %s, 구음 장애 %s, 시간 인지 이상 %s, 나이 인지 이상 %s",
+                selfDiagnosisRequestDTO.getGaze() == 1 ? "있음" : "없음",
+                selfDiagnosisRequestDTO.getArm() == 1 ? "있음" : "없음",
+                diagnosis.isFace() ? "있음" : "없음",
+                diagnosis.isSpeech() ? "있음" : "없음",
+                isMonthCorrect ? "없음" : "있음",
+                isAgeCorrect ? "없음" : "있음"
+        );
 
-        return DiagnosisResponseDTO.from(diagnosis);
+        // LLM 진단 결과
+        String llmResult = llmDiagnosisService.analyzeSymptoms(symptoms).getResult();
+
+        diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore, llmResult);
+
+        return DiagnosisResponseDTO.from(diagnosis, llmResult);
     }
 }
