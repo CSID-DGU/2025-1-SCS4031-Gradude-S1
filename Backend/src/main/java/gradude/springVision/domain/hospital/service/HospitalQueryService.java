@@ -118,7 +118,12 @@ public class HospitalQueryService {
 
         double distance = calculateDistance(latitude, longitude, hospital.getLatitude(), hospital.getLongitude());
 
-        return HospitalDetailResponseDTO.ofDetail(hospital, distance);
+        boolean isOpen = false;
+        if (hospital.getOpeningHour() != null) {
+            isOpen = hospital.isOpenNow();
+        }
+
+        return HospitalDetailResponseDTO.ofDetail(hospital, distance, isOpen);
     }
 
     /**

@@ -36,7 +36,7 @@ public class HospitalDetailResponseDTO {
                 .build();
     }
 
-    public static HospitalDetailResponseDTO ofDetail(Hospital hospital, double distance) {
+    public static HospitalDetailResponseDTO ofDetail(Hospital hospital, double distance, boolean isOpen) {
         OpeningHour openingHour = hospital.isEmergency() ? OpeningHour.alwaysOpen() : hospital.getOpeningHour();
 
         return HospitalDetailResponseDTO.builder()
@@ -46,6 +46,7 @@ public class HospitalDetailResponseDTO {
                 .address(hospital.getAddress())
                 .phoneNumber(hospital.getPhoneNumber())
                 .openingHour(openingHour)
+                .isOpen(isOpen)
                 .strokeCenter(hospital.isStrokeCenter())
                 .latitude(hospital.getLatitude())
                 .longitude(hospital.getLongitude())

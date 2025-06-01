@@ -57,7 +57,7 @@ public class HospitalController {
         return ApiResponse.onSuccess(hospitalQueryService.getHospitalModal(latitude, longitude, hospitalId));
     }
 
-    @Operation(summary = "병원 상세 조회", description = "isOpen: null 고정")
+    @Operation(summary = "병원 상세 조회")
     @Parameters({
             @Parameter(name = "latitude", description = "현위치 위도"),
             @Parameter(name = "longitude", description = "현위치 경도"),
