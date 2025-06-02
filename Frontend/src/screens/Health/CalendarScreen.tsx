@@ -1,11 +1,11 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState} from 'react';
 import {View, Text, SafeAreaView, StyleSheet, Alert} from 'react-native';
 import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import * as Animatable from 'react-native-animatable';
 import {colors, healthNavigations} from '@/constants';
 import {useNavigation} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useGetProfile} from '@/hooks/queries/useAuthHelpers';
+import {useGetHealthDiaryCalendar} from '@/hooks/queries/useHealthDiary';
 
 LocaleConfig.locales['kr'] = {
   monthNames: [
@@ -47,44 +47,96 @@ LocaleConfig.locales['kr'] = {
   ],
   dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
 };
-
 LocaleConfig.defaultLocale = 'kr';
 
-export default function CalendarScreen() {
-  const {
-    data: user, // UserInfo | undefined
-    isLoading, // boolean
-    isError, // boolean
-    error, // Error | null
-  } = useGetProfile();
-
+export default function HealthCalendarScreen() {
   const navigation = useNavigation<any>();
+
+  // 오늘(YYYY-MM-DD) 구하기 (en-CA 포맷)
   const today = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
 
-  const onDayPress = (day: DateData) => {
-    if (day.dateString === today) {
-      navigation.navigate(healthNavigations.HEALTH_DAIRY, {date: today});
+  // ① 현재 보고 있는 달/연도 상태
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1); // 월은 1~12
+
+  // ② 해당 연/월에 기록된 날짜 + diaryId 가져오기
+  const {data: calendarList = [], isLoading: loadingCalendar} =
+    useGetHealthDiaryCalendar(year, month);
+
+  // ③ markedDates 형태로 가공
+  // 예: { "2025-06-02": { marked: true, dotColor: '#3F51B5' }, ... }
+  const markedDates = useMemo(() => {
+    const obj: Record<
+      string,
+      {
+        selectedColor: string;
+        selected: boolean;
+        marked: boolean;
+        dotColor: string;
+      }
+    > = {};
+
+    calendarList.forEach(item => {
+      obj[item.date] = {
+        marked: true,
+        dotColor: colors.SKYBLUE,
+        selected: false,
+        selectedColor: colors.SKYBLUE,
+      };
+    });
+
+    // 오늘 날짜도 항상 선택 상태로 표시 (예: 원형 테두리)
+    if (obj[today]) {
+      obj[today].selected = true;
+      obj[today].selectedColor = colors.SKYBLUE;
     } else {
-      Alert.alert('건강 수첩', '오늘 날짜만 건강 기록이 가능합니다.', [
+      obj[today] = {
+        selected: true,
+        selectedColor: colors.SKYBLUE,
+        marked: false,
+        dotColor: colors.SKYBLUE,
+      };
+    }
+
+    return obj;
+  }, [calendarList, today]);
+
+  // ④ 날짜 눌렀을 때 처리
+  const onDayPress = (day: DateData) => {
+    const {dateString} = day; // YYYY-MM-DD
+
+    // (1) 오늘 날짜일 때: “새로운 하루 기록 화면”으로 이동
+    if (dateString === today) {
+      navigation.navigate(healthNavigations.HEALTH_DAIRY, {date: today});
+      return;
+    }
+
+    // (2) 오늘이 아닌 날짜인데 기록이 있는지 확인
+    const found = calendarList.find(item => item.date === dateString);
+    if (found) {
+      // 기록이 있을 때 → 결과 화면으로 이동 (diaryId 전달)
+      navigation.navigate(healthNavigations.HEALTH_RESULT, {
+        diaryId: found.diaryId,
+      });
+    } else {
+      // 기록이 없으면 팝업
+      Alert.alert('건강 수첩', '해당 날짜에는 기록이 없습니다.', [
         {text: '확인'},
       ]);
     }
   };
 
-  if (isError || !user) {
-    // ← 에러 상태 또는 user가 없을 때 로그를 찍습니다.
-    console.log('CalendarScreen: isError || !user →', {isError, user, error});
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text>프로필 정보를 불러올 수 없습니다.</Text>
-      </SafeAreaView>
-    );
-  }
+  // ⑤ 달을 바꿀 때 (이전/다음 화살표 누를 때) 연/월 state 갱신
+  const onMonthChange = (date: {year: number; month: number}) => {
+    setYear(date.year);
+    setMonth(date.month);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}> {`${user.nickname}님의 건강 수첩`}</Text>
+        <Text style={styles.title}>건강 수첩</Text>
       </View>
       <View style={styles.row}>
         <MaterialCommunityIcons
@@ -95,7 +147,6 @@ export default function CalendarScreen() {
         <Text style={styles.sectionTitle}>하루 한 번, 건강 기록</Text>
       </View>
 
-      {/* ↓ 애니메이션 카드 컨테이너 ↓ */}
       <Animatable.View
         animation="fadeInUp"
         duration={600}
@@ -104,14 +155,9 @@ export default function CalendarScreen() {
         <Calendar
           monthFormat={'yyyy년 M월'}
           onDayPress={onDayPress}
-          markingType="dot"
-          markedDates={{
-            [today]: {
-              selected: true,
-              selectedColor: colors.SKYBLUE,
-              selectedTextColor: colors.WHITE,
-            },
-          }}
+          onMonthChange={onMonthChange}
+          markingType="multi-dot"
+          markedDates={markedDates}
           theme={{
             backgroundColor: colors.WHITE,
             calendarBackground: colors.WHITE,
@@ -119,16 +165,13 @@ export default function CalendarScreen() {
             textMonthFontWeight: 'bold',
             monthTextColor: colors.MAINBLUE,
             arrowColor: colors.MAINBLUE,
-
             textDayFontSize: 16,
             textDayFontWeight: '500',
             textDayHeaderFontSize: 14,
             textDayHeaderFontWeight: '500',
             textDisabledColor: colors.LIGHTGRAY,
-
             todayTextColor: colors.WHITE,
             todayBackgroundColor: colors.SKYBLUE,
-
             selectedDayBackgroundColor: colors.MAINBLUE,
             selectedDayTextColor: colors.WHITE,
           }}

@@ -13,8 +13,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 export type HealthStackParamList = {
   [healthNavigations.HEALTH_HOME]: undefined;
   [healthNavigations.CALENDAR]: undefined;
-  [healthNavigations.HEALTH_DAIRY]: undefined;
-  [healthNavigations.HEALTH_RESULT]: {answers: Record<string, number>};
+  [healthNavigations.HEALTH_DAIRY]: {date: string};
+  [healthNavigations.HEALTH_RESULT]: {diaryId: number};
   [healthNavigations.FINAL_RESULT_LIST]: undefined;
   [healthNavigations.STROKE_DETAIL]: undefined;
 };

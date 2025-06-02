@@ -4,8 +4,17 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+	<key>NSExceptionDomains</key>
+	<dict>
+		<key>43.201.159.48.nip.io</key>
+		<dict>
+		<key>NSIncludesSubdomains</key><true/>
+		<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key><true/>
+		<key>NSExceptionRequiresForwardSecrecy</key><false/>
+		<key>NSTemporaryExceptionMinimumTLSVersion</key><string>TLSv1.0</string>
+		<key>NSAllowsArbitraryLoadsInWebContent</key><true/>
+		</dict>
+	</dict>
 	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>

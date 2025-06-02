@@ -45,6 +45,7 @@ export default function MapScreen() {
   /* 1) 사용자 위치 가져오기 */
   const {latitude, longitude, isUserLocationError} = useUserLocation();
   // TODO: 로그인 문제 해결 되면, 위치 허가 앱 초기 진입으로 빼기
+  // MAIN_HOME으로
   usePermission('LOCATION');
 
   const [region, setRegion] = useState<Region | null>(null);

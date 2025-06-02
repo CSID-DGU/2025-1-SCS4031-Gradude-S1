@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useMemo} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +18,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
+import {useGetHealthDiaryGraph} from '@/hooks/queries/useHealthDiary';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const OUTER_PAD = 24;
@@ -42,18 +44,36 @@ export default function HealthScreen() {
       >
     >();
 
-  // 예시 데이터
-  const response = [
-    {date: '2025-05-15', healthScore: 94},
-    {date: '2025-05-16', healthScore: 56},
-    {date: '2025-05-17', healthScore: 76},
-    {date: '2025-05-18', healthScore: 20},
-    {date: '2025-05-19', healthScore: 80},
-  ];
+  // 1) API 훅으로 최근 5개 건강 점수 가져오기
+  const {data: response = [], isLoading, isError} = useGetHealthDiaryGraph();
+  // response 타입: Array<{ date: string; healthScore: number }>
 
-  const labels = response.map(r => r.date.slice(5).replace('-', '.'));
-  const data = response.map(r => r.healthScore);
-  const reversed = [...response].reverse();
+  // 로딩/에러 처리
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </SafeAreaView>
+    );
+  }
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text>❗️ 건강 점수를 불러오는 중 오류가 발생했습니다.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // 2) 차트에서 사용할 레이블과 데이터
+  //    API로 받아온 순서대로(최신이 뒤에 온다고 가정)
+  const labels = useMemo(
+    () => response.map(r => r.date.slice(5).replace('-', '.')),
+    [response],
+  );
+  const data = useMemo(() => response.map(r => r.healthScore), [response]);
+
+  // 3) 날짜 리스트는 역순으로 보여줄 것이므로 reverse 처리
+  const reversed = useMemo(() => [...response].reverse(), [response]);
 
   const [selectedIndex, setSelectedIndex] = useState(data.length - 1);
   const scrollRef = useRef<ScrollView>(null);
@@ -227,6 +247,11 @@ export default function HealthScreen() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.SEMIWHITE,

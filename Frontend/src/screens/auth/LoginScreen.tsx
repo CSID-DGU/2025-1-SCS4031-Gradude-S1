@@ -15,7 +15,6 @@ type LoginScreenProps = StackScreenProps<
 
 function LoginScreen({navigation}: LoginScreenProps) {
   const onPressKakao = () => {
-    console.log('▶️ 카카오 로그인 버튼 pressed →', authNavigations.KAKAO_LOGIN);
     navigation.navigate(authNavigations.KAKAO_LOGIN);
   };
   return (

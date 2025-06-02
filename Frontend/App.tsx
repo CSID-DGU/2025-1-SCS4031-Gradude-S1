@@ -12,13 +12,13 @@ import {hideSplash, showSplash} from 'react-native-splash-view';
 import {useEffect} from 'react';
 
 function App() {
-  showSplash();
+  // showSplash();
 
-  useEffect(() => {
-    setTimeout(() => {
-      hideSplash();
-    }, 500);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     hideSplash();
+  //   }, 500);
+  // }, []);
   return (
     <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>
