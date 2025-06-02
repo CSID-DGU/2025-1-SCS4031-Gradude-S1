@@ -15,14 +15,17 @@ public class CorsConfig {
     @Value("${frontend.local}")
     private String frontendLocal;
 
-    @Value("${backend.dev}")
-    private String backendDev;
+    @Value("${backend.dev-http}")
+    private String backendDevHttp;
+
+    @Value("${backend.dev-https}")
+    private String backendDevHttps;
 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList(frontendLocal, backendDev));
+        config.setAllowedOrigins(Arrays.asList(frontendLocal, backendDevHttp, backendDevHttps));
         config.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
