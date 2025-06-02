@@ -1,22 +1,15 @@
-import React, {useEffect, useRef, useState} from 'react';
+// src/screens/home/RecordScreen.tsx
+import React, {useRef, useState} from 'react';
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
   View,
-  SafeAreaView,
+  Text,
   Pressable,
-  Platform,
   Alert,
-  Button,
+  Platform,
+  StyleSheet,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-} from 'react-native-reanimated';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import RNFS from 'react-native-fs';
 import AudioRecorderPlayer, {
   AudioSet,
@@ -24,34 +17,33 @@ import AudioRecorderPlayer, {
   AVModeIOSOption,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-audio-recorder-player';
-import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import usePermission from '@/hooks/usePermission';
+import {prepareAudioSession, resetAudioSession} from '@/utils/audioSession';
 import {colors, homeNavigations} from '@/constants';
 import CustomButton from '@/components/commons/CustomButton';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StackScreenProps} from '@react-navigation/stack';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
-async function ensureMicPermission() {
-  if (Platform.OS === 'ios') {
-    const status = await check(PERMISSIONS.IOS.MICROPHONE);
-    if (status !== RESULTS.GRANTED) {
-      const result = await request(PERMISSIONS.IOS.MICROPHONE);
-      if (result !== RESULTS.GRANTED) {
-        throw new Error('마이크 권한이 필요합니다.');
-      }
-    }
-  }
+async function wait(ms: number) {
+  return new Promise(resolve => setTimeout(() => resolve(undefined), ms));
 }
 
-const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_W * 0.85;
-const CARD_HEIGHT = SCREEN_H * 0.4;
+export default function RecordScreen({
+  navigation,
+  route,
+}: StackScreenProps<HomeStackParamList, typeof homeNavigations.RECORD>) {
+  const {CameraUri} = route.params;
 
-type Props = StackScreenProps<
-  HomeStackParamList,
-  typeof homeNavigations.RECORD
->;
+  // 마이크 권한 체크
+  usePermission('MICROPHONE');
 
-export default function RecordScreen({navigation}: Props) {
   const insets = useSafeAreaInsets();
   const recorder = useRef(new AudioRecorderPlayer()).current;
 
@@ -61,7 +53,8 @@ export default function RecordScreen({navigation}: Props) {
 
   const cardOpacity = useSharedValue(0);
   const btnScale = useSharedValue(1);
-  useEffect(() => {
+
+  React.useEffect(() => {
     cardOpacity.value = withTiming(1, {duration: 500});
   }, []);
   const cardStyle = useAnimatedStyle(() => ({
@@ -71,12 +64,13 @@ export default function RecordScreen({navigation}: Props) {
   const buttonAnim = useAnimatedStyle(() => ({
     transform: [{scale: btnScale.value}],
   }));
-  // WAV 전용 경로 (iOS file:// prefix 필수)
-  const wavPath = Platform.select({
-    ios: `file://${RNFS.CachesDirectoryPath}/record_${Date.now()}.wav`,
-    android: `${RNFS.CachesDirectoryPath}/record_${Date.now()}.wav`,
-  })!;
-  // 녹음 설정 (WAV, 44.1kHz, 16bit, mono)
+
+  // 녹음 파일 경로 생성
+  const getFilePath = () => {
+    const fileName = `record_${Date.now()}.wav`;
+    return `${RNFS.CachesDirectoryPath}/${fileName}`;
+  };
+
   const audioSet: AudioSet = {
     AVModeIOS: AVModeIOSOption.measurement,
     AVFormatIDKeyIOS: AVEncodingOption.wav,
@@ -90,23 +84,58 @@ export default function RecordScreen({navigation}: Props) {
 
   const onRecordToggle = async () => {
     btnScale.value = withTiming(0.9, {duration: 100});
+
     try {
-      await ensureMicPermission();
       if (isRecording) {
+        // ── 녹음 중지 ──
         const result = await recorder.stopRecorder();
         recorder.removeRecordBackListener();
+        console.log('▶ 녹음 중지, 파일 경로:', result);
         setUri(result);
         setIsRecording(false);
-      } else {
-        setUri(undefined);
-        const result = await recorder.startRecorder(wavPath, audioSet);
-        recorder.addRecordBackListener(e =>
-          console.log('pos', e.currentPosition),
-        );
-        setIsRecording(true);
+
+        // (iOS) AVAudioSession 비활성화
+        if (Platform.OS === 'ios') {
+          await resetAudioSession();
+        }
+        return;
       }
+
+      // ── 녹음 시작 ──
+      // (iOS) AVAudioSession 활성화
+      if (Platform.OS === 'ios') {
+        console.log('▶ prepareAudioSession 호출 전');
+        await prepareAudioSession();
+        console.log('▶ prepareAudioSession 완료, 200ms 대기');
+        // 딜레이를 줘서 세션 활성화가 안정적으로 완료되도록 함
+        await wait(200);
+      }
+
+      // 실제 녹음 시작
+      const path = getFilePath();
+      console.log('▶ 녹음 시작 경로:', path);
+
+      const result = await recorder.startRecorder(path, audioSet);
+      recorder.addRecordBackListener(e => {
+        console.log('▶ 녹음 중(ms):', e.currentPosition);
+      });
+      setIsRecording(true);
     } catch (e) {
-      Alert.alert('녹음 오류', e instanceof Error ? e.message : String(e));
+      console.warn('▶ onRecordToggle 에러:', e);
+      Alert.alert(
+        '녹음 오류',
+        e instanceof Error ? e.message : '녹음 중 오류가 발생했습니다.',
+      );
+
+      // iOS에서 세션이 꼬였을 수 있으니, 에러 시 세션 리셋
+      if (Platform.OS === 'ios') {
+        try {
+          await resetAudioSession();
+        } catch (err) {
+          console.warn('▶ resetAudioSession 중 추가 에러:', err);
+        }
+        setIsRecording(false);
+      }
     } finally {
       setTimeout(() => (btnScale.value = withTiming(1, {duration: 100})), 100);
     }
@@ -141,18 +170,25 @@ export default function RecordScreen({navigation}: Props) {
     setUri(undefined);
     setIsPlaying(false);
   };
-  const goNext = () =>
-    uri && navigation.navigate(homeNavigations.LOADING, {AudioUri: uri});
+
+  const goNext = () => {
+    if (uri) {
+      navigation.navigate(homeNavigations.LOADING, {
+        CameraUri,
+        AudioUri: uri,
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.card, cardStyle]}>
         <Text style={styles.subtitle}>
-          녹음 버튼을 누른 후,{`\n`}문장을 또박 또박 읽어주세요
+          녹음 버튼을 누른 후,{'\n'}문장을 또박 또박 읽어주세요
         </Text>
         <Text style={styles.title}>"나는 바지를 입고 단추를 채웁니다."</Text>
         <Text style={styles.cautiontext}>
-          ※ 주변 소음 줄이고 마이크 가까이 ※ {`\n`}
+          ※ 주변 소음 줄이고 마이크 가까이 ※ {'\n'}
           녹음이 끝나면 완료 버튼을 눌러주세요
         </Text>
       </Animated.View>
@@ -200,6 +236,10 @@ export default function RecordScreen({navigation}: Props) {
   );
 }
 
+const {width: SCREEN_W, height: SCREEN_H} = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_W * 0.85;
+const CARD_HEIGHT = SCREEN_H * 0.4;
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -236,7 +276,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 30,
   },
-  cautiontext: {fontSize: 15, color: colors.GRAY, textAlign: 'center'},
+  cautiontext: {
+    fontSize: 15,
+    color: colors.GRAY,
+    textAlign: 'center',
+  },
   buttonWrapper: {
     position: 'absolute',
     alignSelf: 'center',
@@ -251,20 +295,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  recordActive: {backgroundColor: '#c0392b'},
+  recordActive: {
+    backgroundColor: '#c0392b',
+  },
   controls: {
     position: 'absolute',
     flexDirection: 'column',
     alignItems: 'center',
     width: CARD_WIDTH,
   },
-  controlBtn: {marginBottom: 12},
+  controlBtn: {
+    marginBottom: 12,
+  },
   actionButton: {
     width: '100%',
     fontSize: 20,
     marginBottom: 12,
     backgroundColor: colors.RED,
   },
-  ButtonText: {fontSize: 18, color: colors.WHITE},
-  confirmButton: {backgroundColor: colors.MAINBLUE, marginBottom: 0},
+  ButtonText: {
+    fontSize: 18,
+    color: colors.WHITE,
+  },
+  confirmButton: {
+    backgroundColor: colors.MAINBLUE,
+    marginBottom: 0,
+  },
 });

@@ -1,5 +1,4 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors, homeNavigations} from '@/constants';

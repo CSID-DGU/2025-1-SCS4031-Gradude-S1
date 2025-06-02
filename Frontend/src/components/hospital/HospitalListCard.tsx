@@ -18,21 +18,24 @@ export default function HospitalListCard({item}: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    paddingVertical: 12,
+    width: '90%',
+    justifyContent: 'center',
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderColor: colors.LIGHTGRAY,
     flexDirection: 'row',
     alignItems: 'center',
   },
   name: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.BLACK,
   },
   distance: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: 'bold',
     color: colors.MAINBLUE,
   },
 });

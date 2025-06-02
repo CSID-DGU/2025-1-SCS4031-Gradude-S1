@@ -21,8 +21,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let session = AVAudioSession.sharedInstance()
     do {
       try session.setCategory(.playAndRecord, options: .defaultToSpeaker)
-      // try session.setMode(.measurement)
-      try session.setActive(true)
+      try session.setMode(.measurement)
+   
     } catch {
       print("⚠️ AVAudioSession 설정 실패:", error)
     }

@@ -14,6 +14,10 @@ type LoginScreenProps = StackScreenProps<
 >;
 
 function LoginScreen({navigation}: LoginScreenProps) {
+  const onPressKakao = () => {
+    console.log('▶️ 카카오 로그인 버튼 pressed →', authNavigations.KAKAO_LOGIN);
+    navigation.navigate(authNavigations.KAKAO_LOGIN);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.imageContainer}>
@@ -37,9 +41,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
           label="카카오 로그인하기"
           variant="filled"
           size="large"
-          onPress={() => {
-            navigation.navigate(authNavigations.KAKAO_LOGIN);
-          }}
+          onPress={onPressKakao}
           style={styles.kakaoButtonContainer}
           textStyle={styles.kakaoButtonText}
           icon={

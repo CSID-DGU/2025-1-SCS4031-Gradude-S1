@@ -48,33 +48,34 @@ export default function HospitalCard({data}: HospitalCardProps) {
 const styles = StyleSheet.create({
   card: {
     minWidth: 280,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     backgroundColor: colors.WHITE,
     borderRadius: 12,
+    marginBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 10,
   },
   title: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.BLACK,
     marginRight: 8,
   },
   distance: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
     color: colors.MAINBLUE,
   },
   address: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.BLACK,
-    marginBottom: 4,
+    marginBottom: 14,
   },
   infoRow: {
     flexDirection: 'row',
@@ -83,13 +84,14 @@ const styles = StyleSheet.create({
   infoText: {
     marginLeft: 4,
     marginRight: 12,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.BLACK,
   },
   iconSpacing: {
     marginLeft: 0,
   },
   openText: {
+    marginLeft: 2,
     color: colors.GREEN,
     fontWeight: 'bold',
   },
