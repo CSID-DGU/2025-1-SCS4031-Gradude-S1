@@ -69,5 +69,6 @@ frontend:
   local: ${FRONTEND_LOCAL}
 
 backend:
+  local: ${BACKEND_LOCAL}
   dev-http: ${BACKEND_DEV_HTTP}
   dev-https: ${BACKEND_DEV_HTTPS}
