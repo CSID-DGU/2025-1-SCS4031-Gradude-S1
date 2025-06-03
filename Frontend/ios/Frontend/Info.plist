@@ -36,8 +36,24 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>KAKAO_APP_KEY</key>
+	<string>84b5df970223608644ac8c121c96135e</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		<!-- kakao + 네이티브키 (카카오문서 고정 규칙) -->
+		<string>kakao84b5df970223608644ac8c121c96135e</string>
+		</array>
+	</dict>
+	</array>
+	
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+		<string>kakaokompassauth</string>
+		<string>kakaolink</string>
+		<string>kakaotalk</string>
 		<string>tel</string>
 		<string>comgooglemaps</string>
 	</array>

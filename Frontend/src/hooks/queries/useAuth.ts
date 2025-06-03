@@ -1,101 +1,77 @@
-// src/hooks/queries/useAuth.ts
-
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {useDispatch, useSelector} from 'react-redux';
+import {kakaoTokenLogin, postSignup, getProfile} from '@/api/auth';
 import {
   setTokens,
   setPreSignupUserInfo,
   setProfileComplete,
   resetAuthState,
   clearPreSignupUserInfo,
+  setUserProfile,
 } from '@/store/slices/authSlice';
+import {setHeader, removeHeader} from '@/utils';
 import type {RootState, AppDispatch} from '@/store';
-import {useMutation} from '@tanstack/react-query';
-import {kakaoLogin, postSignup} from '@/api/auth';
-import {
-  useGetRefreshToken,
-  useLogout,
-  useDeleteAccount,
-} from './useAuthHelpers';
 import queryClient from '@/api/queryClient';
 import React from 'react';
 
 export default function useAuth() {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
 
-  // Redux에서 인증/프로필 상태를 읽어 옵니다.
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  const profileComplete = useSelector(
-    (state: RootState) => state.auth.profileComplete,
-  );
-  const preSignupUserInfo = useSelector(
-    (state: RootState) => state.auth.preSignupUserInfo,
-  );
+  const accessToken = useSelector((s: RootState) => s.auth.accessToken);
+  const profileComplete = useSelector((s: RootState) => s.auth.profileComplete);
+  const preSignupInfo = useSelector((s: RootState) => s.auth.preSignupUserInfo);
 
-  // 1) 카카오 로그인Mutation
+  /* ── 1) 카카오 로그인 ── */
   const kakaoLoginMutation = useMutation({
-    mutationFn: kakaoLogin,
-    onSuccess: res => {
-      const {firstLogin, tokenResponse, userInfo} = res.result;
+    mutationFn: kakaoTokenLogin,
+    onSuccess: ({result}) => {
+      const {tokenResponse, userInfo, firstLogin} = result;
 
+      // ① 토큰 세팅
       if (tokenResponse) {
-        // ❗ 로그인 성공 시 토큰을 Redux에 저장
-        dispatch(
-          setTokens({
-            accessToken: tokenResponse.accessToken,
-            refreshToken: tokenResponse.refreshToken,
-          }),
-        );
+        dispatch(setTokens(tokenResponse));
+        setHeader('Authorization', `Bearer ${tokenResponse.accessToken}`);
       }
 
+      // ② 첫 로그인 / 기존 로그인 분기
       if (firstLogin && userInfo) {
-        // ❗ 첫 가입 유저라면, preSignupUserInfo를 Redux에 저장하고 profileComplete는 false로 설정
         dispatch(setPreSignupUserInfo(userInfo));
         dispatch(setProfileComplete(false));
       } else {
-        // ❗ 기존 유저라면 profileComplete를 true로 설정
         dispatch(setProfileComplete(true));
+        if (userInfo) dispatch(setUserProfile(userInfo));
       }
     },
-    onSettled: () => {
-      // 토큰 세팅 후, refreshQuery를 다시 실행해서 백엔드에서 AccessToken 갱신 혹은 재검증
-      queryClient.refetchQueries({queryKey: ['auth', 'getAccessToken']});
-    },
   });
 
-  // 2) 회원가입Mutation
+  /* ── 2) 회원가입 ── */
   const signupMutation = useMutation({
     mutationFn: postSignup,
-    onSuccess: () => {
-      // 회원가입 완료 시 profileComplete를 true로 바꾸고, preSignupUserInfo는 초기화
+    onSuccess: async res => {
+      // ① 토큰 저장
+      dispatch(setTokens(res.result));
+      setHeader('Authorization', `Bearer ${res.result.accessToken}`);
+
+      // ② 최신 프로필 동기화
+      const profile = await getProfile();
+      dispatch(setUserProfile(profile));
       dispatch(setProfileComplete(true));
       dispatch(clearPreSignupUserInfo());
-      queryClient.invalidateQueries({queryKey: ['auth', 'getProfile']});
+      queryClient.setQueryData(['auth', 'profile'], profile);
     },
   });
 
-  // 3) 리프레시 토큰 & 로그아웃/탈퇴 훅은 기존과 동일
-  const refreshQuery = useGetRefreshToken();
-  const logoutMutation = useLogout();
-  const deleteAccountMutation = useDeleteAccount();
-
-  // 로그아웃/탈퇴 성공 시 전체 auth 상태 초기화
+  /* ── 3) 전체 초기화 후 로그아웃/탈퇴 처리 ── */
   React.useEffect(() => {
-    if (logoutMutation.isSuccess || deleteAccountMutation.isSuccess) {
-      dispatch(resetAuthState());
-      queryClient.clear();
-    }
-  }, [logoutMutation.isSuccess, deleteAccountMutation.isSuccess, dispatch]);
+    // resetAuthState() 는 logoutMutation / deleteAccountMutation 내부(onSuccess)에서 호출
+  }, []);
 
   return {
-    // 네비게이터 분기에서 필요한 값들
-    preSignupUserInfo,
     kakaoLoginMutation,
     signupMutation,
-    refreshQuery,
-    logoutMutation,
-    deleteAccountMutation,
-    isAuthenticated: Boolean(accessToken), // accessToken이 있으면 로그인된 상태
+    preSignupUserInfo: preSignupInfo,
+    isAuthenticated: Boolean(accessToken),
     isProfileComplete: profileComplete,
-    isLoading: refreshQuery.isLoading,
   };
 }

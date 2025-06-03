@@ -1,58 +1,41 @@
 import axiosInstance from '@/api/axios';
-import {getEncryptStorage} from '@/utils';
 import type {
   KakaoLoginResponse,
-  TokenResponse,
-  UserInfo,
+  KakaoTokenRequest,
   SignupRequest,
   SignupResponse,
+  UserInfo,
 } from '@/types/auth';
-import {storageKeys} from '@/constants';
 
-export const kakaoLogin = async (code: string): Promise<KakaoLoginResponse> => {
-  const endpoint = `/api/auth/login?code=${encodeURIComponent(code)}`;
-  const {data} = await axiosInstance.post<KakaoLoginResponse>(endpoint);
+/* ───── 1) 네이티브 SDK 토큰 로그인 ───── */
+
+export const kakaoTokenLogin = async (
+  payload: KakaoTokenRequest,
+): Promise<KakaoLoginResponse> => {
+  const {data} = await axiosInstance.post<KakaoLoginResponse>(
+    '/api/auth/kakao/token',
+    payload,
+  );
   return data;
 };
 
+/* ───── 2) 회원가입(추가 정보) ───── */
 export const postSignup = async (
   payload: SignupRequest,
 ): Promise<SignupResponse> => {
-  console.log('▶️ [postSignup] payload:', payload);
-
   const {data} = await axiosInstance.post<SignupResponse>(
     '/api/auth/signup',
     payload,
   );
-  console.log('◀️ [postSignup] response data:', data);
-  return data;
+  return data; // data.result.{accessToken,refreshToken}
 };
 
-export const getAccessToken = async (): Promise<TokenResponse> => {
-  const refreshToken = await getEncryptStorage(storageKeys.REFRESH_TOKEN);
-
-  const {data} = await axiosInstance.post(
-    '/api/auth/reissue',
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${refreshToken}`,
-      },
-    },
-  );
-  return data;
-};
-
+/* ───── 3) 프로필 조회 ───── */
 export const getProfile = async (): Promise<UserInfo> => {
   const {data} = await axiosInstance.post('/api/auth/profile');
-  console.log('◀️ [getProfile] response data:', data);
-  return data.result;
+  return data.result; // { kakaoId, nickname, … }
 };
 
-export const logout = async (): Promise<void> => {
-  await axiosInstance.post('/api/auth/logout');
-};
-
-export const signout = async (): Promise<void> => {
-  await axiosInstance.delete('/api/auth/delete');
-};
+/* ───── 4) 로그아웃·탈퇴 ───── */
+export const logout = () => axiosInstance.post('/api/auth/logout');
+export const signout = () => axiosInstance.delete('/api/auth/delete');
