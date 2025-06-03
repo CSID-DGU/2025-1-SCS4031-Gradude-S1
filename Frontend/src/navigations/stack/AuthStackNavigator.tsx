@@ -5,11 +5,11 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {authNavigations, colors} from '@/constants';
 import LoginScreen from '@/screens/Auth/LoginScreen';
 import SignupScreen from '@/screens/Auth/SignupScreen';
+import type {KakaoProfile} from '@/types/auth';
 
 export type AuthStackParamList = {
   [authNavigations.AUTH_HOME]: undefined;
-
-  [authNavigations.SIGNUP]: undefined;
+  [authNavigations.SIGNUP]: {kakaoProfile: KakaoProfile};
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();

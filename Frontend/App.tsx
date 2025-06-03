@@ -10,15 +10,16 @@ import {View} from 'react-native-animatable';
 import {ActivityIndicator} from 'react-native';
 import {hideSplash, showSplash} from 'react-native-splash-view';
 import {useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function App() {
-  // showSplash();
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     hideSplash();
-  //   }, 500);
-  // }, []);
+  useEffect(() => {
+    // 개발 중에만 활성화: AsyncStorage 초기화
+    (async () => {
+      await AsyncStorage.clear();
+      console.log('[DEV] AsyncStorage cleared');
+    })();
+  }, []);
   return (
     <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>

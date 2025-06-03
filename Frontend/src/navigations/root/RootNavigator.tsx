@@ -8,10 +8,11 @@ import SignupScreen from '@/screens/Auth/SignupScreen';
 import TabNavigator from '@/navigations/tab/TabNavigator';
 import useAuth from '@/hooks/queries/useAuth';
 import {authNavigations} from '@/constants';
+import type {KakaoProfile} from '@/types/auth';
 
 export type RootStackParamList = {
   AuthStack: undefined;
-  [authNavigations.SIGNUP]: undefined;
+  [authNavigations.SIGNUP]: {kakaoProfile: KakaoProfile};
   TabNavigator: undefined;
 };
 
@@ -23,6 +24,7 @@ export default function RootNavigator() {
     isProfileComplete,
     kakaoLoginMutation,
     signupMutation,
+    profileQuery,
   } = useAuth();
 
   /* ───── Splash 화면 처리 ───── */
@@ -42,6 +44,13 @@ export default function RootNavigator() {
       hideSplash();
     }
   }, [kakaoLoginMutation.isPending, signupMutation.isPending]);
+
+  useEffect(() => {
+    // “이미 액세스 토큰이 남아 있다면(=로그인 상태 유지)” 때마다 서버로 프로필을 불러온다.
+    if (isAuthenticated) {
+      profileQuery.refetch();
+    }
+  }, [isAuthenticated, profileQuery]);
 
   /* 네비게이터 렌더 전 로딩 인디케이터 (Splash 안 보이는 케이스 대비) */
   const stillLoading = kakaoLoginMutation.isPending || signupMutation.isPending;
