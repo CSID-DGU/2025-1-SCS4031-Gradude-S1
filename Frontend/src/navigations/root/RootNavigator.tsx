@@ -1,39 +1,60 @@
 import React, {useEffect, useRef} from 'react';
-import {View, ActivityIndicator} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import AuthStackNavigator from '../stack/AuthStackNavigator';
-import SignupScreen from '@/screens/Auth/SignupScreen';
-import TabNavigator from '../tab/TabNavigator';
-import useAuth from '@/hooks/queries/useAuth';
-import {authNavigations} from '@/constants';
 import {hideSplash, showSplash} from 'react-native-splash-view';
 
+import AuthStackNavigator from '@/navigations/stack/AuthStackNavigator';
+import SignupScreen from '@/screens/Auth/SignupScreen';
+import TabNavigator from '@/navigations/tab/TabNavigator';
+import useAuth from '@/hooks/queries/useAuth';
+import {authNavigations} from '@/constants';
+import type {KakaoProfile} from '@/types/auth';
+
 export type RootStackParamList = {
-  AuthStack: undefined; // 로그인 흐름 전체
-  [authNavigations.SIGNUP]: {authCode: string};
-  TabNavigator: undefined; // 로그인 후 BottomTabs 전체
+  AuthStack: undefined;
+  [authNavigations.SIGNUP]: {kakaoProfile: KakaoProfile};
+  TabNavigator: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const {isAuthenticated, isProfileComplete, isLoading} = useAuth();
+  const {
+    isAuthenticated,
+    isProfileComplete,
+    kakaoLoginMutation,
+    signupMutation,
+    profileQuery,
+  } = useAuth();
+
+  /* ───── Splash 화면 처리 ───── */
   const didShowSplash = useRef(false);
 
-  // Splash 처리
   useEffect(() => {
-    showSplash();
-    didShowSplash.current = true;
+    if (!didShowSplash.current) {
+      showSplash();
+      didShowSplash.current = true;
+    }
   }, []);
 
+  /** 모든 mutation이 끝나면 스플래시 숨김 */
   useEffect(() => {
-    if (didShowSplash.current && !isLoading) {
+    const busy = kakaoLoginMutation.isPending || signupMutation.isPending;
+    if (didShowSplash.current && !busy) {
       hideSplash();
     }
-  }, [isLoading]);
+  }, [kakaoLoginMutation.isPending, signupMutation.isPending]);
 
-  // 로딩 중이라면 로딩 인디케이터만 띄우고, 네비게이터는 아직 렌더링하지 않음
-  if (isLoading) {
+  useEffect(() => {
+    // “이미 액세스 토큰이 남아 있다면(=로그인 상태 유지)” 때마다 서버로 프로필을 불러온다.
+    if (isAuthenticated) {
+      profileQuery.refetch();
+    }
+  }, [isAuthenticated, profileQuery]);
+
+  /* 네비게이터 렌더 전 로딩 인디케이터 (Splash 안 보이는 케이스 대비) */
+  const stillLoading = kakaoLoginMutation.isPending || signupMutation.isPending;
+  if (stillLoading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <ActivityIndicator size="large" />
@@ -42,27 +63,24 @@ export default function RootNavigator() {
   }
 
   return (
-    <RootStack.Navigator
-      screenOptions={{headerShown: false}}
-      // 초기 진입할 화면을 isAuthenticated / isProfileComplete 에 따라 선택
-      initialRouteName={
-        !isAuthenticated
-          ? 'AuthStack'
-          : !isProfileComplete
-          ? authNavigations.SIGNUP
-          : 'TabNavigator'
-      }>
-      {/* 1) 로그인 전 흐름 전체를 담고 있는 네비게이터 */}
-      <RootStack.Screen name="AuthStack" component={AuthStackNavigator} />
+    <RootStack.Navigator screenOptions={{headerShown: false}}>
+      {/* 1) 로그인 전 전체 스택 */}
+      {!isAuthenticated && (
+        <RootStack.Screen name="AuthStack" component={AuthStackNavigator} />
+      )}
 
-      {/* 2) 프로필이 완성되지 않아 회원가입(Signup) 화면으로 가야 할 때 */}
-      <RootStack.Screen
-        name={authNavigations.SIGNUP}
-        component={SignupScreen}
-      />
+      {/* 2) 첫 로그인 → 추가 정보 입력 */}
+      {isAuthenticated && !isProfileComplete && (
+        <RootStack.Screen
+          name={authNavigations.SIGNUP}
+          component={SignupScreen}
+        />
+      )}
 
-      {/* 3) 로그인 & 프로필 완료된 뒤 보여줄 BottomTabs 전체 */}
-      <RootStack.Screen name="TabNavigator" component={TabNavigator} />
+      {/* 3) 로그인 + 프로필 완료 → 탭 네비게이터 */}
+      {isAuthenticated && isProfileComplete && (
+        <RootStack.Screen name="TabNavigator" component={TabNavigator} />
+      )}
     </RootStack.Navigator>
   );
 }

@@ -1,16 +1,15 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StyleSheet, View} from 'react-native';
-import KakaoLoginScreen from '@/screens/Auth/KakaoLoginScreen';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {authNavigations, colors} from '@/constants';
 import LoginScreen from '@/screens/Auth/LoginScreen';
 import SignupScreen from '@/screens/Auth/SignupScreen';
+import type {KakaoProfile} from '@/types/auth';
 
 export type AuthStackParamList = {
   [authNavigations.AUTH_HOME]: undefined;
-  [authNavigations.KAKAO_LOGIN]: undefined;
-  [authNavigations.SIGNUP]: {authCode: string};
+  [authNavigations.SIGNUP]: {kakaoProfile: KakaoProfile};
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -38,13 +37,6 @@ function AuthStackNavigator() {
             headerTitle: '',
             headerBackVisible: false,
             headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name={authNavigations.KAKAO_LOGIN}
-          component={KakaoLoginScreen}
-          options={{
-            headerTitle: '카카오 로그인',
           }}
         />
         <Stack.Screen
