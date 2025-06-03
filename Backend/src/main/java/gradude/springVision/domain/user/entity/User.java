@@ -23,7 +23,7 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private Long kakaoId;
+    private long kakaoId;
 
     @Column(nullable = false, length = 10)
     private String nickname;

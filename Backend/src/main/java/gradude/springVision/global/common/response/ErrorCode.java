@@ -27,6 +27,8 @@ public enum ErrorCode {
     // User Error
     USER_ALREADY_EXIST(HttpStatus.CONFLICT, "USER4000", "사용자가 이미 존재합니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4001", "사용자를 찾을 수 업습니다."),
+    INVALID_KAKAO_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "USER4003", "카카오 액세스 토큰이 유효하지 않습니다."),
+    INVALID_KAKAO_USER(HttpStatus.UNAUTHORIZED, "USER4004", "카카오 사용자 정보가 일치하지 않습니다."),
 
     // Diary Error
     DIARY_NOT_FOUND(HttpStatus.NOT_FOUND, "DIARY4000", "하루 기록을 찾을 수 없습니다."),
