@@ -11,11 +11,21 @@ public class LoginResponseDTO {
 
     private boolean isFirstLogin;
     private TokenResponseDTO tokenResponse;
+    private KakaoUserInfoResponseDTO userInfo;
 
-    public static LoginResponseDTO of(TokenResponseDTO tokenResponse, boolean isFirstLogin) {
+    public static LoginResponseDTO of(KakaoUserInfoResponseDTO userInfo, TokenResponseDTO tokenResponse, boolean isFirstLogin) {
         return LoginResponseDTO.builder()
                 .isFirstLogin(isFirstLogin)
                 .tokenResponse(tokenResponse)
+                .userInfo(userInfo)
+                .build();
+    }
+
+    public static LoginResponseDTO of(KakaoUserInfoResponseDTO userInfo, boolean isFirstLogin) {
+        return LoginResponseDTO.builder()
+                .isFirstLogin(isFirstLogin)
+                .tokenResponse(null)
+                .userInfo(userInfo)
                 .build();
     }
 }
