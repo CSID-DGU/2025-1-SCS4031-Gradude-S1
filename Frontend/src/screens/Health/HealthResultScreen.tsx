@@ -1,4 +1,3 @@
-// ResultScreen.tsx
 import React from 'react';
 import {
   View,
@@ -7,35 +6,21 @@ import {
   Dimensions,
   ScrollView,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import {useRoute, RouteProp} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {colors, healthNavigations} from '@/constants';
 import type {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
+import {useGetHealthDiary} from '@/hooks/queries/useHealthDiary';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
+
 type Route = RouteProp<
   HealthStackParamList,
   typeof healthNavigations.HEALTH_RESULT
 >;
-
-const CATEGORY_CONFIG = [
-  {key: 'drinking', label: '음주'},
-  {key: 'exercise', label: '운동'},
-  {key: 'smoking', label: '흡연'},
-  {key: 'snack', label: '간식'},
-  {key: 'vegetable', label: '야채'},
-];
-
-const BOTTOM_CONFIG = [
-  {key: 'drinking', label: '음주', icon: 'wine-outline'},
-  {key: 'exercise', label: '운동', icon: 'walk-outline'},
-  {key: 'smoking', label: '흡연', icon: 'logo-no-smoking'},
-  {key: 'snack', label: '간식', icon: 'fast-food-outline'},
-  {key: 'vegetable', label: '야채', icon: 'leaf-outline'},
-];
 
 function mapStatus(score: number) {
   switch (score) {
@@ -54,23 +39,61 @@ function mapStatus(score: number) {
 }
 
 export default function HealthResultScreen() {
-  const {answers} = useRoute<Route>().params;
+  const {
+    params: {diaryId},
+  } = useRoute<Route>();
 
-  // TODO: 실제 건강 점수로 교체해야 함
-  // 건강 점수 (0~100)
-  const totalScore = 70;
+  // ① useGetHealthDiary(diaryId) 로 실제 데이터를 가져온다
+  const {data, isLoading, isError} = useGetHealthDiary(diaryId);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </SafeAreaView>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text>❗️ 데이터를 불러오는 중 오류가 발생했습니다.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // data: HealthDiaryResult 타입
+  // { diaryId, date, healthScore, drinking, smoking, exercise, diet, sleep }
+  const totalScore = data.healthScore; // 예: 70
   const CIRCLE_SIZE = SCREEN_WIDTH * 0.45;
 
-  // 상단 요약 데이터
+  // 상단 요약: 카테고리별 점수 + 상태 매핑
+  const CATEGORY_CONFIG = [
+    {key: 'drinking', label: '음주'},
+    {key: 'exercise', label: '운동'},
+    {key: 'smoking', label: '흡연'},
+    {key: 'diet', label: '식단'},
+    {key: 'sleep', label: '숙면'},
+  ] as const;
+
   const summaryData = CATEGORY_CONFIG.map(cat => {
-    const score = answers[cat.key] ?? 0;
+    // @ts-ignore: data[cat.key] 타입이 number 으로 들어온다고 가정
+    const score = data[cat.key] as number;
     const {text, color} = mapStatus(score);
     return {...cat, score, status: text, color};
   });
 
+  // 하단 리스트
+  const BOTTOM_CONFIG = [
+    {key: 'drinking', label: '음주', icon: 'wine-outline'},
+    {key: 'exercise', label: '운동', icon: 'walk-outline'},
+    {key: 'smoking', label: '흡연', icon: 'logo-no-smoking'},
+    {key: 'diet', label: '간식', icon: 'fast-food-outline'},
+    {key: 'sleep', label: '숙면', icon: 'leaf-outline'}, //TODO 아이콘 바꾸기
+  ] as const;
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* 스크롤 부분 종들 TODO : 여기 약간 아이콘 바꾸고 싶은데.. 애매 */}
+      {/* ─── 상단 요약 스크롤 ─── */}
       <View style={styles.summarySection}>
         <ScrollView
           horizontal
@@ -92,7 +115,7 @@ export default function HealthResultScreen() {
         </ScrollView>
       </View>
 
-      {/* 원형  */}
+      {/* ─── 원형 진행 바 (전체 건강 점수) ─── */}
       <View style={styles.circleSection}>
         <AnimatedCircularProgress
           size={CIRCLE_SIZE}
@@ -110,10 +133,11 @@ export default function HealthResultScreen() {
         </AnimatedCircularProgress>
       </View>
 
-      {/* 하단 리스트 */}
+      {/* ─── 하단 세부 리스트 ─── */}
       <View style={styles.lowerList}>
         {BOTTOM_CONFIG.map(item => {
-          const score = answers[item.key] ?? 0;
+          // @ts-ignore
+          const score = data[item.key] as number;
           const isFull = score === 5;
           return (
             <View key={item.key} style={styles.row}>
@@ -147,12 +171,15 @@ export default function HealthResultScreen() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.BACKGRAY,
   },
-
-  //요약 스크롤
   summarySection: {
     marginTop: 16,
     backgroundColor: colors.WHITE,
@@ -184,7 +211,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // 원형
   circleSection: {
     backgroundColor: colors.WHITE,
     marginTop: 16,
@@ -219,7 +245,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // 하단
   lowerList: {
     flex: 1,
     paddingHorizontal: 24,

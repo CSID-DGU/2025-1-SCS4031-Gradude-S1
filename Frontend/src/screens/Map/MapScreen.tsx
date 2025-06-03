@@ -44,6 +44,8 @@ export default function MapScreen() {
 
   /* 1) 사용자 위치 가져오기 */
   const {latitude, longitude, isUserLocationError} = useUserLocation();
+  // TODO: 로그인 문제 해결 되면, 위치 허가 앱 초기 진입으로 빼기
+  // MAIN_HOME으로
   usePermission('LOCATION');
 
   const [region, setRegion] = useState<Region | null>(null);
@@ -76,13 +78,14 @@ export default function MapScreen() {
     latitude,
     longitude,
   );
+
   const [searchTerm, setSearchTerm] = useState('');
   const {data: searched = [], isLoading: loadingSearch} = useHospitalSearch(
     latitude,
     longitude,
     searchTerm,
   );
-  // 검색어가 2자 이상일 때는 검색 결과, 그렇지 않으면 nearest 목록
+
   const listData: HospitalSummaryDto[] =
     searchTerm.length >= 2 ? searched : nearest;
 
@@ -92,36 +95,23 @@ export default function MapScreen() {
   const [detailId, setDetailId] = useState<string | null>(null);
 
   /* 4) 각 마커별 상세 데이터 미리 fetch (useQueries) */
-  // const hospitalDetailQueries = useQueries({
-  //   queries:
-  //     region != null && latitude != null && longitude != null
-  //       ? markers.map(h => ({
-  //           queryKey: ['hospitalMarker', h.hospitalId, latitude, longitude],
-  //           queryFn: () =>
-  //             fetchHospitalMarker(
-  //               h.hospitalId.toString(),
-  //               latitude as number,
-  //               longitude as number,
-  //             ),
-  //           enabled: latitude != null && longitude != null,
-  //         }))
-  //       : [],
-  // });
   const detailQueries = useQueries({
     queries: markers.map(({hospitalId}) => ({
       queryKey: ['hospitalMarker', hospitalId, latitude, longitude],
       queryFn: () =>
         fetchHospitalMarker(String(hospitalId), latitude!, longitude!),
       enabled: !!latitude && !!longitude,
+      staleTime: 1000 * 60 * 5,
     })),
   });
-
-  // 2) detailQueries와 markers를 묶어 { [hospitalId]: query } 객체로 변환
   const detailMap = Object.fromEntries(
     detailQueries.map((q, idx) => [markers[idx].hospitalId, q]),
   );
 
-  /* 위치 정보 가져오기 실패 처리 */
+  /* 콜아웃을 열기 위한 대기 ID */
+  const [pendingCalloutId, setPendingCalloutId] = useState<string | null>(null);
+
+  /* 위치 정보 가져오기 실패 시 */
   if (isUserLocationError) {
     return (
       <View style={styles.center}>
@@ -139,67 +129,101 @@ export default function MapScreen() {
 
   /* 내 위치 버튼 클릭 시 */
   const handlePressUserLocation = () => {
-    if (isUserLocationError) {
+    if (isUserLocationError || !mapRef.current) {
       Alert.alert('위치 정보를 가져올 수 없습니다.');
       return;
     }
-    mapRef.current?.animateCamera(
+    mapRef.current.animateCamera(
       {center: {latitude, longitude}, zoom: 14},
       {duration: 300},
     );
   };
 
-  /* 지도를 눌렀을 때 모든 콜아웃 닫기 + 키보드 내리기 */
+  /* 지도를 누르면 모든 콜아웃 닫기 + 키보드 내리기 */
   const handleMapPress = (_: MapPressEvent) => {
-    Object.values(markerRefs.current).forEach(ref => ref.hideCallout());
+    Object.values(markerRefs.current).forEach(ref => {
+      try {
+        ref.hideCallout();
+      } catch {
+        // 무시
+      }
+    });
     Keyboard.dismiss();
   };
 
-  /* 마커 클릭 시 해당 마커 카메라 이동 + 콜아웃 열기 */
+  /* 마커 클릭 시 카메라 이동 + 콜아웃 열기 (fallback: 일정 시간 뒤 강제 showCallout) */
   const handleMarkerPress = (h: HospitalMarkerDto) => (_: MarkerPressEvent) => {
+    // 1) 다른 콜아웃 숨기기
+    Object.entries(markerRefs.current).forEach(([id, ref]) => {
+      if (id !== h.hospitalId.toString()) {
+        try {
+          ref.hideCallout();
+        } catch {}
+      }
+    });
+
+    // 2) pending ID와 로컬 캡처된 ID 생성
+    const idStr = h.hospitalId.toString();
+    setPendingCalloutId(idStr);
+
+    // 3) 카메라 이동
     mapRef.current?.animateCamera(
       {
         center: {latitude: h.latitude, longitude: h.longitude},
         zoom: 15,
       },
-      {duration: 0},
+      {duration: 300},
     );
 
-    Object.entries(markerRefs.current).forEach(([id, ref]) => {
-      if (id !== h.hospitalId.toString()) {
-        ref.hideCallout();
+    // 4) fallback: animateCamera 후 350ms 뒤에 강제 showCallout
+    setTimeout(() => {
+      const ref = markerRefs.current[idStr];
+      if (ref) {
+        ref.showCallout();
+        setPendingCalloutId(null);
       }
-    });
-
-    requestAnimationFrame(() => {
-      markerRefs.current[h.hospitalId.toString()]?.showCallout();
-    });
+    }, 350);
   };
 
-  //   const handleMarkerPress = (h: HospitalMarkerDto) => (_: MarkerPressEvent) => {
-  //
-  //   mapRef.current?.animateCamera(
-  //     {
-  //       center: { latitude: h.latitude, longitude: h.longitude },
-  //       zoom: 15,
-  //     },
-  //     { duration: 300 },
-  //   );
+  /* 리스트 클릭 시 카메라 이동 + 콜아웃 열기 (fallback) */
+  const handleListItemPress = (item: HospitalSummaryDto) => {
+    setListVisible(false);
+    const idStr = item.hospitalId.toString();
+    setPendingCalloutId(idStr);
 
-  //
-  //   Object.entries(markerRefs.current).forEach(([id, ref]) => {
-  //     if (id !== h.hospitalId.toString()) {
-  //       ref.hideCallout();
-  //     }
-  //   });
+    mapRef.current?.animateCamera(
+      {
+        center: {latitude: item.latitude, longitude: item.longitude},
+        zoom: 15,
+      },
+      {duration: 300},
+    );
 
-  //
-  //   setTimeout(() => {
-  //     markerRefs.current[h.hospitalId.toString()]?.showCallout();
-  //   }, 100);
-  // };
+    setTimeout(() => {
+      const ref = markerRefs.current[idStr];
+      if (ref) {
+        ref.showCallout();
+        setPendingCalloutId(null);
+      }
+    }, 450);
 
-  /* 콜아웃 눌렀을 때 상세 모달 열기 */
+    Keyboard.dismiss();
+  };
+
+  /* 영역 변경 완료 시 (onRegionChangeComplete에서 콜아웃 시도) */
+  const onRegionChangeComplete = (newRegion: Region) => {
+    setRegion(newRegion);
+
+    if (pendingCalloutId) {
+      const ref = markerRefs.current[pendingCalloutId];
+      if (ref) {
+        ref.showCallout();
+      }
+      setPendingCalloutId(null);
+    }
+  };
+
+  /* 콜아웃 클릭 시 상세 모달 열기 */
   const openDetail = (h: {hospitalId: string | number}) => {
     setDetailId(h.hospitalId.toString());
     setDetailVisible(true);
@@ -215,23 +239,25 @@ export default function MapScreen() {
         showsUserLocation
         followsUserLocation
         onPress={handleMapPress}
-        onRegionChangeComplete={r => setRegion(r)}>
-        {/* 실제 병원 마커들 */}
+        onRegionChangeComplete={onRegionChangeComplete}>
         {!loadingMarkers &&
-          markers.map((h, i) => {
+          markers.map(h => {
             const detailQuery = detailMap[h.hospitalId];
+            const idStr = h.hospitalId.toString();
+
             return (
               <Marker
-                key={h.hospitalId.toString()}
+                key={idStr}
                 coordinate={{latitude: h.latitude, longitude: h.longitude}}
                 pinColor={h.strokeCenter ? colors.RED : colors.MAINBLUE}
+                tracksViewChanges={false} // 깜빡임 방지
                 ref={ref => {
                   if (ref) {
-                    markerRefs.current[h.hospitalId.toString()] = ref;
+                    markerRefs.current[idStr] = ref;
                   }
                 }}
                 onPress={handleMarkerPress(h)}>
-                <Callout onPress={() => openDetail(h)} tooltip={true}>
+                <Callout onPress={() => openDetail(h)} tooltip>
                   {detailQuery?.isLoading && (
                     <ActivityIndicator size="small" color={colors.MAINBLUE} />
                   )}
@@ -249,6 +275,7 @@ export default function MapScreen() {
           })}
       </MapView>
 
+      {/* 검색창 / 리스트 */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
           <Ionicons
@@ -268,7 +295,6 @@ export default function MapScreen() {
             returnKeyType="search"
             onFocus={() => setListVisible(true)}
           />
-
           <TouchableOpacity
             onPress={() => {
               setSearchTerm('');
@@ -297,27 +323,7 @@ export default function MapScreen() {
               renderItem={({item}) => (
                 <TouchableOpacity
                   style={styles.listItem}
-                  onPress={() => {
-                    setListVisible(false);
-                    mapRef.current?.animateCamera(
-                      {
-                        center: {
-                          latitude: item.latitude,
-                          longitude: item.longitude,
-                        },
-                        zoom: 15,
-                      },
-                      {duration: 300},
-                    );
-                    setTimeout(
-                      () =>
-                        markerRefs.current[
-                          item.hospitalId.toString()
-                        ]?.showCallout(),
-                      500,
-                    );
-                    Keyboard.dismiss();
-                  }}>
+                  onPress={() => handleListItemPress(item)}>
                   <HospitalListCard item={item} />
                 </TouchableOpacity>
               )}
@@ -327,6 +333,7 @@ export default function MapScreen() {
         </View>
       )}
 
+      {/* 범례 */}
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
           <View style={[styles.markerColor, {backgroundColor: colors.RED}]} />
@@ -340,12 +347,14 @@ export default function MapScreen() {
         </View>
       </View>
 
+      {/* 내 위치 버튼 */}
       <View style={styles.buttonList}>
         <Pressable style={styles.mapButton} onPress={handlePressUserLocation}>
           <Ionicons name="locate-outline" size={25} color={colors.WHITE} />
         </Pressable>
       </View>
 
+      {/* 상세 모달 */}
       <ModalWrapper
         visible={detailVisible}
         onClose={() => setDetailVisible(false)}>
@@ -370,7 +379,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   searchContainer: {
     position: 'absolute',
     top: 70,
@@ -382,7 +390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.WHITE,
     borderRadius: 20,
-    height: 40,
+    height: 55,
     paddingHorizontal: 4,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -394,17 +402,15 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     marginLeft: 6,
-    fontSize: 14,
-    paddingVertical: 0,
+    fontSize: 16,
+    paddingVertical: 6,
   },
   clearIcon: {
     paddingHorizontal: 8,
   },
-
-  /* ========= 검색 리스트 박스 ========= */
   listContainer: {
     position: 'absolute',
-    top: 70 + 40 + 8,
+    top: 70 + 55 + 8,
     left: 20,
     right: 20,
     backgroundColor: colors.WHITE,
@@ -416,7 +422,9 @@ const styles = StyleSheet.create({
     elevation: 5,
     maxHeight: 350,
   },
-  listItem: {},
+  listItem: {
+    alignItems: 'center',
+  },
   legendContainer: {
     position: 'absolute',
     bottom: 110,
@@ -429,15 +437,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3,
-    zIndex: 1, // 범례는 zIndex 낮게
+    zIndex: 1,
   },
   buttonList: {
     position: 'absolute',
     bottom: 30,
     right: 15,
     alignItems: 'center',
-
-    zIndex: 5, // 버튼이 범례 위에 오도록
+    zIndex: 5,
   },
   legendItem: {
     flexDirection: 'row',
@@ -454,7 +461,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.BLACK,
   },
-
   mapButton: {
     backgroundColor: colors.MAINBLUE,
     marginVertical: 5,
@@ -468,7 +474,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     elevation: 2,
   },
-
   errorText: {
     fontSize: 14,
     color: colors.RED,

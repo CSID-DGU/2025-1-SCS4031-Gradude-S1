@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
@@ -13,15 +14,19 @@ import CustomButton from '@/components/commons/CustomButton';
 import {colors, healthNavigations} from '@/constants';
 import type {Option, Question} from '@/data/healthDiaryQuestions';
 import {HEALTHDAIRYQUESTIONS as questions} from '@/data/healthDiaryQuestions';
+import {useCreateHealthDiary} from '@/hooks/queries/useHealthDiary';
+import type {HealthDiaryRequest} from '@/types/healthDiary';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
-
 type AnswerMap = Record<string, number>;
 
 export default function HealthDairyScreen() {
   const navigation = useNavigation<any>();
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
+
+  // React Query mutation 훅
+  const createDiary = useCreateHealthDiary();
 
   const current: Question = questions[index];
   const step = index + 1;
@@ -32,12 +37,38 @@ export default function HealthDairyScreen() {
   };
 
   const handleNext = () => {
+    // 1) 아직 응답이 없는 항목이면 아무 동작 안 함
     if (answers[current.key] == null) return;
+
+    // 2) 다음 질문이 있으면 인덱스 증가
     if (index + 1 < total) {
       setIndex(index + 1);
-    } else {
-      navigation.navigate(healthNavigations.HEALTH_RESULT, {answers});
+      return;
     }
+
+    // 3) 마지막 질문까지 답했으면, createHealthDiary API 호출
+    //    answers 객체의 키들이 백엔드가 기대하는 필드명(drinking, smoking, exercise, diet, sleep)이라고 가정
+    const payload: HealthDiaryRequest = {
+      drinking: answers.drinking ?? 0,
+      smoking: answers.smoking ?? 0,
+      exercise: answers.exercise ?? 0,
+      diet: answers.diet ?? 0,
+      sleep: answers.sleep ?? 0,
+    };
+
+    createDiary.mutate(payload, {
+      onSuccess: createdResult => {
+        // 생성 성공: 생성된 diaryId 등은 createdResult에 담겨 있다
+        navigation.navigate(healthNavigations.HEALTH_RESULT, {
+          diaryId: createdResult.diaryId,
+          healthScore: createdResult.healthScore,
+        });
+      },
+      onError: err => {
+        Alert.alert('오류', '하루 기록 생성 중 문제가 발생했습니다.');
+        console.error(err);
+      },
+    });
   };
 
   return (
@@ -81,7 +112,9 @@ export default function HealthDairyScreen() {
 
       <View style={styles.nextWrapper}>
         <CustomButton
-          label={step < total ? '다음' : '완료'}
+          label={
+            step < total ? '다음' : createDiary.isPending ? '생성 중…' : '완료'
+          }
           size="large"
           variant="filled"
           style={[
@@ -90,7 +123,7 @@ export default function HealthDairyScreen() {
           ]}
           textStyle={styles.nextLabel}
           onPress={handleNext}
-          disabled={answers[current.key] == null}
+          disabled={answers[current.key] == null || createDiary.isPending}
         />
       </View>
     </SafeAreaView>

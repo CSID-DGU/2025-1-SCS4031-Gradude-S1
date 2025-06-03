@@ -180,16 +180,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.WHITE,
     padding: 16,
     borderRadius: 12,
-    shadowColor: colors.BLACK,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: {width: 0, height: 4},
     elevation: 4,
     marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
   },
   title: {
     flex: 1,
@@ -203,14 +200,14 @@ const styles = StyleSheet.create({
     color: colors.MAINBLUE,
   },
   address: {
-    marginTop: 8,
-    fontSize: 16,
+    marginVertical: 10,
+    fontSize: 18,
     color: colors.BLACK,
   },
   infoText: {
     marginLeft: 8,
     marginRight: 16,
-    fontSize: 14,
+    fontSize: 16,
     color: colors.BLACK,
   },
   iconSpacing: {

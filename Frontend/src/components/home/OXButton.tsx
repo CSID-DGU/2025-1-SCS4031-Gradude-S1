@@ -41,17 +41,6 @@ export default function OXButton({value, selected, onPress}: OXButtonProps) {
     });
   }, [selected, scale, borderSize]);
 
-  //   const innerStyle = useAnimatedStyle(() => ({
-  //     transform: [{scale: scale.value}],
-  //   }));
-
-  //   const outerStyle = useAnimatedStyle(() => {
-  //   const bw = ((1 - scale.value) * BUTTON_SIZE) / 2;
-  //   return {
-  //     borderWidth: selected ? bw : 0,
-  //   };
-  //   });
-
   const animatedInner = useAnimatedStyle(() => ({
     transform: [{scale: scale.value}],
   }));
@@ -67,9 +56,8 @@ export default function OXButton({value, selected, onPress}: OXButtonProps) {
       onPress={onPress}
       style={[
         styles.outer,
-        {backgroundColor: bgColor},
+        {backgroundColor: bgColor, borderColor: textColor},
         animatedOuter,
-        {borderColor: textColor},
       ]}>
       <Animated.View
         style={[styles.button, animatedInner, {backgroundColor: bgColor}]}>

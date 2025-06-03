@@ -32,6 +32,7 @@
     "react-native": "^0.79.2",
     "react-native-animatable": "^1.4.0",
     "react-native-audio-recorder-player": "^3.6.12",
+    "react-native-audio-session": "^0.0.6",
     "react-native-calendars": "^1.1312.0",
     "react-native-chart-kit": "^6.12.0",
     "react-native-circular-progress": "^1.4.1",
@@ -55,8 +56,9 @@
     "react-native-video-controls": "^2.8.1",
     "react-native-video-player": "^0.16.3",
     "react-native-vision-camera": "^4.6.4",
-    "react-native-webview": "^13.13.5",
-    "react-redux": "^9.2.0"
+    "react-native-webview": "^13.14.0",
+    "react-redux": "^9.2.0",
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -1,60 +1,58 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
+import {View, Text, StyleSheet, Dimensions, TextInput} from 'react-native';
 import {colors} from '@/constants';
 import type {Question} from '@/data/selfDgsQuestion';
+import OXButton from './OXButton';
 
 const {width} = Dimensions.get('window');
 
 type Props = {
-  question: Question & {answer?: number};
-  onSelect: (value: number) => void;
+  question: Question & {answer?: number | string};
+  onSelect: (value: number | string) => void;
   step: number;
   total: number;
 };
 
-export default function QuestionCard({question, onSelect, step, total}: Props) {
+export default function QuestionCard({question, onSelect}: Props) {
+  // 숫자만 허용하는 필터 함수
+  const handleNumericInput = (text: string) => {
+    const filtered = text.replace(/[^0-9]/g, '');
+    onSelect(filtered);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressRatio}>{`${step}/${total}`}</Text>
-        <AnimatedCircularProgress
-          size={60}
-          width={6}
-          fill={(step / total) * 100}
-          tintColor={colors.MAINBLUE}
-          rotation={0}
-          backgroundColor={colors.OBTN}>
-          {() => <Text style={styles.progressText}>{step}</Text>}
-        </AnimatedCircularProgress>
-      </View>
+      {/* ─── 카드: 오직 질문 텍스트만 ─── */}
       <View style={styles.card}>
         <Text style={styles.questionText}>{question.text}</Text>
       </View>
+
+      {/* ─── 카드 바로 아래: 답변 입력/선택 영역 ─── */}
       <View style={styles.answerContainer}>
-        {question.options.map(opt => {
-          const selected = opt.value === question.answer;
-          return (
-            <TouchableOpacity
-              key={opt.id}
-              style={[styles.option, selected && styles.optionSelected]}
-              onPress={() => onSelect(opt.value)}>
-              <Text
-                style={[
-                  styles.optionLabel,
-                  selected && styles.optionLabelSelected,
-                ]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {question.type === 'input' && (
+          <TextInput
+            style={styles.textInput}
+            placeholder="숫자만 입력하세요"
+            keyboardType="number-pad"
+            value={String(question.answer ?? '')}
+            onChangeText={handleNumericInput}
+          />
+        )}
+
+        {question.type === 'ox' && (
+          <View style={styles.oxContainer}>
+            <OXButton
+              value="O"
+              selected={question.answer === 0}
+              onPress={() => onSelect(0)}
+            />
+            <OXButton
+              value="X"
+              selected={question.answer === 1}
+              onPress={() => onSelect(1)}
+            />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -63,71 +61,56 @@ export default function QuestionCard({question, onSelect, step, total}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    backgroundColor: colors.BACKGRAY,
+    backgroundColor: '#F5F7FA', // 전체 배경을 연한 회색으로
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-  progressContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    marginBottom: -30,
-    zIndex: 2,
-  },
-  progressRatio: {fontSize: 14, fontWeight: 'bold', marginBottom: 4},
-  progressText: {fontSize: 26, fontWeight: 'bold', color: colors.BLACK},
   card: {
-    width: width - 48,
     backgroundColor: colors.WHITE,
-    borderRadius: 12,
-    padding: 16,
-    paddingTop: 40,
+    borderRadius: 16,
+    minHeight: 120,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    marginBottom: 32,
     shadowColor: colors.GRAY,
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: {width: 0, height: 4},
     elevation: 4,
-    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   questionText: {
-    fontSize: 22,
-    paddingTop: 6,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '600',
     color: colors.BLACK,
     textAlign: 'center',
-    marginBottom: 24,
+    lineHeight: 32,
   },
   answerContainer: {
-    width: width - 48,
-    backgroundColor: colors.WHITE,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 20,
-    shadowColor: colors.GRAY,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: {width: 0, height: 3},
-    elevation: 4,
-  },
-  option: {
-    width: '100%',
-    paddingVertical: 16,
     alignItems: 'center',
-    borderRadius: 30,
-    marginBottom: 12,
-    backgroundColor: '#EEEEEE',
   },
-  optionSelected: {
-    backgroundColor: colors.MAINBLUE,
-    borderColor: colors.MAINBLUE,
-  },
-  optionLabel: {
+  textInput: {
+    width: '80%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: colors.LIGHTGRAY,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     fontSize: 18,
-    fontWeight: '600',
-    color: colors.BLACK,
+    textAlign: 'center',
+    backgroundColor: colors.WHITE,
+    shadowColor: colors.GRAY,
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    shadowOffset: {width: 0, height: 3},
+    elevation: 2,
   },
-  optionLabelSelected: {
-    color: colors.WHITE,
-    fontWeight: '600',
+  oxContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: width - 80, // 좌우 여유를 주고
+    marginTop: 20,
   },
 });
