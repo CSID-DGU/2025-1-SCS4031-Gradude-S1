@@ -13,7 +13,7 @@ import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import {useNavigation} from '@react-navigation/native';
 
 import {colors, homeNavigations} from '@/constants';
-import {useDiagnosisHistory} from '@/hooks/queries/useDiagnosis';
+import {useDiagnosisHistory} from '@/hooks/queries/useDiagnosis'; // 경로가 바뀌었으면 실제 경로에 맞게 수정
 
 LocaleConfig.locales['kr'] = {
   monthNames: [
@@ -60,16 +60,14 @@ LocaleConfig.defaultLocale = 'kr';
 export default function FinalResultListScreen() {
   const navigation = useNavigation<any>();
 
-  // useDiagnosisHistory 훅이 내부에서 자동으로 userId를 꺼내서 처리
+  // useDiagnosisHistory 훅 호출만 하면 내부에서 로그인된 유저의 히스토리 API를 가져옵니다.
   const {
     data: historyList = [],
     isLoading: loadingHistory,
     isError: historyError,
-  } = useDiagnosisHistory({
-    enabled: true, // 혹은 특별한 조건이 필요하면 설정
-  });
+  } = useDiagnosisHistory();
 
-  // ── B. 달력에 표시할 연·월 state
+  // ── B. 달력에 표시할 연·월 state (현재 예시에는 사용하지 않지만, 월 변경 로직을 위해 남겨두었습니다)
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -105,8 +103,7 @@ export default function FinalResultListScreen() {
   const onMonthChange = (date: {year: number; month: number}) => {
     setYear(date.year);
     setMonth(date.month);
-    // TODO: 연·월을 서버에 전달해서 필터링된 history를 받고 싶으면 여기서 refetch 호출
-    // 예: refetch({ year: date.year, month: date.month });
+    // TODO: 연·월 필터링이 필요하면 refetch 논리를 추가하세요.
   };
 
   if (loadingHistory) {
@@ -116,6 +113,7 @@ export default function FinalResultListScreen() {
       </SafeAreaView>
     );
   }
+
   if (historyError) {
     return (
       <SafeAreaView style={styles.loadingContainer}>

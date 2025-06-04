@@ -13,6 +13,8 @@ import {
   getDiagnosisById,
   getDiagnosisHistory,
 } from '@/api/diagnosis';
+import {useSelector} from 'react-redux';
+import {RootState} from '@/store';
 
 /**
  * 1) 얼굴/음성 파일 업로드 → DiagnosisResult 반환하는 Mutation 훅
@@ -103,14 +105,15 @@ export function useDiagnosisById(diagnosisId: number) {
  *     refetch: refetchHistory,
  *   } = useDiagnosisHistory(userId);
  */
-export function useDiagnosisHistory(options?: {enabled?: boolean}) {
-  // 내부에서 리덕스 또는 context에서 userId를 가져오도록 변경
-  const userProfile = useSelector((s: RootState) => s.auth.userProfile);
-  const userId = userProfile?.kakaoId;
+// Optionally define UseDiagnosisOptions if not imported from elsewhere
+type UseDiagnosisOptions = {
+  enabled?: boolean;
+};
 
-  return useQuery(
-    ['diagnosisHistory', userId],
-    () => fetchDiagnosisHistory(userId!),
-    {enabled: options?.enabled ?? !!userId},
-  );
+export function useDiagnosisHistory() {
+  return useQuery<DiagnosisHistoryItem[], Error>({
+    queryKey: ['diagnosisHistory'], // 고정된 키만 사용
+    queryFn: () => getDiagnosisHistory(), // userId 없이 호출
+    enabled: true, // 항상 실행하거나, 필요 시 이 값을 동적으로 바꿔도 됩니다
+  });
 }

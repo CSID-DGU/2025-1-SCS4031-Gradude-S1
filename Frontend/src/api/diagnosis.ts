@@ -82,11 +82,11 @@ export const getDiagnosisById = async (
  * 4) 유저별 자가진단 기록 있는 날짜 목록 조회
  *    GET /api/diagnosis/user/{userId}/list
  */
-export const getDiagnosisHistory = async (
-  userId: number,
-): Promise<DiagnosisHistoryItem[]> => {
+export const getDiagnosisHistory = async (): Promise<
+  DiagnosisHistoryItem[]
+> => {
   const {data} = await axiosInstance.get<DiagnosisHistoryResponse>(
-    `/api/diagnosis/user/${userId}/list`,
+    `/api/diagnosis/user/list`,
   );
 
   if (!data.isSuccess) {

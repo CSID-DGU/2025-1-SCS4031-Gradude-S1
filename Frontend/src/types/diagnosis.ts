@@ -43,7 +43,7 @@ export interface SurveyResultDto {
 }
 
 /**
- * 4) /api/diagnosis/user/{userId}/list 응답 내부 아이템 타입
+ * 4) /api/diagnosis/user/list 응답 내부 아이템 타입
  */
 export interface DiagnosisHistoryItem {
   date: string; // ex. "2025-06-04"
