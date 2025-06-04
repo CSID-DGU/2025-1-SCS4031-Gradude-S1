@@ -125,7 +125,7 @@ export default function FinalResultListScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>뇌졸중 자가진단 내역</Text>
+        <Text style={styles.title}>🧠 뇌졸중 자가진단 내역</Text>
       </View>
 
       <Calendar
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.BLACK,
+    color: colors.SKYBLUE,
   },
   calendar: {
     borderRadius: 12,

@@ -37,7 +37,7 @@ export default function LoginScreen({navigation}: Props) {
     try {
       // 1) 카카오 계정으로 로그인 → tokens 반환
       const tokens: KakaoOAuthToken = await loginWithKakaoAccount();
-      Alert.alert('카카오 토큰 정보', `accessToken:\n${tokens.accessToken}`);
+      // Alert.alert('카카오 토큰 정보', `accessToken:\n${tokens.accessToken}`);
 
       // 2) 프로필 정보 가져오기
       const profile: KakaoSdkProfile = await getProfile();
