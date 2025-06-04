@@ -1,4 +1,6 @@
-import React from 'react';
+// src/screens/Diagnosis/FinalResultScreen.tsx
+
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,24 +12,20 @@ import {
 } from 'react-native';
 import {useRoute, RouteProp} from '@react-navigation/native';
 import {useDiagnosisById} from '@/hooks/queries/useDiagnosis';
-import {colors} from '@/constants';
+import {colors, homeNavigations} from '@/constants';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import type {HospitalDetailDto} from '@/types/hospital';
 
 // ▶ HomeStackParamList에서 FINAL_RESULT는 { diagnosisId: number }
-type RouteParams = {
-  [key in keyof {FINAL_RESULT: {diagnosisId: number}}]: {
-    diagnosisId: number;
-  };
-};
+type FinalResultRouteProp = RouteProp<
+  {[homeNavigations.FINAL_RESULT]: {diagnosisId: number}},
+  typeof homeNavigations.FINAL_RESULT
+>;
 
 export default function FinalResultScreen() {
   // ▶ useRoute로 넘어온 diagnosisId를 꺼냅니다.
-  const route =
-    useRoute<
-      RouteProp<{FINAL_RESULT: {diagnosisId: number}}, 'FINAL_RESULT'>
-    >();
+  const route = useRoute<FinalResultRouteProp>();
   const {diagnosisId} = route.params;
 
   // ▶ react-query 훅으로 진단 결과(fetch)
@@ -79,16 +77,17 @@ export default function FinalResultScreen() {
   const [firstLine, secondLine] = rawMessage.split('\n');
 
   const screenWidth = Dimensions.get('window').width;
-  const circleSize = screenWidth * 0.6;
+  // 원형 크기를 약간 축소: 화면 너비의 50%
+  const circleSize = screenWidth * 0.5;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
-        {/* 1. 최종 뇌졸중 위험도 & 원형 프로그래스 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>최종 뇌졸중 위험도</Text>
+        {/* 1. 카드 형태로 감싼 최종 뇌졸중 위험도 & 원형 프로그래스 */}
+        <View style={styles.cardContainer}>
+          <Text style={styles.sectionTitle}>💡 최종 뇌졸중 위험도</Text>
           <View style={styles.progressWrapper}>
             <AnimatedCircularProgress
               size={circleSize}
@@ -113,7 +112,7 @@ export default function FinalResultScreen() {
 
         {/* 2. 최종 진단 결과 & LLM 텍스트 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>최종 진단 결과</Text>
+          <Text style={styles.sectionTitle}>🔎 최종 진단 결과</Text>
           <View style={styles.llmContainer}>
             <Text style={styles.llmText}>{llmResult}</Text>
           </View>
@@ -121,13 +120,14 @@ export default function FinalResultScreen() {
 
         {/* 3. AI 예측 메시지 (face/speech) */}
         <View style={styles.topMessageContainer}>
+          <Text style={styles.sectionTitle}>📍 AI 분석 결과</Text>
           <Text style={styles.topMessageFirst}>{firstLine}</Text>
           <Text style={styles.topMessageSecond}>{secondLine}</Text>
         </View>
 
         {/* 4. 추천 병원 리스트 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>추천 병원</Text>
+          <Text style={styles.sectionTitle}>🏥 가장 가까운 병원</Text>
           {hospitalList.length === 0 ? (
             <Text style={styles.noHospitalText}>
               주변에 추천 병원이 없습니다.
@@ -160,6 +160,23 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     alignItems: 'center',
   },
+  // 카드처럼 감싼 컨테이너
+  cardContainer: {
+    width: SCREEN_W - 40,
+    backgroundColor: colors.WHITE,
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    marginBottom: 32,
+    // 그림자 (iOS)
+    shadowColor: colors.BLACK,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    // 그림자 (Android)
+    elevation: 3,
+    alignItems: 'center',
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -167,27 +184,28 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
+  // 원형 프로그래스 래퍼 (센터 정렬)
   progressWrapper: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginTop: 8,
   },
   innerCircle: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   scoreText: {
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: 'bold',
     color: colors.MAINBLUE,
   },
   scoreLabel: {
-    fontSize: 18,
+    fontSize: 16,
     color: colors.GRAY,
     marginTop: 4,
   },
   percentageText: {
     marginTop: 8,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.BLACK,
   },

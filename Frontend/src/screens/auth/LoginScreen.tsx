@@ -76,7 +76,7 @@ export default function LoginScreen({navigation}: Props) {
         },
       });
     } catch {
-      Alert.alert('카카오 로그인 취소', '다시 시도해 주세요.');
+      // Alert.alert('카카오 로그인 취소', '다시 시도해 주세요.');
     }
   };
 

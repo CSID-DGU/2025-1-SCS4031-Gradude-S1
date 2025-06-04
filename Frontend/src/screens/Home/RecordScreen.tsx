@@ -1,4 +1,3 @@
-// src/screens/home/RecordScreen.tsx
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -111,22 +110,26 @@ export default function RecordScreen({
 
   /**
    * (C) “녹음” 버튼을 누르면:
-   * - isRecording을 true로 설정해 2초간 녹음 중 UI만 보여준다.
-   * - 타이머 종료 시 실제 파일 URI를 recordingUri에 세팅.
+   * - isRecording이 false(녹음 대기)면, 녹음 시작 모드로 전환
+   * - isRecording이 true(녹음 중)면, 녹음 중지 및 recordingUri에 fileUri 세팅
    */
   const onRecordToggle = () => {
-    if (isRecording || !fileUri) return;
+    if (isLoadingAsset || !fileUri) return;
 
+    // 애니메이션
     btnScale.value = withTiming(0.9, {duration: 100});
     setTimeout(() => {
       btnScale.value = withTiming(1, {duration: 100});
     }, 100);
 
-    setIsRecording(true);
-    setTimeout(() => {
+    if (!isRecording) {
+      // 녹음 시작
+      setIsRecording(true);
+    } else {
+      // 녹음 중이던 상태 → 중지 후 녹음 완료
       setIsRecording(false);
       setRecordingUri(fileUri);
-    }, 2000); // 예: 2초간 “녹음 중” UI
+    }
   };
 
   /**
@@ -157,6 +160,7 @@ export default function RecordScreen({
     }
   };
 
+  // (E) 다시 녹음하기: 상태 초기화
   const onReRecord = () => {
     setRecordingUri(undefined);
     setIsPlaying(false);
@@ -166,7 +170,7 @@ export default function RecordScreen({
   };
 
   /**
-   * (E) “완료” 버튼: recordingUri가 있으면 다음 화면으로 네비게이션
+   * (F) “완료” 버튼: recordingUri가 있으면 다음 화면으로 네비게이션
    */
   const goNext = () => {
     if (recordingUri) {
@@ -177,6 +181,7 @@ export default function RecordScreen({
     }
   };
 
+  // ■ UI 렌더링 ■
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.card, cardStyle]}>
@@ -186,33 +191,49 @@ export default function RecordScreen({
         <Text style={styles.title}>"나는 바지를 입고 단추를 채웁니다."</Text>
         <Text style={styles.cautiontext}>
           ※ 주변 소음 줄이고 마이크 가까이 ※ {'\n'}
-          녹음이 끝나면 완료 버튼을 눌러주세요
+          녹음을 중지하려면 버튼을 다시 눌러주세요
         </Text>
       </Animated.View>
 
-      {!recordingUri ? (
+      {/* 1) 아직 녹음 완료 전: 녹음 시작/중지 버튼 (isRecording 토글) */}
+      {!recordingUri && (
         <View style={[styles.buttonWrapper, {bottom: insets.bottom + 10}]}>
-          <Animated.View style={buttonAnim}>
-            <Pressable
-              onPress={onRecordToggle}
-              style={[styles.recordBtn, isRecording && styles.recordActive]}>
-              <MaterialIcons
-                name={isRecording ? 'mic-off' : 'mic'}
-                size={50}
-                color={colors.WHITE}
-              />
-            </Pressable>
-          </Animated.View>
+          {isLoadingAsset ? (
+            <View style={styles.loadingWrapper}>
+              <ActivityIndicator size="large" color={colors.MAINBLUE} />
+              <Text style={{marginTop: 8, color: colors.GRAY}}>
+                오디오 로딩 중...
+              </Text>
+            </View>
+          ) : (
+            <Animated.View style={buttonAnim}>
+              <Pressable
+                onPress={onRecordToggle}
+                style={[styles.recordBtn, isRecording && styles.recordActive]}>
+                <MaterialIcons
+                  name={isRecording ? 'mic-off' : 'mic'}
+                  size={50}
+                  color={colors.WHITE}
+                />
+              </Pressable>
+            </Animated.View>
+          )}
         </View>
-      ) : (
+      )}
+
+      {/* 2) 녹음 완료 후: 재생 버튼 + 다시 녹음 / 완료 버튼 */}
+      {recordingUri && (
         <View style={[styles.controls, {bottom: insets.bottom + 10}]}>
-          {/* <Pressable onPress={onPlayToggle} style={styles.controlBtn}>
-            <MaterialIcons
-              name={isPlaying ? 'pause-circle' : 'play-circle'}
-              size={62}
-              color={colors.BLUE}
-            />
-          </Pressable> */}
+          <Animated.View style={buttonAnim}>
+            {/* <Pressable onPress={onPlayToggle} style={styles.playBtn}>
+              <MaterialIcons
+                name={isPlaying ? 'pause-circle' : 'play-circle'}
+                size={62}
+                color={colors.MAINBLUE}
+              />
+            </Pressable> */}
+          </Animated.View>
+
           <CustomButton
             label="다시 녹음"
             variant="filled"

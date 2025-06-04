@@ -14,6 +14,7 @@ import {StackScreenProps} from '@react-navigation/stack';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import {uploadDiagnosis, postSurvey} from '@/api/diagnosis';
 import type {SurveyRequest} from '@/types/diagnosis';
+import {AxiosError} from 'axios';
 
 type Props = StackScreenProps<
   HomeStackParamList,
@@ -68,18 +69,18 @@ export default function LoadingScreen({navigation, route}: Props) {
     opacity: progress.value,
     transform: [{scale: progress.value * 0.05 + 0.95}],
   }));
+  // src/screens/home/LoadingScreen.tsx (일부만 발췌)
 
-  // ── 마운트 시점에 API 호출 ──
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       try {
-        // ① 얼굴+음성 업로드
         if (hasVoiceParams && CameraUri && AudioUri) {
           const result = await uploadDiagnosis(CameraUri, AudioUri);
           if (!isMounted) return;
 
+          // 성공 콜백
           const {facePrediction, speechPrediction} = result;
           navigation.replace(homeNavigations.MID_RESULT, {
             facePrediction,
@@ -88,28 +89,64 @@ export default function LoadingScreen({navigation, route}: Props) {
           return;
         }
 
-        // ② 자가진단 설문 전송
         if (hasSurveyParams && surveyPayload) {
           const surveyResult = await postSurvey(surveyPayload);
           if (!isMounted) return;
 
-          // 결과가 오면 FinalResultScreen으로 이동
           navigation.replace(homeNavigations.FINAL_RESULT, {
             surveyResult,
           });
           return;
         }
 
-        // 둘 다 해당하지 않으면, 잘못된 진입. 뒤로 보내기
         Alert.alert('오류', '잘못된 경로로 접근하였습니다.');
         navigation.goBack();
       } catch (error: any) {
-        Alert.alert(
-          '로딩 중 오류',
-          error instanceof Error
-            ? error.message
-            : '알 수 없는 오류가 발생했습니다.',
-        );
+        // 1) 콘솔에 에러 전체 출력
+        console.error('============================');
+        console.error('▶ LoadingScreen 에러 발생:', error);
+
+        // 2) AxiosError인지 확인
+        if (error.isAxiosError) {
+          const axiosErr = error as AxiosError;
+
+          // (a) HTTP 요청을 보낼 때 사용된 config
+          console.error('--- [Axios Config] ---');
+          console.error(axiosErr.config);
+
+          // (b) 서버가 응답한 response가 있으면 status, headers, data까지 출력
+          if (axiosErr.response) {
+            console.error('--- [Axios Response] ---');
+            console.error('Status:', axiosErr.response.status);
+            console.error('Headers:', axiosErr.response.headers);
+            console.error('Data:', axiosErr.response.data);
+          } else if (axiosErr.request) {
+            // (c) 서버 응답을 못 받았을 때 request 객체 확인
+            console.error('--- [Axios Request] ---');
+            console.error(axiosErr.request);
+          }
+
+          // (d) 에러 메시지
+          console.error('--- [Axios Error Message] ---');
+          console.error(axiosErr.message);
+        } else {
+          // AxiosError가 아니라면 일반 JS Error나 기타 예외
+          console.error('--- [Non-Axios Error] ---');
+          console.error(error.message);
+          console.error(error.stack);
+        }
+
+        // 디버그 목적으로 Alert에도 상세 메시지 띄우기
+        let userMsg = '알 수 없는 오류가 발생했습니다.';
+        if (error.isAxiosError) {
+          const axiosErr = error as AxiosError<{message: string}>;
+          userMsg =
+            axiosErr.response?.data?.message || axiosErr.message || userMsg;
+        } else if (error instanceof Error) {
+          userMsg = error.message;
+        }
+        Alert.alert('로딩 중 오류', userMsg);
+
         navigation.goBack();
       }
     })();
