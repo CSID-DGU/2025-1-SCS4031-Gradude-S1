@@ -33,6 +33,7 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Transactional
 @RequiredArgsConstructor
@@ -142,7 +143,7 @@ public class DiagnosisCommandService {
     /**
      * 설문 자가진단 후 자가진단 최종 결과 반환
      */
-    public DiagnosisResponseDTO selfDiagnosis(Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO, double latitude, double longitude) {
+    public DiagnosisResponseDTO selfDiagnosis(Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
         Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
@@ -187,19 +188,29 @@ public class DiagnosisCommandService {
         diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore, llmResult);
 
         // 가까운 병원 2개 조회 (지도에서 모달 조회랑 같은 반환값들)
-        List<HospitalSearchResponseDTO> nearestHospitals = hospitalQueryService.getNearestHospitals(latitude, longitude)
-                .subList(0, Math.min(2, hospitalQueryService.getNearestHospitals(latitude, longitude).size()));
+//        List<HospitalSearchResponseDTO> nearestHospitals = hospitalQueryService.getNearestHospitals(latitude, longitude)
+//                .subList(0, Math.min(2, hospitalQueryService.getNearestHospitals(latitude, longitude).size()));
+//
+//        List<HospitalDetailResponseDTO> hospitalDetails = nearestHospitals.stream()
+//                .map(dto -> {
+//                    Hospital hospital = hospitalRepository.findById(dto.getHospitalId())
+//                            .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
+//                    boolean isOpen = hospital.isEmergency()
+//                            || (hospital.getOpeningHour() != null && hospital.isOpenNow());
+//                    return HospitalDetailResponseDTO.ofMarker(hospital, dto.getDistance(), isOpen);
+//                })
+//                .toList();
+        List<Long> hospitalIds = List.of(241L, 671L);
 
-        List<HospitalDetailResponseDTO> hospitalDetails = nearestHospitals.stream()
-                .map(dto -> {
-                    Hospital hospital = hospitalRepository.findById(dto.getHospitalId())
+        List<HospitalDetailResponseDTO> hospitalDetails = hospitalIds.stream()
+                .map(hospitalId -> {
+                    Hospital hospital = hospitalRepository.findById(hospitalId)
                             .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
                     boolean isOpen = hospital.isEmergency()
                             || (hospital.getOpeningHour() != null && hospital.isOpenNow());
-                    return HospitalDetailResponseDTO.ofMarker(hospital, dto.getDistance(), isOpen);
+                    return HospitalDetailResponseDTO.ofMarker(hospital, 0.0, isOpen); // 거리 0.0은 예시
                 })
                 .toList();
-
         return DiagnosisResponseDTO.from(diagnosis, llmResult, hospitalDetails);
     }
 }
