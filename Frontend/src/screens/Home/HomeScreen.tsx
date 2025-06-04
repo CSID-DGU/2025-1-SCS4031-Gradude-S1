@@ -175,14 +175,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 30,
-    fontWeight: '600',
+    fontSize: 34,
+    fontWeight: 'bold',
     color: colors.MAINBLUE,
     marginTop: 20,
     marginBottom: 12,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 22,
     color: colors.BLACK,
     textAlign: 'center',
     lineHeight: 30,
@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 10,
     elevation: 5,
+    fontWeight: 'bold',
   },
   cardButtonText: {
     color: colors.MAINBLUE,
