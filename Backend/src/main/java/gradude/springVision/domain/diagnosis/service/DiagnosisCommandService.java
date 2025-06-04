@@ -186,6 +186,7 @@ public class DiagnosisCommandService {
 
         diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore, llmResult);
 
+        // 가까운 병원 2개 조회 (지도에서 모달 조회랑 같은 반환값들)
         List<HospitalSearchResponseDTO> nearestHospitals = hospitalQueryService.getNearestHospitals(latitude, longitude)
                 .subList(0, Math.min(2, hospitalQueryService.getNearestHospitals(latitude, longitude).size()));
 
