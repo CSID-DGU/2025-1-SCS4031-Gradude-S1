@@ -5,6 +5,11 @@ import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResponseDTO
 import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.entity.Diagnosis;
 import gradude.springVision.domain.diagnosis.repository.DiagnosisRepository;
+import gradude.springVision.domain.hospital.dto.response.HospitalDetailResponseDTO;
+import gradude.springVision.domain.hospital.dto.response.HospitalSearchResponseDTO;
+import gradude.springVision.domain.hospital.entity.Hospital;
+import gradude.springVision.domain.hospital.repository.HospitalRepository;
+import gradude.springVision.domain.hospital.service.HospitalQueryService;
 import gradude.springVision.domain.user.entity.User;
 import gradude.springVision.domain.user.repository.UserRepository;
 import gradude.springVision.global.common.response.ErrorCode;
@@ -26,6 +31,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Transactional
@@ -42,6 +48,8 @@ public class DiagnosisCommandService {
     private final DiagnosisRepository diagnosisRepository;
     private final S3Service s3Service;
     private final LlmDiagnosisService llmDiagnosisService;
+    private final HospitalQueryService hospitalQueryService;
+    private final HospitalRepository hospitalRepository;
 
     private static final String[] ALLOWED_VIDEO_EXTENSIONS = {"mp4", "mov"};
     private static final String[] ALLOWED_AUDIO_EXTENSIONS = {"wav", "pcm", "m4a"};
@@ -134,7 +142,7 @@ public class DiagnosisCommandService {
     /**
      * 설문 자가진단 후 자가진단 최종 결과 반환
      */
-    public DiagnosisResponseDTO selfDiagnosis(Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
+    public DiagnosisResponseDTO selfDiagnosis(Long userId, SelfDiagnosisRequestDTO selfDiagnosisRequestDTO, double latitude, double longitude) {
         Diagnosis diagnosis = diagnosisRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
@@ -178,6 +186,19 @@ public class DiagnosisCommandService {
 
         diagnosis.updateDiagnosis(selfDiagnosisRequestDTO, orientation, totalScore, llmResult);
 
-        return DiagnosisResponseDTO.from(diagnosis, llmResult);
+        List<HospitalSearchResponseDTO> nearestHospitals = hospitalQueryService.getNearestHospitals(latitude, longitude)
+                .subList(0, Math.min(2, hospitalQueryService.getNearestHospitals(latitude, longitude).size()));
+
+        List<HospitalDetailResponseDTO> hospitalDetails = nearestHospitals.stream()
+                .map(dto -> {
+                    Hospital hospital = hospitalRepository.findById(dto.getHospitalId())
+                            .orElseThrow(() -> new GeneralException(ErrorCode.HOSPITAL_NOT_FOUND));
+                    boolean isOpen = hospital.isEmergency()
+                            || (hospital.getOpeningHour() != null && hospital.isOpenNow());
+                    return HospitalDetailResponseDTO.ofMarker(hospital, dto.getDistance(), isOpen);
+                })
+                .toList();
+
+        return DiagnosisResponseDTO.from(diagnosis, llmResult, hospitalDetails);
     }
 }

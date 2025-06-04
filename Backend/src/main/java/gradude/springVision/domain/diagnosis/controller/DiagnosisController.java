@@ -30,7 +30,8 @@ public class DiagnosisController {
 
     @Operation(summary = "설문 자가 진단", description = "gaze와 arm은 증상이 있으면 1, 없으면 0 으로 입력 받습니다.")
     @PostMapping(value = "/survey")
-    public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, @RequestBody SelfDiagnosisRequestDTO selfDiagnosisRequestDTO) {
-        return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO));
+    public ApiResponse<DiagnosisResponseDTO> selfDiagnosis(@AuthenticationPrincipal Long userId, @RequestBody SelfDiagnosisRequestDTO selfDiagnosisRequestDTO,
+                                                           @RequestParam double latitude, @RequestParam double longitude){
+        return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO, latitude, longitude));
     }
 }
