@@ -214,3 +214,6 @@ public class DiagnosisCommandService {
         return DiagnosisResponseDTO.from(diagnosis, llmResult, hospitalDetails);
     }
 }
+
+
+
