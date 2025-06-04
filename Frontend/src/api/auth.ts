@@ -6,9 +6,10 @@ import type {
   KakaoTokenRequest,
   SignupRequest,
   SignupResponse,
-  UserInfo,
   TokenResponse, // 이미 정의되어 있어야 하는 타입
-  ApiResponse, // ApiResponse<T> 제너릭 래퍼 타입
+  ApiResponse,
+  UserProfileWithoutId,
+  KakaoProfile, // ApiResponse<T> 제너릭 래퍼 타입
 } from '@/types/auth';
 
 /* ───── 1) 네이티브 SDK 토큰 로그인 ───── */
@@ -34,11 +35,12 @@ export const postSignup = async (
 };
 
 /* ───── 3) 프로필 조회 ───── */
-export const getProfile = async (): Promise<UserInfo> => {
-  const {data} = await axiosInstance.post<{result: UserInfo}>(
+export const getProfile = async (): Promise<UserProfileWithoutId> => {
+  const {data} = await axiosInstance.get<{result: KakaoProfile}>(
     '/api/auth/profile',
   );
-  return data.result;
+  const {kakaoId, ...profileWithoutId} = data.result;
+  return profileWithoutId;
 };
 
 /* ───── 4) 로그아웃·탈퇴 ───── */

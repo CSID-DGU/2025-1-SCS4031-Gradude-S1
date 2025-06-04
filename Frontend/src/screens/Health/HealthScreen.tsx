@@ -1,4 +1,4 @@
-import React, {useState, useRef, useMemo} from 'react';
+import React, {useState, useRef, useMemo, useEffect} from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,8 @@ const BOX_WIDTH = 110;
 const BOX_MARGIN = 8;
 
 export default function HealthScreen() {
+  // ────────────────────────────────────────────────────────────────────────────
+  // 1) 훅들을 모두 최상단에 선언
   const navigation =
     useNavigation<
       CompositeNavigationProp<
@@ -44,11 +46,40 @@ export default function HealthScreen() {
       >
     >();
 
-  // 1) API 훅으로 최근 5개 건강 점수 가져오기
   const {data: response = [], isLoading, isError} = useGetHealthDiaryGraph();
   // response 타입: Array<{ date: string; healthScore: number }>
 
-  // 로딩/에러 처리
+  const labels = useMemo(
+    () => response.map(r => r.date.slice(5).replace('-', '.')),
+    [response],
+  );
+
+  const data = useMemo(() => response.map(r => r.healthScore), [response]);
+
+  const reversed = useMemo(() => [...response].reverse(), [response]);
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // response가 바뀔 때마다 가장 마지막(최신) 인덱스로 초기화
+  useEffect(() => {
+    if (data.length > 0) {
+      setSelectedIndex(data.length - 1);
+    }
+  }, [data]);
+
+  const scrollRef = useRef<ScrollView>(null);
+
+  // onSelect 함수: 차트나 날짜 박스를 눌렀을 때 호출
+  const onSelect = (origIdx: number) => {
+    setSelectedIndex(origIdx);
+    const revIdx = data.length - 1 - origIdx;
+    const offsetX =
+      revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
+    scrollRef.current?.scrollTo({x: offsetX, animated: true});
+  };
+  // ────────────────────────────────────────────────────────────────────────────
+
+  // 2) 로딩/에러 처리
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -56,6 +87,7 @@ export default function HealthScreen() {
       </SafeAreaView>
     );
   }
+
   if (isError) {
     return (
       <SafeAreaView style={styles.center}>
@@ -64,28 +96,7 @@ export default function HealthScreen() {
     );
   }
 
-  // 2) 차트에서 사용할 레이블과 데이터
-  //    API로 받아온 순서대로(최신이 뒤에 온다고 가정)
-  const labels = useMemo(
-    () => response.map(r => r.date.slice(5).replace('-', '.')),
-    [response],
-  );
-  const data = useMemo(() => response.map(r => r.healthScore), [response]);
-
-  // 3) 날짜 리스트는 역순으로 보여줄 것이므로 reverse 처리
-  const reversed = useMemo(() => [...response].reverse(), [response]);
-
-  const [selectedIndex, setSelectedIndex] = useState(data.length - 1);
-  const scrollRef = useRef<ScrollView>(null);
-
-  const onSelect = (origIdx: number) => {
-    setSelectedIndex(origIdx);
-    const revIdx = data.length - 1 - origIdx;
-    const offsetX =
-      revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
-    scrollRef.current?.scrollTo({x: offsetX, animated: true});
-  };
-
+  // 3) 실제 렌더링
   const buttons = [
     {
       icon: 'calendar-check',

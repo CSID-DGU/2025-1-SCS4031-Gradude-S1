@@ -19,7 +19,7 @@ export interface KakaoTokenRequest {
   accessToken: string;
   kakaoId: number;
   nickname?: string;
-  profileImage?: string;
+  profileImageUrl?: string;
 }
 
 /** ── 토큰 페이로드 ── */
@@ -57,4 +57,4 @@ export interface SignupResult {
 export type SignupResponse = ApiResponse<SignupResult>;
 
 /** ── 프로필 조회 시 쓸 수 있는 타입 ── */
-export type UserInfo = KakaoProfile;
+export type UserProfileWithoutId = Omit<KakaoProfile, 'kakaoId'>;

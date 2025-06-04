@@ -12,19 +12,29 @@ import FinalResultScreen from '@/screens/Home/FinalResultScreen';
 
 import type {ImageSourcePropType} from 'react-native';
 import CameraScreen from '@/screens/Home/CameraScreen';
+import {SurveyResultDto} from '@/types/diagnosis';
 
 export type HomeStackParamList = {
   [homeNavigations.MAIN_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
   [homeNavigations.CAMERA]: undefined;
   [homeNavigations.RECORD]: {CameraUri: string};
-  [homeNavigations.LOADING]: {CameraUri: string; AudioUri: string};
+  Loading:
+    | {CameraUri: string; AudioUri: string} // ① 얼굴/음성 기반 로딩
+    | {
+        surveyPayload: {
+          orientationMonth: number;
+          orientationAge: number;
+          gaze: 0 | 1;
+          arm: 0 | 1;
+        };
+      };
   [homeNavigations.MID_RESULT]: {
     facePrediction: boolean;
     speechPrediction: boolean;
   };
   [homeNavigations.SELF_DGS]: undefined;
-  [homeNavigations.FINAL_RESULT]: undefined;
+  [homeNavigations.FINAL_RESULT]: {surveyResult: SurveyResultDto};
   [homeNavigations.EXERCISE_LIST]: undefined;
   [homeNavigations.VIDEO_PLAYER]: {
     uri: string | number;
