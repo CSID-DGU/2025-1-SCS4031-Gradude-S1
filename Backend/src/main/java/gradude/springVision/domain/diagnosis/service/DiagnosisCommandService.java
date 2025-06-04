@@ -1,5 +1,7 @@
 package gradude.springVision.domain.diagnosis.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gradude.springVision.domain.diagnosis.dto.request.SelfDiagnosisRequestDTO;
 import gradude.springVision.domain.diagnosis.dto.response.AiDiagnosisResponseDTO;
 import gradude.springVision.domain.diagnosis.dto.response.DiagnosisResponseDTO;
@@ -19,6 +21,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +31,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -112,7 +118,7 @@ public class DiagnosisCommandService {
     private Map<String, Object> callAiApi(String apiUrl, MultipartFile file) {
         RestTemplate restTemplate = new RestTemplate();
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(); // Multipart/form-data
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         try {
             body.add("file", new ByteArrayResource(file.getBytes()) {
                 @Override
@@ -121,7 +127,7 @@ public class DiagnosisCommandService {
                 }
             });
         } catch (IOException e) {
-            throw new GeneralException(ErrorCode.FILE_UPLOAD_FAILED);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일 업로드 실패: " + e.getMessage());
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -130,14 +136,53 @@ public class DiagnosisCommandService {
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, requestEntity, Map.class);
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
             } else {
-                throw new GeneralException(ErrorCode.AI_PREDICTION_FAILED);
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "AI 예측 실패: 응답 본문이 없습니다.");
+            }
+
+        } catch (HttpClientErrorException | HttpServerErrorException ex) {
+            String responseBody = ex.getResponseBodyAsString();
+            String detail = extractDetailMessage(responseBody);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "AI 서버 오류: " + detail);
+
+        } catch (ResourceAccessException ex) {
+            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI 서버 접근 실패: " + ex.getMessage());
+
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "예기치 못한 오류: " + ex.getMessage());
+        }
+    }
+
+    private String extractDetailMessage(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(json);
+
+            if (root.has("detail")) {
+                JsonNode detailNode = root.get("detail");
+
+                // detail이 문자열이면 바로 리턴
+                if (detailNode.isTextual()) {
+                    return detailNode.asText();
+                }
+
+                // detail이 객체면 error 필드 우선
+                if (detailNode.has("error")) {
+                    return detailNode.get("error").asText();
+                }
+
+                // detail 전체를 문자열로 반환
+                return detailNode.toString();
             }
         } catch (Exception e) {
-            throw new GeneralException(ErrorCode.AI_CALL_FAILED);
+            // 파싱 실패시 원본문자열 일부만 리턴
+            return json.length() > 200 ? json.substring(0, 200) + "..." : json;
         }
+
+        return "상세 메시지를 파싱할 수 없습니다.";
     }
 
     /**
