@@ -44,7 +44,7 @@ public class AuthController {
     }
 
     @Operation(summary = "프로필 조회")
-    @PostMapping("/profile")
+    @GetMapping("/profile")
     public ApiResponse<UserResponseDTO> getUserInfo(@AuthenticationPrincipal Long userId) {
         return ApiResponse.onSuccess(userQueryService.getUserInfo(userId));
     }
