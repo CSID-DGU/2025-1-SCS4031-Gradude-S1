@@ -86,7 +86,7 @@ export const getDiagnosisHistory = async (): Promise<
   DiagnosisHistoryItem[]
 > => {
   const {data} = await axiosInstance.get<DiagnosisHistoryResponse>(
-    `/api/diagnosis/user/list`,
+    `/api/diagnosis/list`,
   );
 
   if (!data.isSuccess) {

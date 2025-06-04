@@ -113,7 +113,7 @@ type UseDiagnosisOptions = {
 export function useDiagnosisHistory() {
   return useQuery<DiagnosisHistoryItem[], Error>({
     queryKey: ['diagnosisHistory'], // 고정된 키만 사용
-    queryFn: () => getDiagnosisHistory(), // userId 없이 호출
+    queryFn: () => getDiagnosisHistory(),
     enabled: true, // 항상 실행하거나, 필요 시 이 값을 동적으로 바꿔도 됩니다
   });
 }
