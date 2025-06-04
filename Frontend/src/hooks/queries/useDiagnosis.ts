@@ -1,96 +1,116 @@
-import axiosInstance from '@/api/axios';
+// src/hooks/queries/diagnosisHooks.ts
+
+import {useQuery, useMutation} from '@tanstack/react-query';
 import type {
-  ApiResponse,
   DiagnosisResult,
   SurveyRequest,
   SurveyResultDto,
   DiagnosisHistoryItem,
-  SingleDiagnosisResponse,
-  DiagnosisHistoryResponse,
 } from '@/types/diagnosis';
+import {
+  uploadDiagnosis,
+  postSurvey,
+  getDiagnosisById,
+  getDiagnosisHistory,
+} from '@/api/diagnosis';
 
 /**
- * 1) 얼굴/음성 파일 업로드 → ApiResponse<DiagnosisResult>
+ * 1) 얼굴/음성 파일 업로드 → DiagnosisResult 반환하는 Mutation 훅
+ *
+ * 사용 예시:
+ *   const {
+ *     mutateAsync: uploadDiagnosisAsync,
+ *     isLoading: isUploading,
+ *     isError: uploadError,
+ *     data: diagnosisResult,
+ *   } = useUploadDiagnosis();
+ *
+ *   // 실제 호출:
+ *   await uploadDiagnosisAsync({ faceUri: 'file://...', speechUri: 'file://...' });
  */
-export const uploadDiagnosis = async (
-  faceUri: string,
-  speechUri: string,
-): Promise<DiagnosisResult> => {
-  const formData = new FormData();
-  formData.append('faceFile', {
-    uri: faceUri,
-    type: 'image/mp4',
-    name: 'face.mp4',
-  } as any);
-  formData.append('speechFile', {
-    uri: speechUri,
-    type: 'audio/wav',
-    name: 'speech.wav',
-  } as any);
-
-  const {data} = await axiosInstance.post<ApiResponse<DiagnosisResult>>(
-    '/api/diagnosis',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+export function useUploadDiagnosis() {
+  return useMutation<
+    DiagnosisResult,
+    Error,
+    {faceUri: string; speechUri: string}
+  >({
+    mutationFn: ({faceUri, speechUri}) => uploadDiagnosis(faceUri, speechUri),
+    onError: (err: Error) => {
+      console.error('uploadDiagnosis failed:', err);
     },
-  );
-
-  if (!data.isSuccess) {
-    throw new Error(`Diagnosis API failed: ${data.message}`);
-  }
-  return data.result;
-};
+  });
+}
 
 /**
- * 2) 설문 전송 (설문을 보내면 병원 추천까지 포함된 SurveyResultDto를 반환)
+ * 2) 설문 전송 → SurveyResultDto(병원 목록 포함) 반환하는 Mutation 훅
+ *
+ * 사용 예시:
+ *   const {
+ *     mutateAsync: postSurveyAsync,
+ *     isLoading: isPostingSurvey,
+ *     isError: postSurveyError,
+ *     data: surveyResult,
+ *   } = usePostSurvey();
+ *
+ *   // 실제 호출:
+ *   await postSurveyAsync({
+ *     orientationMonth: 2,
+ *     orientationAge: 65,
+ *     gaze: 1,
+ *     arm: 0,
+ *   });
  */
-export const postSurvey = async (
-  payload: SurveyRequest,
-): Promise<SurveyResultDto> => {
-  const {data} = await axiosInstance.post<ApiResponse<SurveyResultDto>>(
-    '/api/diagnosis/survey',
-    payload,
-  );
-
-  if (!data.isSuccess) {
-    throw new Error(`Survey API failed: ${data.message}`);
-  }
-  return data.result;
-};
+export function usePostSurvey() {
+  return useMutation<SurveyResultDto, Error, SurveyRequest>({
+    mutationFn: (payload: SurveyRequest) => postSurvey(payload),
+    onError: (err: Error) => {
+      console.error('postSurvey failed:', err);
+    },
+  });
+}
 
 /**
- * 3) 저장된 자가진단 단건 조회
- *    GET /api/diagnosis/{diagnosisId}
+ * 3) 진단 ID로 단건 조회 → SurveyResultDto 반환하는 Query 훅
+ *
+ * 사용 예시:
+ *   const {
+ *     data: diagnosisData,
+ *     isLoading: isLoadingDiagnosis,
+ *     isError: isDiagnosisError,
+ *     refetch: refetchDiagnosis,
+ *   } = useDiagnosisById(diagnosisId);
  */
-export const getDiagnosisById = async (
-  diagnosisId: number,
-): Promise<SurveyResultDto> => {
-  const {data} = await axiosInstance.get<SingleDiagnosisResponse>(
-    `/api/diagnosis/${diagnosisId}`,
-  );
-
-  if (!data.isSuccess) {
-    throw new Error(`Get Diagnosis API failed: ${data.message}`);
-  }
-  return data.result;
-};
+export function useDiagnosisById(diagnosisId: number) {
+  return useQuery<SurveyResultDto, Error>({
+    queryKey: ['diagnosis', diagnosisId],
+    queryFn: () => getDiagnosisById(diagnosisId),
+    enabled: diagnosisId !== undefined && diagnosisId !== null,
+    staleTime: 1000 * 60 * 5, // 5분 동안 캐시를 신선 상태로 유지
+    // onError: (err: Error) => {
+    //   console.error('getDiagnosisById failed:', err);
+    // },
+  });
+}
 
 /**
- * 4) 유저별 자가진단 기록 있는 날짜 목록 조회
- *    GET /api/diagnosis/user/{userId}/list
+ * 4) 유저별 진단 기록 목록 조회 → DiagnosisHistoryItem[] 반환하는 Query 훅
+ *
+ * 사용 예시:
+ *   const {
+ *     data: historyData,
+ *     isLoading: isLoadingHistory,
+ *     isError: isHistoryError,
+ *     refetch: refetchHistory,
+ *   } = useDiagnosisHistory(userId);
  */
-export const getDiagnosisHistory = async (
-  userId: number,
-): Promise<DiagnosisHistoryItem[]> => {
-  const {data} = await axiosInstance.get<DiagnosisHistoryResponse>(
-    `/api/diagnosis/user/${userId}/list`,
-  );
+export function useDiagnosisHistory(options?: {enabled?: boolean}) {
+  // 내부에서 리덕스 또는 context에서 userId를 가져오도록 변경
+  const userProfile = useSelector((s: RootState) => s.auth.userProfile);
+  const userId = userProfile?.kakaoId;
 
-  if (!data.isSuccess) {
-    throw new Error(`Diagnosis History API failed: ${data.message}`);
-  }
-  return data.result;
-};
+  return useQuery(
+    ['diagnosisHistory', userId],
+    () => fetchDiagnosisHistory(userId!),
+    {enabled: options?.enabled ?? !!userId},
+  );
+}
