@@ -2,302 +2,246 @@ import React from 'react';
 import {
   View,
   Text,
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
   StyleSheet,
   Dimensions,
-  ScrollView,
-  SafeAreaView,
-  ActivityIndicator,
 } from 'react-native';
 import {useRoute, RouteProp} from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useDiagnosisById} from '@/hooks/queries/useDiagnosis';
+import {colors} from '@/constants';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {colors, healthNavigations} from '@/constants';
-import type {HealthStackParamList} from '@/navigations/stack/HealthStackNavigator';
-import {useGetHealthDiary} from '@/hooks/queries/useHealthDiary';
+import HospitalCard from '@/components/hospital/HospitalCard';
+import type {HospitalDetailDto} from '@/types/hospital';
 
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
+// ▶ HomeStackParamList에서 FINAL_RESULT는 { diagnosisId: number }
+type RouteParams = {
+  [key in keyof {FINAL_RESULT: {diagnosisId: number}}]: {
+    diagnosisId: number;
+  };
+};
 
-type Route = RouteProp<
-  HealthStackParamList,
-  typeof healthNavigations.HEALTH_RESULT
->;
+export default function FinalResultScreen() {
+  // ▶ useRoute로 넘어온 diagnosisId를 꺼냅니다.
+  const route =
+    useRoute<
+      RouteProp<{FINAL_RESULT: {diagnosisId: number}}, 'FINAL_RESULT'>
+    >();
+  const {diagnosisId} = route.params;
 
-function mapStatus(score: number) {
-  switch (score) {
-    case 1:
-    case 2:
-      return {text: '정상', color: '#4CAF50'};
-    case 3:
-      return {text: '주의', color: '#FFEB3B'};
-    case 4:
-      return {text: '경고', color: '#FF9800'};
-    case 5:
-      return {text: '위험', color: '#F44336'};
-    default:
-      return {text: '-', color: '#CCC'};
-  }
-}
-
-export default function HealthResultScreen() {
+  // ▶ react-query 훅으로 진단 결과(fetch)
   const {
-    params: {diaryId},
-  } = useRoute<Route>();
-
-  // ① useGetHealthDiary(diaryId) 로 실제 데이터를 가져온다
-  const {data, isLoading, isError} = useGetHealthDiary(diaryId);
+    data: surveyResult,
+    isLoading,
+    isError,
+  } = useDiagnosisById(diagnosisId);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.MAINBLUE} />
       </SafeAreaView>
     );
   }
-  if (isError || !data) {
+  if (isError || !surveyResult) {
     return (
-      <SafeAreaView style={styles.center}>
-        <Text>❗️ 데이터를 불러오는 중 오류가 발생했습니다.</Text>
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text>결과를 불러오는 중 오류가 발생했습니다.</Text>
       </SafeAreaView>
     );
   }
 
-  // data: HealthDiaryResult 타입
-  // { diaryId, date, healthScore, drinking, smoking, exercise, diet, sleep }
-  const totalScore = data.healthScore; // 예: 70
-  const CIRCLE_SIZE = SCREEN_WIDTH * 0.45;
+  // ▶ surveyResult가 정상적으로 내려왔을 때 UI 렌더링
+  const {
+    face,
+    speech,
+    totalScore,
+    totalScorePercentage,
+    llmResult,
+    hospitalList,
+  } = surveyResult;
 
-  // 상단 요약: 카테고리별 점수 + 상태 매핑
-  const CATEGORY_CONFIG = [
-    {key: 'drinking', label: '음주'},
-    {key: 'exercise', label: '운동'},
-    {key: 'smoking', label: '흡연'},
-    {key: 'diet', label: '식단'},
-    {key: 'sleep', label: '숙면'},
-  ] as const;
+  let rawMessage = '';
+  if (face && speech) {
+    rawMessage =
+      '발화와 얼굴 표정 모두에서 어색함이 느껴집니다.\n경각심을 갖고 주변 병원을 내원하는 것을 추천합니다.';
+  } else if (face && !speech) {
+    rawMessage =
+      '얼굴 표정에서 어색함이 느껴집니다.\n경각심을 갖고 주변 병원을 내원하는 것을 추천합니다.';
+  } else if (!face && speech) {
+    rawMessage =
+      '발화에서 어색함이 느껴집니다.\n경각심을 갖고 주변 병원을 내원하는 것을 추천합니다.';
+  } else {
+    rawMessage =
+      '얼굴 표정과 발화가 모두 정상입니다.\n계속 건강을 관리해주세요.';
+  }
+  const [firstLine, secondLine] = rawMessage.split('\n');
 
-  const summaryData = CATEGORY_CONFIG.map(cat => {
-    // @ts-ignore: data[cat.key] 타입이 number 으로 들어온다고 가정
-    const score = data[cat.key] as number;
-    const {text, color} = mapStatus(score);
-    return {...cat, score, status: text, color};
-  });
-
-  // 하단 리스트
-  const BOTTOM_CONFIG = [
-    {key: 'drinking', label: '음주', icon: 'wine-outline'},
-    {key: 'exercise', label: '운동', icon: 'walk-outline'},
-    {key: 'smoking', label: '흡연', icon: 'logo-no-smoking'},
-    {key: 'diet', label: '간식', icon: 'fast-food-outline'},
-    {key: 'sleep', label: '숙면', icon: 'leaf-outline'}, //TODO 아이콘 바꾸기
-  ] as const;
+  const screenWidth = Dimensions.get('window').width;
+  const circleSize = screenWidth * 0.6;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* ─── 상단 요약 스크롤 ─── */}
-      <View style={styles.summarySection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.summaryList}>
-          {summaryData.map(item => (
-            <View key={item.key} style={styles.summaryItem}>
-              <Ionicons
-                name="notifications-circle-outline"
-                size={40}
-                color={item.color}
-              />
-              <Text style={styles.summaryLabel}>{item.label}</Text>
-              <Text style={[styles.summaryStatus, {color: item.color}]}>
-                {item.status}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}>
+        {/* 1. 최종 뇌졸중 위험도 & 원형 프로그래스 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>최종 뇌졸중 위험도</Text>
+          <View style={styles.progressWrapper}>
+            <AnimatedCircularProgress
+              size={circleSize}
+              width={10}
+              fill={totalScorePercentage} // 0~100
+              tintColor={colors.MAINBLUE}
+              backgroundColor={colors.LIGHTGRAY}
+              rotation={0}
+              lineCap="round">
+              {() => (
+                <View style={styles.innerCircle}>
+                  <Text style={styles.scoreText}>{totalScore}</Text>
+                  <Text style={styles.scoreLabel}>점</Text>
+                </View>
+              )}
+            </AnimatedCircularProgress>
+            <Text style={styles.percentageText}>
+              {`${totalScorePercentage.toFixed(0)}%`}
+            </Text>
+          </View>
+        </View>
 
-      {/* ─── 원형 진행 바 (전체 건강 점수) ─── */}
-      <View style={styles.circleSection}>
-        <AnimatedCircularProgress
-          size={CIRCLE_SIZE}
-          width={12}
-          fill={totalScore}
-          tintColor={colors.MAINBLUE}
-          backgroundColor={colors.OBTN}
-          rotation={0}>
-          {() => (
-            <View style={styles.totalInner}>
-              <Text style={styles.totalScoreText}>{totalScore}</Text>
-              <Text style={styles.totalScoreLabel}>건강 점수</Text>
-            </View>
+        {/* 2. 최종 진단 결과 & LLM 텍스트 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>최종 진단 결과</Text>
+          <View style={styles.llmContainer}>
+            <Text style={styles.llmText}>{llmResult}</Text>
+          </View>
+        </View>
+
+        {/* 3. AI 예측 메시지 (face/speech) */}
+        <View style={styles.topMessageContainer}>
+          <Text style={styles.topMessageFirst}>{firstLine}</Text>
+          <Text style={styles.topMessageSecond}>{secondLine}</Text>
+        </View>
+
+        {/* 4. 추천 병원 리스트 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>추천 병원</Text>
+          {hospitalList.length === 0 ? (
+            <Text style={styles.noHospitalText}>
+              주변에 추천 병원이 없습니다.
+            </Text>
+          ) : (
+            hospitalList.map((hospital: HospitalDetailDto) => (
+              <HospitalCard key={hospital.hospitalId} data={hospital} />
+            ))
           )}
-        </AnimatedCircularProgress>
-      </View>
-
-      {/* ─── 하단 세부 리스트 ─── */}
-      <View style={styles.lowerList}>
-        {BOTTOM_CONFIG.map(item => {
-          // @ts-ignore
-          const score = data[item.key] as number;
-          const isFull = score === 5;
-          return (
-            <View key={item.key} style={styles.row}>
-              <Ionicons
-                name={item.icon}
-                size={24}
-                color={colors.BLACK}
-                style={styles.rowIcon}
-              />
-              <Text style={styles.rowLabel}>{item.label}</Text>
-              <Text style={styles.rowCount}>{score} / 5</Text>
-              <View
-                style={[
-                  styles.badge,
-                  isFull ? styles.badgeGood : styles.badgeBad,
-                ]}>
-                <Text
-                  style={[
-                    styles.badgeText,
-                    isFull ? styles.badgeTextGood : styles.badgeTextBad,
-                  ]}>
-                  {isFull ? '건강' : '노력!'}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+const {width: SCREEN_W} = Dimensions.get('window');
+
 const styles = StyleSheet.create({
-  center: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.SEMIWHITE,
   },
   container: {
-    flex: 1,
-    backgroundColor: colors.BACKGRAY,
-  },
-  summarySection: {
-    marginTop: 16,
-    backgroundColor: colors.WHITE,
-    marginHorizontal: 24,
-    borderRadius: 12,
-    paddingVertical: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  summaryList: {
-    paddingHorizontal: 8,
-  },
-  summaryItem: {
-    width: 70,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
     alignItems: 'center',
-    marginRight: 12,
   },
-  summaryLabel: {
-    fontSize: 12,
+  section: {
+    width: SCREEN_W - 40,
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
     color: colors.BLACK,
-    marginTop: 4,
-  },
-  summaryStatus: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-
-  circleSection: {
-    backgroundColor: colors.WHITE,
-    marginTop: 16,
-    marginBottom: 24,
-    marginHorizontal: 24,
-    borderRadius: 12,
-    paddingVertical: 24,
-    elevation: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'visible',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  totalInner: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  totalScoreText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: colors.BLACK,
-  },
-  totalScoreLabel: {
-    fontSize: 14,
-    color: colors.BLACK,
-    marginTop: 4,
-  },
-
-  lowerList: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    alignSelf: 'flex-start',
     marginBottom: 8,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+  },
+  progressWrapper: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  innerCircle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.MAINBLUE,
+  },
+  scoreLabel: {
+    fontSize: 18,
+    color: colors.GRAY,
+    marginTop: 4,
+  },
+  percentageText: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.BLACK,
+  },
+  llmContainer: {
+    width: '100%',
+    backgroundColor: colors.WHITE,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: colors.BLACK,
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  rowIcon: {
-    width: 32,
-  },
-  rowLabel: {
-    flex: 1,
+  llmText: {
     fontSize: 16,
-    fontWeight: '500',
+    lineHeight: 24,
     color: colors.BLACK,
   },
-  rowCount: {
-    width: 60,
+  topMessageContainer: {
+    width: SCREEN_W - 40,
+    backgroundColor: colors.WHITE,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: colors.BLACK,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topMessageFirst: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.RED,
     textAlign: 'center',
-    fontSize: 16,
-    color: colors.BLACK,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  badgeGood: {
-    backgroundColor: '#E0F7FA',
-  },
-  badgeBad: {
-    backgroundColor: '#FFEBEE',
-  },
-  badgeText: {
-    fontSize: 12,
     fontWeight: '600',
   },
-  badgeTextGood: {
-    color: '#00796B',
+  topMessageSecond: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.BLACK,
+    textAlign: 'center',
+    marginTop: 4,
   },
-  badgeTextBad: {
-    color: '#C62828',
+  noHospitalText: {
+    fontSize: 16,
+    color: colors.GRAY,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

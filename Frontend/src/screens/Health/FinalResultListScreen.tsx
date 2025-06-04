@@ -1,4 +1,4 @@
-// src/screens/Diagnosis/FinalResultListScreen.tsx
+// src/screens/Health/FinalResultListScreen.tsx
 
 import React, {useMemo, useState} from 'react';
 import {
@@ -13,8 +13,10 @@ import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import {useNavigation} from '@react-navigation/native';
 
 import {colors, homeNavigations} from '@/constants';
-import {useDiagnosisHistory} from '@/hooks/queries/useDiagnosis'; // 경로가 바뀌었으면 실제 경로에 맞게 수정
+import {mainTabNavigations} from '@/navigations/tab/TabNavigator'; // ← 여기를 수정
+import {useDiagnosisHistory} from '@/hooks/queries/useDiagnosis';
 
+// 달력 한국어 설정 (생략 가능)
 LocaleConfig.locales['kr'] = {
   monthNames: [
     '1월',
@@ -60,19 +62,18 @@ LocaleConfig.defaultLocale = 'kr';
 export default function FinalResultListScreen() {
   const navigation = useNavigation<any>();
 
-  // useDiagnosisHistory 훅 호출만 하면 내부에서 로그인된 유저의 히스토리 API를 가져옵니다.
+  // 진단 기록 불러오기
   const {
     data: historyList = [],
     isLoading: loadingHistory,
     isError: historyError,
   } = useDiagnosisHistory();
 
-  // ── B. 달력에 표시할 연·월 state (현재 예시에는 사용하지 않지만, 월 변경 로직을 위해 남겨두었습니다)
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
 
-  // ── D. historyList를 markedDates 형태로 가공
+  // 달력에 표시할 markedDates 만들기
   const markedDates = useMemo(() => {
     const obj: Record<string, {marked: boolean; dotColor: string}> = {};
     historyList.forEach(item => {
@@ -84,14 +85,19 @@ export default function FinalResultListScreen() {
     return obj;
   }, [historyList]);
 
-  // ── E. 날짜 탭 핸들러
+  // 달력 날짜를 누르면 호출
   const onDayPress = (day: DateData) => {
     const {dateString} = day; // "YYYY-MM-DD"
     const found = historyList.find(item => item.date === dateString);
+
     if (found) {
-      navigation.navigate(homeNavigations.FINAL_RESULT, {
-        diagnosisId: found.diagnosisId,
+      // ─── 수정된 부분 ───
+      navigation.navigate(mainTabNavigations.HOME, {
+        screen: homeNavigations.FINAL_RESULT,
+        params: {diagnosisId: found.diagnosisId},
       });
+      // mainTabNavigations.HOME === "Home" (TabNavigator에서 HomeStackNavigator에 매핑된 탭 이름)
+      // homeNavigations.FINAL_RESULT === "FinalResult" (HomeStackNavigator 안의 등록된 화면 이름)
     } else {
       Alert.alert('안내', '해당 날짜에는 진단 기록이 없습니다.', [
         {text: '확인'},
@@ -99,11 +105,10 @@ export default function FinalResultListScreen() {
     }
   };
 
-  // ── F. 달·월 변경 시 state 업데이트 (필요 시 refetch 로직 추가)
+  // 월이 바뀌면 호출 (필요 시 refetch 로직 추가)
   const onMonthChange = (date: {year: number; month: number}) => {
     setYear(date.year);
     setMonth(date.month);
-    // TODO: 연·월 필터링이 필요하면 refetch 논리를 추가하세요.
   };
 
   if (loadingHistory) {
@@ -113,7 +118,6 @@ export default function FinalResultListScreen() {
       </SafeAreaView>
     );
   }
-
   if (historyError) {
     return (
       <SafeAreaView style={styles.loadingContainer}>

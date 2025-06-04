@@ -11,7 +11,7 @@ const homeNavigations = {
   LOADING: 'Loading',
   MID_RESULT: 'MidResult',
   SELF_DGS: 'SelfDgs',
-  FINAL_RESULT: 'FinalReusult',
+  FINAL_RESULT: 'FinalResult',
   EXERCISE_LIST: 'ExerciseList',
   VIDEO_PLAYER: 'VideoPlayer',
 } as const;

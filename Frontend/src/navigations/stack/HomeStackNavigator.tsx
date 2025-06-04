@@ -2,25 +2,25 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StyleSheet, View} from 'react-native';
 import {colors, homeNavigations} from '@/constants';
+
 import HomeScreen from '@/screens/Home/HomeScreen';
 import FaceSmileScreen from '@/screens/Home/FaceSmileScreen';
+import CameraScreen from '@/screens/Home/CameraScreen';
 import RecordScreen from '@/screens/Home/RecordScreen';
 import LoadingScreen from '@/screens/Home/LoadingScreen';
-import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
 import MidResultScreen from '@/screens/Home/MidResultScreen';
-import FinalResultScreen from '@/screens/Home/FinalResultScreen';
-
-import type {ImageSourcePropType} from 'react-native';
-import CameraScreen from '@/screens/Home/CameraScreen';
-import {SurveyResultDto} from '@/types/diagnosis';
+import FinalResultScreen from '@/screens/Home/FinalResultScreen'; // 경로 확인
+import type {SurveyResultDto} from '@/types/diagnosis';
+import SelfDgsScreen from '@/screens/Home/SelfDgsScreen';
 
 export type HomeStackParamList = {
   [homeNavigations.MAIN_HOME]: undefined;
   [homeNavigations.FACE_SMILE]: undefined;
   [homeNavigations.CAMERA]: undefined;
   [homeNavigations.RECORD]: {CameraUri: string};
+
   Loading:
-    | {CameraUri: string; AudioUri: string} // ① 얼굴/음성 기반 로딩
+    | {CameraUri: string; AudioUri: string}
     | {
         surveyPayload: {
           orientationMonth: number;
@@ -29,36 +29,29 @@ export type HomeStackParamList = {
           arm: 0 | 1;
         };
       };
+
   [homeNavigations.MID_RESULT]: {
     facePrediction: boolean;
     speechPrediction: boolean;
   };
   [homeNavigations.SELF_DGS]: undefined;
+
+  // ↓ 여기만 수정
   [homeNavigations.FINAL_RESULT]: {surveyResult: SurveyResultDto};
-  [homeNavigations.EXERCISE_LIST]: undefined;
-  [homeNavigations.VIDEO_PLAYER]: {
-    uri: string | number;
-    thumbnail: ImageSourcePropType;
-    videoId: string;
-  };
+  // 원래는 { diagnosisId: number } 였지만, LoadingScreen에서 surveyResult 를 직접 넘기므로
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
+
 function HomeStackNavigator() {
   return (
     <View style={styles.container}>
       <Stack.Navigator
         screenOptions={{
-          contentStyle: {
-            backgroundColor: colors.WHITE,
-          },
-          headerStyle: {
-            backgroundColor: colors.SEMIWHITE,
-          },
+          contentStyle: {backgroundColor: colors.WHITE},
+          headerStyle: {backgroundColor: colors.SEMIWHITE},
           headerShadowVisible: true,
-          headerTitleStyle: {
-            fontSize: 15,
-          },
+          headerTitleStyle: {fontSize: 15},
           headerTintColor: colors.BLACK,
         }}>
         <Stack.Screen
@@ -118,6 +111,7 @@ function HomeStackNavigator() {
           }}
         />
         <Stack.Screen
+          // ▶ 여기서 FINAL_RESULT의 params 타입을 { diagnosisId: number }로 변경
           name={homeNavigations.FINAL_RESULT}
           component={FinalResultScreen}
           options={{
@@ -128,6 +122,7 @@ function HomeStackNavigator() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {flex: 1},
 });

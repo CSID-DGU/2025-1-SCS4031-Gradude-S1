@@ -1,5 +1,3 @@
-// src/screens/Diagnosis/FinalResultScreen.tsx
-
 import React from 'react';
 import {
   View,
@@ -17,18 +15,22 @@ import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import type {HospitalDetailDto} from '@/types/hospital';
 
-type FinalResultScreenParamList = {
-  FinalResultScreen: {
+// ▶ HomeStackParamList에서 FINAL_RESULT는 { diagnosisId: number }
+type RouteParams = {
+  [key in keyof {FINAL_RESULT: {diagnosisId: number}}]: {
     diagnosisId: number;
   };
 };
 
 export default function FinalResultScreen() {
+  // ▶ useRoute로 넘어온 diagnosisId를 꺼냅니다.
   const route =
-    useRoute<RouteProp<FinalResultScreenParamList, 'FinalResultScreen'>>();
+    useRoute<
+      RouteProp<{FINAL_RESULT: {diagnosisId: number}}, 'FINAL_RESULT'>
+    >();
   const {diagnosisId} = route.params;
 
-  // (A) react-query로 진단 ID에 해당하는 결과 fetch
+  // ▶ react-query 훅으로 진단 결과(fetch)
   const {
     data: surveyResult,
     isLoading,
@@ -50,7 +52,7 @@ export default function FinalResultScreen() {
     );
   }
 
-  // surveyResult 타입: SurveyResultDto
+  // ▶ surveyResult가 정상적으로 내려왔을 때 UI 렌더링
   const {
     face,
     speech,
@@ -60,7 +62,6 @@ export default function FinalResultScreen() {
     hospitalList,
   } = surveyResult;
 
-  // (B) face/speech 조합별 메시지
   let rawMessage = '';
   if (face && speech) {
     rawMessage =
@@ -77,7 +78,6 @@ export default function FinalResultScreen() {
   }
   const [firstLine, secondLine] = rawMessage.split('\n');
 
-  // (C) 원형 프로그래스 사이즈 계산
   const screenWidth = Dimensions.get('window').width;
   const circleSize = screenWidth * 0.6;
 
@@ -86,7 +86,7 @@ export default function FinalResultScreen() {
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
-        {/* 1. 소제목: 최종 뇌졸중 위험도 & 원형 프로그래스 */}
+        {/* 1. 최종 뇌졸중 위험도 & 원형 프로그래스 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>최종 뇌졸중 위험도</Text>
           <View style={styles.progressWrapper}>
@@ -111,7 +111,7 @@ export default function FinalResultScreen() {
           </View>
         </View>
 
-        {/* 2. 소제목: 최종 진단 결과 & LLM 텍스트 */}
+        {/* 2. 최종 진단 결과 & LLM 텍스트 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>최종 진단 결과</Text>
           <View style={styles.llmContainer}>
