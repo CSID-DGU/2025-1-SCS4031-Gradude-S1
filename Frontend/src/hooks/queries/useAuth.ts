@@ -120,7 +120,7 @@ export default function useAuth() {
       }
     },
     onError: err => {
-      console.error('❌ kakaoLoginMutation error ▶', err);
+      // console.error('❌ kakaoLoginMutation error ▶', err);
     },
   });
 
@@ -157,7 +157,7 @@ export default function useAuth() {
       }
     },
     onError: err => {
-      console.error('❌ signupMutation error ▶', err);
+      // console.error('❌ signupMutation error ▶', err);
     },
   });
 

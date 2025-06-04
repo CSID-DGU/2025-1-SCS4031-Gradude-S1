@@ -20,7 +20,7 @@ axiosInstance.interceptors.request.use(
         );
       }
     } catch (error) {
-      console.error('❌ Request Interceptor - 토큰 가져오기 실패:', error);
+      // console.error('❌ Request Interceptor - 토큰 가져오기 실패:', error);
     }
 
     console.log('📤 Request Config:', {
@@ -32,7 +32,7 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   error => {
-    console.error('❌ Request Interceptor Error:', error);
+    // console.error('❌ Request Interceptor Error:', error);
     return Promise.reject(error);
   },
 );
@@ -46,22 +46,22 @@ axiosInstance.interceptors.response.use(
     });
     return response;
   },
-  error => {
-    console.error('❌ Response Error:', {
-      status: error.response?.status,
-      message: error.response?.data?.message,
-      url: error.config?.url,
-    });
+  // error => {
+  //   console.error('❌ Response Error:', {
+  //     status: error.response?.status,
+  //     message: error.response?.data?.message,
+  //     url: error.config?.url,
+  //   });
 
-    // 401 에러 시 토큰 만료로 간주하고 AsyncStorage에서 제거
-    if (error.response?.status === 401) {
-      AsyncStorage.removeItem('accessToken');
-      AsyncStorage.removeItem('refreshToken');
-      console.log('🔐 토큰 만료로 인한 로그아웃 처리');
-    }
+  //   // 401 에러 시 토큰 만료로 간주하고 AsyncStorage에서 제거
+  //   if (error.response?.status === 401) {
+  //     AsyncStorage.removeItem('accessToken');
+  //     AsyncStorage.removeItem('refreshToken');
+  //     console.log('🔐 토큰 만료로 인한 로그아웃 처리');
+  //   }
 
-    return Promise.reject(error);
-  },
+  //   return Promise.reject(error);
+  // },
 );
 
 export default axiosInstance;

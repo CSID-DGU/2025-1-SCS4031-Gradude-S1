@@ -11,11 +11,9 @@ import {
 } from 'react-native';
 import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import {useNavigation} from '@react-navigation/native';
-import {useSelector} from 'react-redux';
 
 import {colors, homeNavigations} from '@/constants';
 import {useDiagnosisHistory} from '@/hooks/queries/useDiagnosis';
-import type {RootState} from '@/store';
 
 LocaleConfig.locales['kr'] = {
   monthNames: [
