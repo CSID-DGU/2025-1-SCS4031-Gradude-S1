@@ -1,14 +1,7 @@
 // src/screens/home/LoadingScreen.tsx
+
 import React, {useEffect, useState, useRef} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  Dimensions,
-  SafeAreaView,
-  Alert,
-} from 'react-native';
-import {SafeAreaView as RNSafeAreaView} from 'react-native-safe-area-context';
+import {StyleSheet, View, Text, SafeAreaView, Alert} from 'react-native';
 import {TIPS} from '@/constants/tips';
 import {colors, homeNavigations} from '@/constants';
 import {
@@ -19,32 +12,45 @@ import {
 import LottieView from 'lottie-react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
-import {uploadDiagnosis} from '@/api/diagnosis';
+import {uploadDiagnosis, postSurvey} from '@/api/diagnosis';
+import type {SurveyRequest} from '@/types/diagnosis';
 
-/**
- * LoadingScreenProps:
- * - route.params.CameraUri: 카메라에서 촬영한 이미지 URI
- * - route.params.AudioUri: 녹음한 오디오 파일 URI
- */
 type Props = StackScreenProps<
   HomeStackParamList,
   typeof homeNavigations.LOADING
 >;
 
+/**
+ * LoadingScreen은 두 가지 케이스를 처리합니다:
+ * 1) 얼굴+음성 업로드 → uploadDiagnosis 호출
+ * 2) 자가진단 설문 전송 → postSurvey 호출
+ *
+ * route.params가 { CameraUri, AudioUri } 형태라면 ①을,
+ * { surveyPayload } 형태라면 ②를 처리합니다.
+ */
 export default function LoadingScreen({navigation, route}: Props) {
-  const {CameraUri, AudioUri} = route.params;
+  // route.params는 union 타입이므로, 두 케이스 중 어느 형태인지 확인
+  const hasVoiceParams =
+    'CameraUri' in route.params && 'AudioUri' in route.params;
+  const hasSurveyParams = 'surveyPayload' in route.params;
 
-  // Tip 인덱스 관리
+  const CameraUri = hasVoiceParams ? route.params.CameraUri : undefined;
+  const AudioUri = hasVoiceParams ? route.params.AudioUri : undefined;
+  const surveyPayload = hasSurveyParams
+    ? (route.params.surveyPayload as SurveyRequest)
+    : undefined;
+
+  // ── 팁 로테이션용 상태 ──
   const [tipIndex, setTipIndex] = useState(0);
   const intervalMs = 4000;
   const random = false;
-
-  // 애니메이션 진행을 제어하는 shared value (tip 변경 타이밍 맞추기용)
   const progress = useSharedValue(0);
   const animationRef = useRef<LottieView>(null);
 
   useEffect(() => {
-    // 1) Tip 텍스트를 일정 간격마다 업데이트
+    // 첫 진입 시 애니메이션 시작
+    progress.value = withTiming(1, {duration: intervalMs});
+
     const tipTimer = setInterval(() => {
       setTipIndex(prev =>
         random
@@ -55,41 +61,70 @@ export default function LoadingScreen({navigation, route}: Props) {
       progress.value = withTiming(1, {duration: intervalMs});
     }, intervalMs);
 
-    // 초기 애니메이션 진행
-    progress.value = withTiming(1, {duration: intervalMs});
-
     return () => clearInterval(tipTimer);
-  }, [random, intervalMs, progress]);
+  }, [progress]);
 
-  // 2) 컴포넌트가 마운트되면 곧바로 진단 API 호출
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await uploadDiagnosis(CameraUri, AudioUri);
-        const {facePrediction, speechPrediction} = result;
-        // 결과가 오면 MidResultScreen 으로 교체(navigate) → 뒤로 가기 불가
-        navigation.replace(homeNavigations.MID_RESULT, {
-          facePrediction,
-          speechPrediction,
-        });
-      } catch (error) {
-        Alert.alert(
-          '진단 실패',
-          error instanceof Error
-            ? error.message
-            : '알 수 없는 오류가 발생했습니다.',
-        );
-        // 실패 시 이전 화면으로 돌아가거나, 원하는 위치로 라우팅
-        navigation.goBack();
-      }
-    })();
-  }, [CameraUri, AudioUri, navigation]);
-
-  // 애니메이션 스타일(필요시 사용)
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     transform: [{scale: progress.value * 0.05 + 0.95}],
   }));
+
+  // ── 마운트 시점에 API 호출 ──
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        // ① 얼굴+음성 업로드
+        if (hasVoiceParams && CameraUri && AudioUri) {
+          const result = await uploadDiagnosis(CameraUri, AudioUri);
+          if (!isMounted) return;
+
+          const {facePrediction, speechPrediction} = result;
+          navigation.replace(homeNavigations.MID_RESULT, {
+            facePrediction,
+            speechPrediction,
+          });
+          return;
+        }
+
+        // ② 자가진단 설문 전송
+        if (hasSurveyParams && surveyPayload) {
+          const surveyResult = await postSurvey(surveyPayload);
+          if (!isMounted) return;
+
+          // 결과가 오면 FinalResultScreen으로 이동
+          navigation.replace(homeNavigations.FINAL_RESULT, {
+            surveyResult,
+          });
+          return;
+        }
+
+        // 둘 다 해당하지 않으면, 잘못된 진입. 뒤로 보내기
+        Alert.alert('오류', '잘못된 경로로 접근하였습니다.');
+        navigation.goBack();
+      } catch (error: any) {
+        Alert.alert(
+          '로딩 중 오류',
+          error instanceof Error
+            ? error.message
+            : '알 수 없는 오류가 발생했습니다.',
+        );
+        navigation.goBack();
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    CameraUri,
+    AudioUri,
+    surveyPayload,
+    navigation,
+    hasVoiceParams,
+    hasSurveyParams,
+  ]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -108,7 +143,7 @@ export default function LoadingScreen({navigation, route}: Props) {
           resizeMode="contain"
           speed={1}
         />
-        <Text style={styles.loadingText}>검사 결과 분석중...</Text>
+        <Text style={styles.loadingText}>분석 중입니다...</Text>
       </View>
     </SafeAreaView>
   );

@@ -1,3 +1,5 @@
+// src/screens/home/SelfDgsScreen.tsx
+
 import React, {useState} from 'react';
 import {
   SafeAreaView,
@@ -16,7 +18,6 @@ import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import SELFDGSQUESTIONS, {Question} from '@/data/selfDgsQuestion';
 import QuestionCard from '@/components/home/QuestionCard';
 import CustomButton from '@/components/commons/CustomButton';
-import {postSurvey} from '@/api/diagnosis';
 
 type Props = StackScreenProps<
   HomeStackParamList,
@@ -56,6 +57,7 @@ export default function SelfDgsScreen({navigation}: Props) {
       return;
     }
 
+    // ─── 모든 문항에 답변 완료 → 설문 페이로드 생성 ───
     try {
       const orientationMonthAnswer = questions.find(
         q => q.id === 'orientationMonth',
@@ -68,22 +70,22 @@ export default function SelfDgsScreen({navigation}: Props) {
 
       const orientationMonthNum = parseInt(String(orientationMonthAnswer), 10);
       const orientationAgeNum = parseInt(String(orientationAgeAnswer), 10);
+      // gaze, arm 은 0 또는 1 로 들어오는데, 서버 로직에 맞추려면
+      // (예시에서는 반대로 변환하는 코드가 있었으므로 그대로 두겠습니다)
       const gazeValue: 0 | 1 = gazeAnswer === 0 ? 1 : 0;
       const armValue: 0 | 1 = armAnswer === 0 ? 1 : 0;
 
-      const payload = {
+      const surveyPayload = {
         orientationMonth: orientationMonthNum,
         orientationAge: orientationAgeNum,
         gaze: gazeValue,
         arm: armValue,
       };
 
-      const surveyResponse = await postSurvey(payload);
-      console.log('▶ SurveyResponse:', surveyResponse);
-
-      navigation.replace(homeNavigations.FINAL_RESULT);
-    } catch (err) {
-      Alert.alert('설문 전송 실패', (err as Error).message);
+      // ─── 직접 postSurvey 호출 대신, LoadingScreen 으로 이동 ───
+      navigation.replace(homeNavigations.LOADING, {surveyPayload});
+    } catch (err: any) {
+      Alert.alert('설문 전송 실패', err.message);
     }
   };
 

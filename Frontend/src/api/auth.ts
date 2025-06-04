@@ -35,7 +35,7 @@ export const postSignup = async (
 
 /* ───── 3) 프로필 조회 ───── */
 export const getProfile = async (): Promise<UserInfo> => {
-  const {data} = await axiosInstance.post<{result: UserInfo}>(
+  const {data} = await axiosInstance.get<{result: UserInfo}>(
     '/api/auth/profile',
   );
   return data.result;

@@ -1,4 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type {UserInfo, TokenResponse} from '@/types/auth';
 
 /* ── 상태 ── */
@@ -36,18 +37,34 @@ const authSlice = createSlice({
     setTokens(state, action: PayloadAction<TokenResponse>) {
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
+
+      // AsyncStorage에 토큰 저장
+      AsyncStorage.setItem('accessToken', action.payload.accessToken);
+      AsyncStorage.setItem('refreshToken', action.payload.refreshToken);
+      console.log('💾 토큰 저장 완료 - Redux & AsyncStorage');
     },
     clearTokens(state) {
       state.accessToken = null;
       state.refreshToken = null;
+
+      // AsyncStorage에서 토큰 제거
+      AsyncStorage.removeItem('accessToken');
+      AsyncStorage.removeItem('refreshToken');
+      console.log('🗑️ 토큰 삭제 완료 - Redux & AsyncStorage');
     },
 
     setProfileComplete(state, action: PayloadAction<boolean>) {
       state.profileComplete = action.payload;
     },
 
-    resetAuthState() {
-      return initialState;
+    resetAuthState(state) {
+      // 상태 초기화
+      Object.assign(state, initialState);
+
+      // AsyncStorage에서도 토큰 제거
+      AsyncStorage.removeItem('accessToken');
+      AsyncStorage.removeItem('refreshToken');
+      console.log('🔄 인증 상태 초기화 완료 - Redux & AsyncStorage');
     },
   },
 });

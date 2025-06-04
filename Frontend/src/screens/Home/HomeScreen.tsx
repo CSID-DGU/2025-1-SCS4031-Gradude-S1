@@ -19,6 +19,7 @@ import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 
+import usePermission from '@/hooks/usePermission';
 // type HomeScreenProps = StackScreenProps<
 //   HomeStackParamList,
 //   typeof homeNavigations.DIAGNOSE_HOME
@@ -36,6 +37,8 @@ const R = CIRCLE_DIAMETER / 2;
 function HomeScreen() {
   const navigation = useNavigation<Navigation>();
   const insets = useSafeAreaInsets();
+
+  usePermission('LOCATION');
   const btnScale = useSharedValue(1);
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{scale: btnScale.value}],
@@ -104,6 +107,7 @@ function HomeScreen() {
               onPressOut={() => {
                 btnScale.value = withTiming(1, {duration: 100});
                 navigation.navigate(homeNavigations.FACE_SMILE);
+                // navigation.navigate(homeNavigations.RECORD, {CameraUri: ''});
               }}
             />
           </Animated.View>

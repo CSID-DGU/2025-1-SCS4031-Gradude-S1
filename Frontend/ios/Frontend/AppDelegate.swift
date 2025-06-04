@@ -1,4 +1,5 @@
 import UIKit
+import Expo
 import React
 import React_RCTAppDelegate       // RN New Arch
 import ReactAppDependencyProvider // RN New Arch
@@ -10,7 +11,7 @@ import KakaoSDKAuth               // Kakao SDK – 로그인 콜백
              // 환경변수(.env) 읽기
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: ExpoAppDelegate {
 
   var window: UIWindow?
 
@@ -19,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   var reactNativeFactory : RCTReactNativeFactory?
 
   // MARK: - App Launch
-  func application(
+  override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
   ) -> Bool {
@@ -45,9 +46,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let delegate = ReactNativeDelegate()
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
-    let factory  = RCTReactNativeFactory(delegate: delegate)
+    let factory  = ExpoReactNativeFactory(delegate: delegate)
     reactNativeDelegate = delegate
     reactNativeFactory  = factory
+    bindReactNativeFactory(factory)
 
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(
@@ -59,11 +61,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // ─── 5) 커스텀 스플래시 표시 ───
     showSplashScreen()
 
-    return true
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   // MARK: - 딥링크 처리 (Kakao + RN Linking)
-  func application(
+  override func application(
     _ application: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
@@ -96,7 +98,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 // MARK: - React Native New-Arch Delegate
-class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
+class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 
   override func sourceURL(for bridge: RCTBridge) -> URL? {
     return bundleURL()

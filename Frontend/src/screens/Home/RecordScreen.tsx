@@ -1,24 +1,23 @@
 // src/screens/home/RecordScreen.tsx
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
   Pressable,
   Alert,
-  Platform,
   StyleSheet,
   SafeAreaView,
   Dimensions,
 } from 'react-native';
-import RNFS from 'react-native-fs';
-import AudioRecorderPlayer, {
-  AudioSet,
-  AVEncodingOption,
-  AVModeIOSOption,
-  AVEncoderAudioQualityIOSType,
-} from 'react-native-audio-recorder-player';
-import usePermission from '@/hooks/usePermission';
-import {prepareAudioSession, resetAudioSession} from '@/utils/audioSession';
+import {
+  useAudioRecorder,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+  AudioModule,
+  IOSOutputFormat,
+  AudioQuality,
+} from 'expo-audio';
+import type { AndroidOutputFormat, AndroidAudioEncoder } from 'expo-audio';
 import {colors, homeNavigations} from '@/constants';
 import CustomButton from '@/components/commons/CustomButton';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -31,32 +30,77 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StackScreenProps} from '@react-navigation/stack';
 import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
-async function wait(ms: number) {
-  return new Promise(resolve => setTimeout(() => resolve(undefined), ms));
-}
-
 export default function RecordScreen({
   navigation,
   route,
 }: StackScreenProps<HomeStackParamList, typeof homeNavigations.RECORD>) {
   const {CameraUri} = route.params;
 
-  // 마이크 권한 체크
-  usePermission('MICROPHONE');
+  // WAV 파일을 위한 커스텀 녹음 옵션
+  const wavRecordingOptions = {
+    extension: '.wav',
+    sampleRate: 44100,
+    numberOfChannels: 1, // Mono
+    bitRate: 128000,
+    android: {
+      outputFormat: 'default' as AndroidOutputFormat,
+      audioEncoder: 'default' as AndroidAudioEncoder,
+    },
+    ios: {
+      outputFormat: IOSOutputFormat.LINEARPCM,
+      audioQuality: AudioQuality.HIGH,
+      linearPCMBitDepth: 16,
+      linearPCMIsBigEndian: false,
+      linearPCMIsFloat: false,
+    },
+    web: {
+      mimeType: 'audio/wav',
+      bitsPerSecond: 128000,
+    },
+  };
 
   const insets = useSafeAreaInsets();
-  const recorder = useRef(new AudioRecorderPlayer()).current;
-
-  const [uri, setUri] = useState<string>();
+  const audioRecorder = useAudioRecorder(wavRecordingOptions);
+  const audioPlayer = useAudioPlayer();
+  const audioPlayerStatus = useAudioPlayerStatus(audioPlayer);
+  
+  const [recordingUri, setRecordingUri] = useState<string>();
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const cardOpacity = useSharedValue(0);
   const btnScale = useSharedValue(1);
 
-  React.useEffect(() => {
+  useEffect(() => {
     cardOpacity.value = withTiming(1, {duration: 500});
-  }, []);
+    
+    // 권한 요청
+    (async () => {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        Alert.alert('권한 필요', '마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.');
+      }
+    })();
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      if (isRecording) {
+        audioRecorder.stop();
+      }
+      if (isPlaying) {
+        audioPlayer.pause();
+      }
+    };
+  }, [cardOpacity, audioRecorder, audioPlayer, isRecording, isPlaying]);
+
+  // 재생 완료 감지
+  useEffect(() => {
+    if (audioPlayerStatus?.didJustFinish && isPlaying) {
+      console.log('▶ 재생 완료 감지');
+      setIsPlaying(false);
+    }
+  }, [audioPlayerStatus?.didJustFinish, isPlaying]);
+
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
     transform: [{scale: cardOpacity.value * 0.05 + 0.95}],
@@ -65,117 +109,79 @@ export default function RecordScreen({
     transform: [{scale: btnScale.value}],
   }));
 
-  // 녹음 파일 경로 생성
-  const getFilePath = () => {
-    const fileName = `record_${Date.now()}.wav`;
-    return `${RNFS.CachesDirectoryPath}/${fileName}`;
-  };
-
-  const audioSet: AudioSet = {
-    AVModeIOS: AVModeIOSOption.measurement,
-    AVFormatIDKeyIOS: AVEncodingOption.wav,
-    AVSampleRateKeyIOS: 44100,
-    AVNumberOfChannelsKeyIOS: 1,
-    AVLinearPCMBitDepthKeyIOS: 16,
-    AVLinearPCMIsBigEndianKeyIOS: false,
-    AVLinearPCMIsFloatKeyIOS: false,
-    AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
-  };
-
   const onRecordToggle = async () => {
     btnScale.value = withTiming(0.9, {duration: 100});
 
     try {
       if (isRecording) {
         // ── 녹음 중지 ──
-        const result = await recorder.stopRecorder();
-        recorder.removeRecordBackListener();
-        console.log('▶ 녹음 중지, 파일 경로:', result);
-        setUri(result);
+        await audioRecorder.stop();
+        const uri = audioRecorder.uri;
+        console.log('▶ 녹음 중지, 파일 경로:', uri);
+        setRecordingUri(uri || undefined);
         setIsRecording(false);
-
-        // (iOS) AVAudioSession 비활성화
-        if (Platform.OS === 'ios') {
-          await resetAudioSession();
-        }
         return;
       }
 
       // ── 녹음 시작 ──
-      // (iOS) AVAudioSession 활성화
-      if (Platform.OS === 'ios') {
-        console.log('▶ prepareAudioSession 호출 전');
-        await prepareAudioSession();
-        console.log('▶ prepareAudioSession 완료, 200ms 대기');
-        // 딜레이를 줘서 세션 활성화가 안정적으로 완료되도록 함
-        await wait(200);
-      }
-
-      // 실제 녹음 시작
-      const path = getFilePath();
-      console.log('▶ 녹음 시작 경로:', path);
-
-      const result = await recorder.startRecorder(path, audioSet);
-      recorder.addRecordBackListener(e => {
-        console.log('▶ 녹음 중(ms):', e.currentPosition);
-      });
+      console.log('▶ 녹음 준비 중...');
+      await audioRecorder.prepareToRecordAsync();
+      console.log('▶ 녹음 시작');
+      
+      audioRecorder.record();
       setIsRecording(true);
+      
     } catch (e) {
-      console.warn('▶ onRecordToggle 에러:', e);
+      console.error('▶ 녹음 오류:', {
+        error: e,
+        message: e instanceof Error ? e.message : String(e),
+      });
+      
       Alert.alert(
         '녹음 오류',
-        e instanceof Error ? e.message : '녹음 중 오류가 발생했습니다.',
+        '녹음을 시작할 수 없습니다. 마이크 권한을 확인하고 다시 시도해주세요.',
       );
-
-      // iOS에서 세션이 꼬였을 수 있으니, 에러 시 세션 리셋
-      if (Platform.OS === 'ios') {
-        try {
-          await resetAudioSession();
-        } catch (err) {
-          console.warn('▶ resetAudioSession 중 추가 에러:', err);
-        }
-        setIsRecording(false);
-      }
+      setIsRecording(false);
     } finally {
       setTimeout(() => (btnScale.value = withTiming(1, {duration: 100})), 100);
     }
   };
 
   const onPlayToggle = async () => {
-    if (!uri) return;
-    const playUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+    if (!recordingUri) return;
+    
     try {
       if (isPlaying) {
-        await recorder.stopPlayer();
-        recorder.removePlayBackListener();
+        audioPlayer.pause();
         setIsPlaying(false);
       } else {
-        await recorder.startPlayer(playUri);
-        recorder.setVolume(1.0);
-        recorder.addPlayBackListener(e => {
-          if (e.currentPosition === e.duration) {
-            recorder.stopPlayer();
-            recorder.removePlayBackListener();
-            setIsPlaying(false);
-          }
-        });
+        // 새로운 오디오 소스 로드
+        console.log('▶ 재생 준비 중...');
+        audioPlayer.replace(recordingUri);
+        console.log('▶ 재생 시작');
+        audioPlayer.play();
         setIsPlaying(true);
       }
     } catch (e) {
+      console.error('재생 에러:', e);
       Alert.alert('재생 오류', e instanceof Error ? e.message : String(e));
+      setIsPlaying(false);
     }
   };
 
   const onReRecord = () => {
-    setUri(undefined);
+    setRecordingUri(undefined);
     setIsPlaying(false);
+    if (isPlaying) {
+      audioPlayer.pause();
+    }
   };
 
   const goNext = () => {
-    if (uri) {
+    if (recordingUri) {
       navigation.navigate(homeNavigations.LOADING, {
         CameraUri,
-        AudioUri: uri,
+        AudioUri: recordingUri,
       });
     }
   };
@@ -193,7 +199,7 @@ export default function RecordScreen({
         </Text>
       </Animated.View>
 
-      {!uri ? (
+      {!recordingUri ? (
         <View style={[styles.buttonWrapper, {bottom: insets.bottom + 10}]}>
           <Animated.View style={buttonAnim}>
             <Pressable

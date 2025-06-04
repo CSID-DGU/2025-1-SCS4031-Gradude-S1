@@ -1,9 +1,9 @@
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import {View, Text, SafeAreaView, StyleSheet, Alert} from 'react-native';
 import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import * as Animatable from 'react-native-animatable';
 import {colors, healthNavigations} from '@/constants';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useIsFocused} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useGetHealthDiaryCalendar} from '@/hooks/queries/useHealthDiary';
 
@@ -49,44 +49,53 @@ LocaleConfig.locales['kr'] = {
 };
 LocaleConfig.defaultLocale = 'kr';
 
-export default function HealthCalendarScreen() {
+export default function CalendarScreen() {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
 
-  // 오늘(YYYY-MM-DD) 구하기 (en-CA 포맷)
+  // 오늘(YYYY-MM-DD) 구하기
   const today = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
 
-  // ① 현재 보고 있는 달/연도 상태
+  // 현재 보고 있는 연/월 상태
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1); // 월은 1~12
+  const [month, setMonth] = useState(now.getMonth() + 1);
 
-  // ② 해당 연/월에 기록된 날짜 + diaryId 가져오기
-  const {data: calendarList = [], isLoading: loadingCalendar} =
-    useGetHealthDiaryCalendar(year, month);
+  // 해당 연/월에 기록된 날짜+diaryId 가져오기
+  const {
+    data: calendarList = [],
+    isLoading: loadingCalendar,
+    refetch: refetchCalendar,
+  } = useGetHealthDiaryCalendar(year, month);
 
-  // ③ markedDates 형태로 가공
-  // 예: { "2025-06-02": { marked: true, dotColor: '#3F51B5' }, ... }
+  // 🎯 캘린더 화면이 포커스될 때마다(refocus) 강제로 refetch
+  useEffect(() => {
+    if (isFocused) {
+      refetchCalendar();
+    }
+  }, [isFocused, year, month]);
+
+  // markedDates 형태로 가공
   const markedDates = useMemo(() => {
     const obj: Record<
       string,
       {
-        selectedColor: string;
-        selected: boolean;
-        marked: boolean;
-        dotColor: string;
+        selected?: boolean;
+        selectedColor?: string;
+        marked?: boolean;
+        dotColor?: string;
       }
     > = {};
 
+    // 1) 실제로 기록이 있는 날짜들에 dot 표시
     calendarList.forEach(item => {
       obj[item.date] = {
         marked: true,
         dotColor: colors.SKYBLUE,
-        selected: false,
-        selectedColor: colors.SKYBLUE,
       };
     });
 
-    // 오늘 날짜도 항상 선택 상태로 표시 (예: 원형 테두리)
+    // 2) 오늘 날짜는 항상 selected 상태로 표시
     if (obj[today]) {
       obj[today].selected = true;
       obj[today].selectedColor = colors.SKYBLUE;
@@ -102,32 +111,32 @@ export default function HealthCalendarScreen() {
     return obj;
   }, [calendarList, today]);
 
-  // ④ 날짜 눌렀을 때 처리
+  // 날짜 눌렀을 때 처리 (기록 우선)
   const onDayPress = (day: DateData) => {
     const {dateString} = day; // YYYY-MM-DD
 
-    // (1) 오늘 날짜일 때: “새로운 하루 기록 화면”으로 이동
+    // 1) 기록이 있는 날짜라면 → 결과 화면으로 이동
+    const found = calendarList.find(item => item.date === dateString);
+    if (found) {
+      navigation.navigate(healthNavigations.HEALTH_RESULT, {
+        diaryId: found.diaryId,
+      });
+      return;
+    }
+
+    // 2) 기록이 없고, 오늘 날짜라면 → 새 기록 화면(퀴즈)으로 이동
     if (dateString === today) {
       navigation.navigate(healthNavigations.HEALTH_DAIRY, {date: today});
       return;
     }
 
-    // (2) 오늘이 아닌 날짜인데 기록이 있는지 확인
-    const found = calendarList.find(item => item.date === dateString);
-    if (found) {
-      // 기록이 있을 때 → 결과 화면으로 이동 (diaryId 전달)
-      navigation.navigate(healthNavigations.HEALTH_RESULT, {
-        diaryId: found.diaryId,
-      });
-    } else {
-      // 기록이 없으면 팝업
-      Alert.alert('건강 수첩', '해당 날짜에는 기록이 없습니다.', [
-        {text: '확인'},
-      ]);
-    }
+    // 3) 그 외 날짜(기록도 없고 오늘도 아님) → 경고창
+    Alert.alert('건강 수첩', '해당 날짜에는 기록이 없습니다.', [
+      {text: '확인'},
+    ]);
   };
 
-  // ⑤ 달을 바꿀 때 (이전/다음 화살표 누를 때) 연/월 state 갱신
+  // 달 바뀔 때 연/월 state 갱신
   const onMonthChange = (date: {year: number; month: number}) => {
     setYear(date.year);
     setMonth(date.month);
@@ -156,7 +165,7 @@ export default function HealthCalendarScreen() {
           monthFormat={'yyyy년 M월'}
           onDayPress={onDayPress}
           onMonthChange={onMonthChange}
-          markingType="multi-dot"
+          markingType="dot"
           markedDates={markedDates}
           theme={{
             backgroundColor: colors.WHITE,

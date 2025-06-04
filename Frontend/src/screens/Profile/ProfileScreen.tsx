@@ -1,5 +1,3 @@
-// src/screens/Profile/ProfileScreen.tsx
-
 import React from 'react';
 import {
   View,
@@ -7,17 +5,16 @@ import {
   SafeAreaView,
   StyleSheet,
   Dimensions,
-  Image,
+  TouchableOpacity,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {colors, profileNavigations} from '@/constants';
-import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
+import {CompositeNavigationProp} from '@react-navigation/native';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {MainTabParamList} from '@/navigations/tab/TabNavigator';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {ProfileStackParamList} from '@/navigations/stack/ProfileStackNavigator';
-import {useSelector} from 'react-redux';
-import type {RootState} from '@/store';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type Navigation = CompositeNavigationProp<
   StackNavigationProp<ProfileStackParamList>,
@@ -28,59 +25,88 @@ const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CIRCLE_DIAMETER = SCREEN_WIDTH * 2;
 const R = CIRCLE_DIAMETER / 2;
 
-export default function ProfileScreen() {
-  const navigation = useNavigation<Navigation>();
+interface Props {
+  navigation: Navigation;
+}
 
-  // Redux에서 저장된 프로필을 꺼냅니다.
-  const userProfile = useSelector((state: RootState) => state.auth.userProfile);
-
-  // 만약 userProfile이 없다면(예: 로딩 중이거나, 로그아웃되었거나) 간단히 빈 화면 처리
-  if (!userProfile) {
-    return (
-      <SafeAreaView
-        style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>프로필 정보를 불러오는 중입니다…</Text>
-      </SafeAreaView>
-    );
-  }
+export default function ProfileScreen({navigation}: Props) {
+  // 메뉴 항목 배열에 onPress 함수 추가
+  const menuItems = [
+    {
+      icon: 'document-text-outline',
+      label: '개인정보약관',
+      onPress: () => navigation.navigate(profileNavigations.INFO),
+    },
+    {
+      icon: 'settings-outline',
+      label: '설정',
+    },
+    {
+      icon: 'log-out-outline',
+      label: '로그 아웃',
+      tint: colors.RED,
+      onPress: () => {
+        /* TODO : 로그아웃 */
+      },
+    },
+    {
+      icon: 'alert-circle-outline',
+      label: '회원 탈퇴',
+      tint: colors.RED,
+      onPress: () => {
+        /* TODO : 회원 탈퇴 */
+      },
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.backgroundLayer} />
-      <View
-        style={[
-          styles.halfCircle,
-          {
-            top: 120,
-            left: -SCREEN_WIDTH / 2,
-            width: CIRCLE_DIAMETER,
-            height: CIRCLE_DIAMETER,
-            borderRadius: R,
-          },
-        ]}>
-        {/* 그라디언트 대신 배경색 사용 예시 */}
-        <View style={{flex: 1, backgroundColor: colors.BLUE, opacity: 0.4}} />
-      </View>
+      <LinearGradient
+        colors={['rgba(190,159,255,0.4)', colors.BLUE]}
+        start={{x: 0.5, y: 0}}
+        end={{x: 0.5, y: 1}}
+        style={styles.halfCircle}
+      />
 
       {/* 아바타 + 이름 */}
       <View style={styles.header}>
-        {userProfile.profileImageUrl ? (
-          <Image
-            source={{uri: userProfile.profileImageUrl}}
-            style={styles.avatar}
-          />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person" size={48} color={colors.WHITE} />
-          </View>
-        )}
-        <Text style={styles.name}>{userProfile.nickname}</Text>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person" size={48} color={colors.WHITE} />
+        </View>
+        <Text style={styles.name}>유다현</Text>
       </View>
 
-      {/* (예시) 카드 메뉴 */}
+      {/* 카드 메뉴 */}
       <View style={styles.card}>
-        {/* 예시 메뉴: 개인정보약관, 설정, 로그아웃, 회원탈퇴 등 */}
-        <Text style={{textAlign: 'center', marginTop: 20}}>…메뉴들…</Text>
+        {menuItems.map((item, i, arr) => (
+          <React.Fragment key={item.label}>
+            <TouchableOpacity style={styles.cardItem} onPress={item.onPress}>
+              <View
+                style={[
+                  styles.itemIconBg,
+                  item.tint
+                    ? {backgroundColor: 'rgba(255, 69, 58, 0.1)'}
+                    : undefined,
+                ]}>
+                <Ionicons
+                  name={item.icon}
+                  size={20}
+                  color={item.tint ?? colors.MAINBLUE}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.itemLabel,
+                  item.tint ? {color: colors.RED} : undefined,
+                ]}>
+                {item.label}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.GRAY} />
+            </TouchableOpacity>
+            {i < arr.length - 1 && <View style={styles.separator} />}
+          </React.Fragment>
+        ))}
       </View>
     </SafeAreaView>
   );
@@ -96,22 +122,20 @@ const styles = StyleSheet.create({
   },
   halfCircle: {
     position: 'absolute',
+    top: 120,
+    left: -SCREEN_WIDTH / 2,
+    width: CIRCLE_DIAMETER,
+    height: CIRCLE_DIAMETER,
+    borderRadius: R,
   },
   header: {
     alignItems: 'center',
     marginTop: 30,
   },
-  avatar: {
+  avatarContainer: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    borderWidth: 2,
-    borderColor: colors.WHITE,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    borderRadius: 100,
     backgroundColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -129,5 +153,31 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingVertical: 16,
+  },
+  cardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  itemIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(190,159,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  itemLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.BLACK,
+    fontWeight: '500',
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.LIGHTGRAY,
+    marginLeft: 24 + 36 + 16, // 아이콘 영역만큼 들여쓰기
   },
 });

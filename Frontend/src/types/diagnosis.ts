@@ -1,6 +1,5 @@
-/**
- * 모든 API 응답에 공통으로 들어오는 필드
- */
+import {HospitalDetailDto} from '@/types/hospital';
+
 export interface ApiResponse<T> {
   isSuccess: boolean;
   code: string;
@@ -29,45 +28,43 @@ export interface SurveyRequest {
 }
 
 /**
- * 2) /api/diagnosis/survey 응답 result 타입
+ * 3) /api/diagnosis/survey 응답 result 타입
  */
-export interface SurveyResult {
-  result: any;
+export interface SurveyResultDto {
   face: boolean;
   speech: boolean;
   orientation: number;
   gaze: number;
   arm: number;
   totalScore: number;
+  totalScorePercentage: number;
+  llmResult: string;
+  hospitalList: HospitalDetailDto[];
 }
 
 /**
- * 3) /api/diagnosis/final 요청 바디
+ * 4) /api/diagnosis/user/{userId}/list 응답 내부 아이템 타입
  */
-export interface FinalRequest {
-  symptoms: string;
+export interface DiagnosisHistoryItem {
+  date: string; // ex. "2025-06-04"
+  diagnosisId: number; // ex. 9007199254740991
 }
 
 /**
- * 3) /api/diagnosis/final 응답 result 타입
+ * 실제 Survey API 호출 시 반환되는 형태
+ * 예: ApiResponse<SurveyResultDto>
  */
-export type FinalResult = string;
-
-/** TODO : 수정해야 함
- * 4) fullDiagnosis() 호출 시 합쳐서 넘겨줄 파라미터
- */
-export interface FullDiagnosisRequest {
-  faceUri: string;
-  speechUri: string;
-  survey: SurveyRequest;
-  symptoms: string;
-}
+export type SurveyResponse = ApiResponse<SurveyResultDto>;
 
 /**
- * 4) fullDiagnosis()를 호출한 뒤 반환받는 최종 데이터
+ * 진단 기록 목록 조회 시 반환되는 형태
+ * 예: ApiResponse<DiagnosisHistoryItem[]>
  */
-export interface FullDiagnosisResult {
-  diagnosis: DiagnosisResult;
-  surveyResult: SurveyResult;
-  finalResult: FinalResult;
-}
+export type DiagnosisHistoryResponse = ApiResponse<DiagnosisHistoryItem[]>;
+
+/**
+ * 진단 단건 조회 시 반환되는 형태
+ * (SurveyResultDto와 동일한 필드 구조를 리턴)
+ * 예: ApiResponse<SurveyResultDto>
+ */
+export type SingleDiagnosisResponse = ApiResponse<SurveyResultDto>;

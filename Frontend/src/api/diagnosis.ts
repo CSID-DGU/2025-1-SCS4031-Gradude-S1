@@ -1,13 +1,12 @@
 import axiosInstance from '@/api/axios';
-import {
+import type {
   ApiResponse,
   DiagnosisResult,
   SurveyRequest,
-  SurveyResult,
-  FinalRequest,
-  FinalResult,
-  FullDiagnosisRequest,
-  FullDiagnosisResult,
+  SurveyResultDto,
+  DiagnosisHistoryItem,
+  SingleDiagnosisResponse,
+  DiagnosisHistoryResponse,
 } from '@/types/diagnosis';
 
 /**
@@ -42,17 +41,16 @@ export const uploadDiagnosis = async (
   if (!data.isSuccess) {
     throw new Error(`Diagnosis API failed: ${data.message}`);
   }
-
   return data.result;
 };
 
 /**
- * 2) 설문 데이터 전송 → ApiResponse<SurveyResult>
+ * 2) 설문 전송 (설문을 보내면 병원 추천까지 포함된 SurveyResultDto를 반환)
  */
 export const postSurvey = async (
   payload: SurveyRequest,
-): Promise<SurveyResult> => {
-  const {data} = await axiosInstance.post<ApiResponse<SurveyResult>>(
+): Promise<SurveyResultDto> => {
+  const {data} = await axiosInstance.post<ApiResponse<SurveyResultDto>>(
     '/api/diagnosis/survey',
     payload,
   );
@@ -60,47 +58,39 @@ export const postSurvey = async (
   if (!data.isSuccess) {
     throw new Error(`Survey API failed: ${data.message}`);
   }
-
   return data.result;
 };
 
 /**
- * TODO : 여기 없애거나 수정
+ * 3) 저장된 자가진단 단건 조회
+ *    GET /api/diagnosis/{diagnosisId}
  */
-export const postFinal = async (
-  payload: FinalRequest,
-): Promise<FinalResult> => {
-  const {data} = await axiosInstance.post<ApiResponse<FinalResult>>(
-    '/api/diagnosis/final',
-    payload,
+export const getDiagnosisById = async (
+  diagnosisId: number,
+): Promise<SurveyResultDto> => {
+  const {data} = await axiosInstance.get<SingleDiagnosisResponse>(
+    `/api/diagnosis/${diagnosisId}`,
   );
 
-  // Final API도 isSuccess가 false일 수 있으니 조건 검사
   if (!data.isSuccess) {
-    throw new Error(`Final API failed: ${data.message}`);
+    throw new Error(`Get Diagnosis API failed: ${data.message}`);
   }
-
   return data.result;
 };
 
 /**
- * TODO: 수정해야함
+ * 4) 유저별 자가진단 기록 있는 날짜 목록 조회
+ *    GET /api/diagnosis/user/{userId}/list
  */
-export const fullDiagnosis = async (
-  payload: FullDiagnosisRequest,
-): Promise<FullDiagnosisResult> => {
-  // 1) 얼굴/음성 업로드
-  const diagnosis = await uploadDiagnosis(payload.faceUri, payload.speechUri);
+export const getDiagnosisHistory = async (
+  userId: number,
+): Promise<DiagnosisHistoryItem[]> => {
+  const {data} = await axiosInstance.get<DiagnosisHistoryResponse>(
+    `/api/diagnosis/user/${userId}/list`,
+  );
 
-  // 2) 설문 전송
-  const surveyResult = await postSurvey(payload.survey);
-
-  // 3) 최종 증상 전송
-  const finalResult = await postFinal({symptoms: payload.symptoms});
-
-  return {
-    diagnosis,
-    surveyResult,
-    finalResult,
-  };
+  if (!data.isSuccess) {
+    throw new Error(`Diagnosis History API failed: ${data.message}`);
+  }
+  return data.result;
 };
