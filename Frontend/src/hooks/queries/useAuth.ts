@@ -55,7 +55,7 @@ export default function useAuth() {
 
         return profileFromServer;
       } catch (err) {
-        console.error('❌ useQuery fetchProfile error ▶', err);
+        // console.error('❌ useQuery fetchProfile error ▶', err);
         // 예를 들어 토큰 만료 등으로 프로필 조회 실패 시, 강제 로그아웃 처리
         dispatch(resetAuthState());
         removeHeader('Authorization');
@@ -120,7 +120,7 @@ export default function useAuth() {
       }
     },
     onError: err => {
-      console.error('❌ kakaoLoginMutation error ▶', err);
+      // console.error('❌ kakaoLoginMutation error ▶', err);
     },
   });
 
@@ -157,7 +157,7 @@ export default function useAuth() {
       }
     },
     onError: err => {
-      console.error('❌ signupMutation error ▶', err);
+      // console.error('❌ signupMutation error ▶', err);
     },
   });
 

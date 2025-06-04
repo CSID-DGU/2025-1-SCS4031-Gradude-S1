@@ -19,7 +19,7 @@ async function setHeader(key: string, value: string) {
       currentHeaders: axiosInstance.defaults.headers.common,
     });
   } catch (error) {
-    console.error('❌ setHeader 실패:', error);
+    // console.error('❌ setHeader 실패:', error);
   }
 }
 
@@ -46,7 +46,7 @@ async function removeHeader(key: string) {
 
     console.log(`🧹 removeHeader '${key}' 제거 완료`);
   } catch (error) {
-    console.error('❌ removeHeader 실패:', error);
+    // console.error('❌ removeHeader 실패:', error);
   }
 }
 

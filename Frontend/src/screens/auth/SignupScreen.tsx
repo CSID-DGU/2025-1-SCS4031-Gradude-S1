@@ -164,7 +164,7 @@ export default function SignupScreen({}: SignupProps) {
           // onSuccess에서 profileComplete = true로 바뀌면 useEffect가 실행되어 메인으로 리셋됩니다.
         },
         onError: err => {
-          console.error('❌ 회원가입 에러:', err);
+          // console.error('❌ 회원가입 에러:', err);
           Alert.alert(
             '오류',
             '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.',

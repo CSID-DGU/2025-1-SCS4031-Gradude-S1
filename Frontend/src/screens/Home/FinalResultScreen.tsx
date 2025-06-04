@@ -1,27 +1,56 @@
+// src/screens/Diagnosis/FinalResultScreen.tsx
+
 import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  ScrollView,
   SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
   Dimensions,
 } from 'react-native';
+import {useRoute, RouteProp} from '@react-navigation/native';
+import {useDiagnosisById} from '@/hooks/queries/useDiagnosis';
+import {colors} from '@/constants';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {colors, homeNavigations} from '@/constants';
-import type {HospitalDetailDto} from '@/types/hospital';
-import type {SurveyResultDto} from '@/types/diagnosis';
-import {StackScreenProps} from '@react-navigation/stack';
-import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 import HospitalCard from '@/components/hospital/HospitalCard';
+import type {HospitalDetailDto} from '@/types/hospital';
 
-type Props = StackScreenProps<
-  HomeStackParamList,
-  typeof homeNavigations.FINAL_RESULT
->;
+type FinalResultScreenParamList = {
+  FinalResultScreen: {
+    diagnosisId: number;
+  };
+};
 
-export default function FinalResultScreen({route}: Props) {
-  const {surveyResult} = route.params;
+export default function FinalResultScreen() {
+  const route =
+    useRoute<RouteProp<FinalResultScreenParamList, 'FinalResultScreen'>>();
+  const {diagnosisId} = route.params;
+
+  // (A) react-query로 진단 ID에 해당하는 결과 fetch
+  const {
+    data: surveyResult,
+    isLoading,
+    isError,
+  } = useDiagnosisById(diagnosisId);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.MAINBLUE} />
+      </SafeAreaView>
+    );
+  }
+  if (isError || !surveyResult) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text>결과를 불러오는 중 오류가 발생했습니다.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // surveyResult 타입: SurveyResultDto
   const {
     face,
     speech,
@@ -31,7 +60,7 @@ export default function FinalResultScreen({route}: Props) {
     hospitalList,
   } = surveyResult;
 
-  // ── face / speech 조합에 따른 메시지 결정 ──
+  // (B) face/speech 조합별 메시지
   let rawMessage = '';
   if (face && speech) {
     rawMessage =
@@ -46,22 +75,18 @@ export default function FinalResultScreen({route}: Props) {
     rawMessage =
       '얼굴 표정과 발화가 모두 정상입니다.\n계속 건강을 관리해주세요.';
   }
-
-  // '\n'로 두 줄을 분리
   const [firstLine, secondLine] = rawMessage.split('\n');
 
-  // 화면 너비 기준으로 원형 프로그래스 크기 계산
+  // (C) 원형 프로그래스 사이즈 계산
   const screenWidth = Dimensions.get('window').width;
-  const circleSize = screenWidth * 0.6; // 화면 너비의 60%
+  const circleSize = screenWidth * 0.6;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
-        {/* ───── 1. 소제목: AI 진단 결과 ───── */}
-
-        {/* ───── 3. “최종 뇌졸중 위험도” 헤더 & 원형 프로그래스 ───── */}
+        {/* 1. 소제목: 최종 뇌졸중 위험도 & 원형 프로그래스 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>최종 뇌졸중 위험도</Text>
           <View style={styles.progressWrapper}>
@@ -86,7 +111,7 @@ export default function FinalResultScreen({route}: Props) {
           </View>
         </View>
 
-        {/* ───── 4. 소제목: 최종 진단 결과 & LLM 텍스트 ───── */}
+        {/* 2. 소제목: 최종 진단 결과 & LLM 텍스트 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>최종 진단 결과</Text>
           <View style={styles.llmContainer}>
@@ -94,13 +119,13 @@ export default function FinalResultScreen({route}: Props) {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>AI 진단 결과</Text>
-        {/* ───── 2. AI 예측 메시지 (첫 줄: 붉은색, 둘째 줄: 검은색) ───── */}
+        {/* 3. AI 예측 메시지 (face/speech) */}
         <View style={styles.topMessageContainer}>
           <Text style={styles.topMessageFirst}>{firstLine}</Text>
           <Text style={styles.topMessageSecond}>{secondLine}</Text>
         </View>
-        {/* ───── 5. 소제목: 추천 병원 & 병원 카드 목록 ───── */}
+
+        {/* 4. 추천 병원 리스트 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>추천 병원</Text>
           {hospitalList.length === 0 ? (
@@ -125,18 +150,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.SEMIWHITE,
   },
-  section: {
-    width: SCREEN_W - 40,
-    marginBottom: 32,
-    alignItems: 'center', // 내부 아이템 정중앙 배치
-  },
   container: {
     paddingHorizontal: 20,
     paddingBottom: 40,
     alignItems: 'center',
   },
-
-  // ─────────────── 소제목 ───────────────
+  section: {
+    width: SCREEN_W - 40,
+    marginBottom: 32,
+    alignItems: 'center',
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -144,38 +167,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
-
-  // ─────────────── 1. AI 예측 메시지 ───────────────
-  topMessageContainer: {
-    width: SCREEN_W - 40,
-    backgroundColor: colors.WHITE,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    // iOS 그림자
-    shadowColor: colors.BLACK,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    // Android
-    elevation: 3,
-  },
-  topMessageFirst: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.RED, // 첫 번째 줄은 빨간색
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  topMessageSecond: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.BLACK, // 두 번째 줄은 검은색
-    textAlign: 'center',
-    marginTop: 4,
-  },
-
-  // ─────────────── 2. 원형 프로그래스 ───────────────
   progressWrapper: {
     alignItems: 'center',
     marginBottom: 32,
@@ -200,19 +191,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.BLACK,
   },
-
-  // ─────────────── 3. LLM 결과 ───────────────
   llmContainer: {
     width: '100%',
     backgroundColor: colors.WHITE,
     borderRadius: 12,
     padding: 16,
-    // iOS 그림자
     shadowColor: colors.BLACK,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // Android
     elevation: 3,
   },
   llmText: {
@@ -220,12 +207,41 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: colors.BLACK,
   },
-
-  // ─────────────── 4. 추천 병원 ───────────────
+  topMessageContainer: {
+    width: SCREEN_W - 40,
+    backgroundColor: colors.WHITE,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: colors.BLACK,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topMessageFirst: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.RED,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  topMessageSecond: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.BLACK,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   noHospitalText: {
     fontSize: 16,
     color: colors.GRAY,
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
