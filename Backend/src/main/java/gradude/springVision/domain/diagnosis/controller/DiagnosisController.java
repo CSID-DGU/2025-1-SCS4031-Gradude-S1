@@ -40,5 +40,15 @@ public class DiagnosisController {
         return ApiResponse.onSuccess(diagnosisCommandService.selfDiagnosis(userId, selfDiagnosisRequestDTO));
     }
 
+    @Operation(summary = "자가진단 기록 있는 날 모아보기")
+    @GetMapping("/list")
+    public ApiResponse<List<DiagnosisCalendarResponseDTO>> getDiagnosisList(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.onSuccess(diagnosisQueryService.getDiagnosisCalendar(userId));
+    }
 
+    @Operation(summary = "저장된 자가진단지 조회")
+    @GetMapping("/{diagnosisId}")
+    public ApiResponse<DiagnosisResponseDTO> getDiagnosisDetail(@PathVariable Long diagnosisId) {
+        return ApiResponse.onSuccess(diagnosisQueryService.getDiagnosisDetail(diagnosisId));
+    }
 }
