@@ -41,7 +41,7 @@ public class DiaryController {
 
     @Operation(summary = "하루 기록 캘린더 조회", description = "년/월 기준으로 하루 기록이 작성된 날짜와 해당 기록의 id 조회")
     @GetMapping("/calendar")
-    public ApiResponse<List<DiaryCalendarResponseDTO>> getDiaryCalender(@AuthenticationPrincipal Long userId,
+    public ApiResponse<List<DiaryCalendarResponseDTO>> getDiaryCalendar(@AuthenticationPrincipal Long userId,
                                                                         @RequestParam int year, @RequestParam int month) {
         return ApiResponse.onSuccess(diaryQueryService.getDiaryCalendar(userId, year, month));
     }
