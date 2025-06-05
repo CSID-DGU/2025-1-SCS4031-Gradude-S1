@@ -1,9 +1,10 @@
 import os
 import torch
-import torchaudio
 import numpy as np
 import joblib
 import logging
+import soundfile as sf
+import librosa
 from transformers import WhisperProcessor, WhisperModel
 
 # ✅ 로깅 설정
@@ -50,32 +51,25 @@ def load_whisper_model():
         logging.error(f"Whisper 모델 로딩 실패: {e}")
         raise
 
-# ✅ PCM/WAV 파일 로딩
-def load_audio(path, sr=16000, dtype=np.int16):
+# ✅ 오디오 파일 로딩 (librosa + soundfile 기반)
+def load_audio(path, target_sr=16000):
     if not os.path.exists(path):
         logging.error(f"파일 경로 없음: {path}")
         raise FileNotFoundError(f"파일 경로가 존재하지 않습니다: {path}")
 
     try:
-        if path.endswith(".wav"):
-            waveform, sr = torchaudio.load(path)
-        elif path.endswith(".pcm"):
-            with open(path, 'rb') as f:
-                pcm = np.frombuffer(f.read(), dtype=dtype)
-                waveform = pcm.astype(np.float32) / 32768.0
-                waveform = torch.from_numpy(waveform).unsqueeze(0)
-        else:
-            raise ValueError(f"지원하지 않는 포맷: {path}")
+        waveform, sr = sf.read(path)
 
-        if sr != 16000:
-            resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)
-            waveform = resampler(waveform)
+        if waveform.dtype != np.float32:
+            waveform = waveform.astype(np.float32)
 
-        if waveform.shape[0] > 1:
-            waveform = torch.mean(waveform, dim=0, keepdim=True)
+        if sr != target_sr:
+            waveform = librosa.resample(waveform, orig_sr=sr, target_sr=target_sr)
 
-        return waveform.squeeze()
+        if len(waveform.shape) > 1:
+            waveform = np.mean(waveform, axis=1)
 
+        return torch.from_numpy(waveform)
     except Exception as e:
         logging.error(f"오디오 로딩 실패: {e}")
         raise
@@ -105,21 +99,21 @@ def predict(path, model_path="svm_model.pkl"):
 
         prediction = classifier.predict(embedding_scaled)[0]
         if hasattr(classifier, "predict_proba"):
-            probability = classifier.predict_proba(embedding_scaled)[0][prediction]  # 해당 클래스의 확률
+            probability = classifier.predict_proba(embedding_scaled)[0][prediction]
         else:
-            probability = classifier.decision_function(embedding_scaled)[0]  # fallback
-        
+            probability = classifier.decision_function(embedding_scaled)[0]
+
         logging.info(f"예측 완료 - 결과: {prediction}, 확률: {probability:.4f}")
-        
         return prediction, probability
     except Exception as e:
         logging.error(f"예측 실패: {e}")
         raise
 
+# ✅ 커맨드라인 실행용 main
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Whisper 기반 음성 분류기")
+    parser = argparse.ArgumentParser(description="Whisper 기반 음성 분류기 (librosa 안정화 버전)")
     parser.add_argument("audio_path", type=str, help="분석할 .wav 또는 .pcm 파일 경로")
     parser.add_argument("--model_path", type=str, default="svm_model.pkl", help="SVM 모델 pkl 파일 경로")
 
