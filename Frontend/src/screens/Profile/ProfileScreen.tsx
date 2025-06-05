@@ -74,7 +74,7 @@ export default function ProfileScreen({navigation}: Props) {
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={48} color={colors.WHITE} />
         </View>
-        <Text style={styles.name}>유다현</Text>
+        <Text style={styles.name}>양희진</Text>
       </View>
 
       {/* 카드 메뉴 */}

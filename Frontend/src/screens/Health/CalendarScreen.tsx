@@ -208,7 +208,7 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.title}>건강 수첩</Text>
+        <Text style={styles.title}>나의 건강 수첩</Text>
       </View>
 
       {/* 설명 영역 */}

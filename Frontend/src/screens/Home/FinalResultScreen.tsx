@@ -151,18 +151,18 @@ export default function FinalResultScreen() {
         </View>
 
         {/* 4. 추천 병원 리스트 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏥 가장 가까운 병원</Text>
-          {hospitalList.length === 0 ? (
-            <Text style={styles.noHospitalText}>
-              주변에 추천 병원이 없습니다.
-            </Text>
-          ) : (
-            hospitalList.map((hospital: HospitalDetailDto) => (
-              <HospitalCard key={hospital.hospitalId} data={hospital} />
-            ))
-          )}
-        </View>
+        {/* <View style={styles.section}> */}
+        <Text style={styles.sectionTitle}>🏥 가장 가까운 병원</Text>
+        {hospitalList.length === 0 ? (
+          <Text style={styles.noHospitalText}>
+            주변에 추천 병원이 없습니다.
+          </Text>
+        ) : (
+          hospitalList.map((hospital: HospitalDetailDto) => (
+            <HospitalCard key={hospital.hospitalId} data={hospital} />
+          ))
+        )}
+        {/* </View> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     color: colors.MAINBLUE,
   },
   scoreLabel: {
-    fontSize: 16,
+    fontSize: 24,
     color: colors.GRAY,
     marginTop: 4,
   },
