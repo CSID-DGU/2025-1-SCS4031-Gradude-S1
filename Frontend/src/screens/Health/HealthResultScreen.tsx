@@ -88,8 +88,8 @@ export default function HealthResultScreen() {
     {key: 'drinking', label: '음주', icon: 'wine-outline'},
     {key: 'exercise', label: '운동', icon: 'walk-outline'},
     {key: 'smoking', label: '흡연', icon: 'logo-no-smoking'},
-    {key: 'diet', label: '간식', icon: 'fast-food-outline'},
-    {key: 'sleep', label: '숙면', icon: 'leaf-outline'}, //TODO 아이콘 바꾸기
+    {key: 'diet', label: '식단', icon: 'restaurant-outline'},
+    {key: 'sleep', label: '숙면', icon: 'bed-outline'}, //TODO 아이콘 바꾸기
   ] as const;
 
   return (
