@@ -11,26 +11,18 @@ import {
 } from 'react-native-reanimated';
 import LottieView from 'lottie-react-native';
 import {StackScreenProps} from '@react-navigation/stack';
-import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
-import {uploadDiagnosis, postSurvey} from '@/api/diagnosis';
 import type {SurveyRequest} from '@/types/diagnosis';
+import {postSurvey, uploadDiagnosis} from '@/api/diagnosis';
 import {AxiosError} from 'axios';
+import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
 type Props = StackScreenProps<
   HomeStackParamList,
   typeof homeNavigations.LOADING
 >;
 
-/**
- * LoadingScreen은 두 가지 케이스를 처리합니다:
- * 1) 얼굴+음성 업로드 → uploadDiagnosis 호출
- * 2) 자가진단 설문 전송 → postSurvey 호출
- *
- * route.params가 { CameraUri, AudioUri } 형태라면 ①을,
- * { surveyPayload } 형태라면 ②를 처리합니다.
- */
 export default function LoadingScreen({navigation, route}: Props) {
-  // route.params는 union 타입이므로, 두 케이스 중 어느 형태인지 확인
+  // route.params가 { CameraUri, AudioUri } 또는 { surveyPayload } 두 가지 중 하나
   const hasVoiceParams =
     'CameraUri' in route.params && 'AudioUri' in route.params;
   const hasSurveyParams = 'surveyPayload' in route.params;
@@ -41,15 +33,14 @@ export default function LoadingScreen({navigation, route}: Props) {
     ? (route.params.surveyPayload as SurveyRequest)
     : undefined;
 
-  // ── 팁 로테이션용 상태 ──
   const [tipIndex, setTipIndex] = useState(0);
   const intervalMs = 4000;
   const random = false;
   const progress = useSharedValue(0);
   const animationRef = useRef<LottieView>(null);
 
+  // Tip 텍스트와 애니메이션 상태 업데이트
   useEffect(() => {
-    // 첫 진입 시 애니메이션 시작
     progress.value = withTiming(1, {duration: intervalMs});
 
     const tipTimer = setInterval(() => {
@@ -69,74 +60,86 @@ export default function LoadingScreen({navigation, route}: Props) {
     opacity: progress.value,
     transform: [{scale: progress.value * 0.05 + 0.95}],
   }));
-  // src/screens/home/LoadingScreen.tsx (일부만 발췌)
 
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       try {
+        // ─── 얼굴+음성 업로드(Prediction) 부분: 더미 30초 뒤 MID_RESULT ───
         if (hasVoiceParams && CameraUri && AudioUri) {
-          const result = await uploadDiagnosis(CameraUri, AudioUri);
-          if (!isMounted) return;
+          setTimeout(() => {
+            if (!isMounted) return;
+            navigation.replace(homeNavigations.MID_RESULT, {
+              // dummy 값: 둘 다 false면 NormalCard
+              facePrediction: false,
+              speechPrediction: false,
+            });
+          }, 30000);
 
-          // 성공 콜백
-          const {facePrediction, speechPrediction} = result;
-          navigation.replace(homeNavigations.MID_RESULT, {
-            facePrediction,
-            speechPrediction,
-          });
           return;
         }
 
+        // ─── 설문 제출(Survey) 부분: 실제 API postSurvey 호출 ───
         if (hasSurveyParams && surveyPayload) {
-          const surveyResult = await postSurvey(surveyPayload);
-          if (!isMounted) return;
+          try {
+            // 실제 postSurvey API 호출
+            const surveyResult = await postSurvey(surveyPayload);
 
-          navigation.replace(homeNavigations.FINAL_RESULT, {
-            surveyResult,
-          });
+            if (!isMounted) return;
+            // /HomeStackParamList에서 FINAL_RESULT: { surveyResult: SurveyResultDto }
+            navigation.replace(homeNavigations.FINAL_RESULT, {
+              surveyResult,
+            });
+          } catch (err: any) {
+            // postSurvey 호출 중 에러 처리
+            console.error('▶ postSurvey 에러:', err);
+            let userMsg = '설문 전송 중 오류가 발생했습니다.';
+            if (err.isAxiosError) {
+              const axiosErr = err as AxiosError<{message: string}>;
+              userMsg =
+                axiosErr.response?.data?.message || axiosErr.message || userMsg;
+            } else if (err instanceof Error) {
+              userMsg = err.message;
+            }
+            Alert.alert('설문 오류', userMsg);
+            navigation.goBack();
+          }
+
           return;
         }
 
+        // 둘 다 해당하지 않는 경우: 잘못된 경로
         Alert.alert('오류', '잘못된 경로로 접근하였습니다.');
         navigation.goBack();
       } catch (error: any) {
-        // 1) 콘솔에 에러 전체 출력
+        // 예외 처리 (원래 코드 유지)
         console.error('============================');
         console.error('▶ LoadingScreen 에러 발생:', error);
 
-        // 2) AxiosError인지 확인
         if (error.isAxiosError) {
           const axiosErr = error as AxiosError;
-
-          // (a) HTTP 요청을 보낼 때 사용된 config
           console.error('--- [Axios Config] ---');
           console.error(axiosErr.config);
 
-          // (b) 서버가 응답한 response가 있으면 status, headers, data까지 출력
           if (axiosErr.response) {
             console.error('--- [Axios Response] ---');
             console.error('Status:', axiosErr.response.status);
             console.error('Headers:', axiosErr.response.headers);
             console.error('Data:', axiosErr.response.data);
           } else if (axiosErr.request) {
-            // (c) 서버 응답을 못 받았을 때 request 객체 확인
             console.error('--- [Axios Request] ---');
             console.error(axiosErr.request);
           }
 
-          // (d) 에러 메시지
           console.error('--- [Axios Error Message] ---');
           console.error(axiosErr.message);
         } else {
-          // AxiosError가 아니라면 일반 JS Error나 기타 예외
           console.error('--- [Non-Axios Error] ---');
           console.error(error.message);
           console.error(error.stack);
         }
 
-        // 디버그 목적으로 Alert에도 상세 메시지 띄우기
         let userMsg = '알 수 없는 오류가 발생했습니다.';
         if (error.isAxiosError) {
           const axiosErr = error as AxiosError<{message: string}>;
@@ -146,7 +149,6 @@ export default function LoadingScreen({navigation, route}: Props) {
           userMsg = error.message;
         }
         Alert.alert('로딩 중 오류', userMsg);
-
         navigation.goBack();
       }
     })();

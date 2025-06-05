@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Text,
+  ScrollView,
 } from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
@@ -82,7 +83,7 @@ export default function SelfDgsScreen({navigation}: Props) {
         arm: armValue,
       };
 
-      // ─── 직접 postSurvey 호출 대신, LoadingScreen 으로 이동 ───
+      // ─── LoadingScreen 으로 이동 ───
       navigation.replace(homeNavigations.LOADING, {surveyPayload});
     } catch (err: any) {
       Alert.alert('설문 전송 실패', err.message);
@@ -93,30 +94,38 @@ export default function SelfDgsScreen({navigation}: Props) {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.progressContainer}>
-          <AnimatedCircularProgress
-            size={60}
-            width={6}
-            fill={(step / total) * 100}
-            tintColor={colors.MAINBLUE}
-            rotation={0}
-            backgroundColor={colors.OBTN}>
-            {() => (
-              <Text style={styles.progressRatio}>{`${step}/${total}`}</Text>
-            )}
-          </AnimatedCircularProgress>
-        </View>
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled">
+          {/* 1. 프로그레스 원형 */}
+          <View style={styles.progressContainer}>
+            <AnimatedCircularProgress
+              size={60}
+              width={6}
+              fill={(step / total) * 100}
+              tintColor={colors.MAINBLUE}
+              rotation={0}
+              backgroundColor={colors.OBTN}>
+              {() => (
+                <Text style={styles.progressRatio}>{`${step}/${total}`}</Text>
+              )}
+            </AnimatedCircularProgress>
+          </View>
 
-        <View style={styles.cardWrapper}>
-          <QuestionCard
-            question={current}
-            onSelect={value => selectOption(value)}
-            step={step}
-            total={total}
-          />
-        </View>
+          {/* 2. 질문 카드 */}
+          <View style={styles.cardWrapper}>
+            <QuestionCard
+              question={current}
+              onSelect={value => selectOption(value)}
+              step={step}
+              total={total}
+            />
+          </View>
+        </ScrollView>
 
+        {/* 3. 다음/완료 버튼 */}
         <View style={styles.nextWrapper}>
           <CustomButton
             label={step < total ? '다음' : '완료'}
@@ -143,6 +152,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.BACKGRAY,
   },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
   progressContainer: {
     marginTop: 16,
     alignItems: 'center',
@@ -154,7 +168,6 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     flex: 1,
-    marginHorizontal: 24,
     marginTop: 12,
   },
   nextWrapper: {

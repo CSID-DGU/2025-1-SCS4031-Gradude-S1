@@ -1,4 +1,6 @@
-import React, {useState, useRef, useMemo, useEffect} from 'react';
+// src/screens/Health/HealthScreen.tsx
+
+import React, {useMemo, useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -36,8 +38,6 @@ const BOX_WIDTH = 110;
 const BOX_MARGIN = 8;
 
 export default function HealthScreen() {
-  // ────────────────────────────────────────────────────────────────────────────
-  // 1) 훅들을 모두 최상단에 선언
   const navigation =
     useNavigation<
       CompositeNavigationProp<
@@ -46,30 +46,46 @@ export default function HealthScreen() {
       >
     >();
 
+  // 차트 데이터 가져오기
   const {data: response = [], isLoading, isError} = useGetHealthDiaryGraph();
-  // response 타입: Array<{ date: string; healthScore: number }>
 
+  // 디버깅: 서버에서 내려오는 데이터 확인
+  useEffect(() => {
+    console.log('🔽[HealthChart] fetched response:', response);
+  }, [response]);
+
+  // response 타입: Array<{ date: string; healthScore: number }>
   const labels = useMemo(
-    () => response.map(r => r.date.slice(5).replace('-', '.')),
+    () =>
+      response.map(r =>
+        // "2025-06-01" → "06.01"
+        r.date.slice(5).replace('-', '.'),
+      ),
     [response],
   );
-
   const data = useMemo(() => response.map(r => r.healthScore), [response]);
 
+  // 차트와 날짜 바의 인덱스를 맞추기 위해 뒤집은 배열 생성
   const reversed = useMemo(() => [...response].reverse(), [response]);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  // response가 바뀔 때마다 가장 마지막(최신) 인덱스로 초기화
+  // 데이터가 바뀌면 항상 맨 뒤(최신) 인덱스로 초기화
   useEffect(() => {
     if (data.length > 0) {
       setSelectedIndex(data.length - 1);
+      // 맨 뒤 날짜 박스가 중앙에 보이도록 스크롤 (옵션)
+      setTimeout(() => {
+        const revIdx = 0; // 최신 날짜가 reversed[0]
+        const offsetX =
+          revIdx * (BOX_WIDTH + BOX_MARGIN * 2) -
+          (SCREEN_WIDTH - BOX_WIDTH) / 2;
+        scrollRef.current?.scrollTo({x: offsetX, animated: true});
+      }, 100);
     }
   }, [data]);
 
   const scrollRef = useRef<ScrollView>(null);
 
-  // onSelect 함수: 차트나 날짜 박스를 눌렀을 때 호출
   const onSelect = (origIdx: number) => {
     setSelectedIndex(origIdx);
     const revIdx = data.length - 1 - origIdx;
@@ -77,9 +93,8 @@ export default function HealthScreen() {
       revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
     scrollRef.current?.scrollTo({x: offsetX, animated: true});
   };
-  // ────────────────────────────────────────────────────────────────────────────
 
-  // 2) 로딩/에러 처리
+  // 로딩/에러 상태 처리
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -87,7 +102,6 @@ export default function HealthScreen() {
       </SafeAreaView>
     );
   }
-
   if (isError) {
     return (
       <SafeAreaView style={styles.center}>
@@ -95,8 +109,16 @@ export default function HealthScreen() {
       </SafeAreaView>
     );
   }
+  if (response.length === 0) {
+    // 기록이 하나도 없을 때 안내
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text>아직 건강 기록이 없습니다. 먼저 하루 기록을 눌러주세요.</Text>
+      </SafeAreaView>
+    );
+  }
 
-  // 3) 실제 렌더링
+  // 버튼 목록
   const buttons = [
     {
       icon: 'calendar-check',
@@ -219,7 +241,7 @@ export default function HealthScreen() {
         />
       </View>
 
-      {/* 날짜 리스트 */}
+      {/* 날짜 리스트 바 */}
       <ScrollView
         horizontal
         ref={scrollRef}

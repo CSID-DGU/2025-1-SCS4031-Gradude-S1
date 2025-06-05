@@ -1,6 +1,6 @@
 // src/hooks/queries/diagnosisHooks.ts
 
-import {useQuery, useMutation} from '@tanstack/react-query';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import type {
   DiagnosisResult,
   SurveyRequest,
@@ -62,9 +62,19 @@ export function useUploadDiagnosis() {
  *     arm: 0,
  *   });
  */
+
 export function usePostSurvey() {
+  const qc = useQueryClient(); // ① QueryClient 가져오기
+
   return useMutation<SurveyResultDto, Error, SurveyRequest>({
     mutationFn: (payload: SurveyRequest) => postSurvey(payload),
+
+    // ② 성공하면 diagnosisHistory 캐시를 바로 비워서
+    //    다음 access 때 강제 refetch 가 일어나도록
+    onSuccess: () => {
+      qc.invalidateQueries({queryKey: ['diagnosisHistory']});
+    },
+
     onError: (err: Error) => {
       console.error('postSurvey failed:', err);
     },
@@ -106,6 +116,7 @@ export function useDiagnosisById(diagnosisId: number) {
  *   } = useDiagnosisHistory(userId);
  */
 // Optionally define UseDiagnosisOptions if not imported from elsewhere
+
 type UseDiagnosisOptions = {
   enabled?: boolean;
 };

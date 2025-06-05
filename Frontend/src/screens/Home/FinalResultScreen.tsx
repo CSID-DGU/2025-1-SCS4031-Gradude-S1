@@ -1,6 +1,6 @@
 // src/screens/Diagnosis/FinalResultScreen.tsx
 
-import React, {useEffect} from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,37 +12,62 @@ import {
 } from 'react-native';
 import {useRoute, RouteProp} from '@react-navigation/native';
 import {useDiagnosisById} from '@/hooks/queries/useDiagnosis';
-import {colors, homeNavigations} from '@/constants';
+import {colors} from '@/constants';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import HospitalCard from '@/components/hospital/HospitalCard';
 import type {HospitalDetailDto} from '@/types/hospital';
+import type {SurveyResultDto} from '@/types/diagnosis';
 
-// ▶ HomeStackParamList에서 FINAL_RESULT는 { diagnosisId: number }
+/**
+ * 두 가지 파라미터 타입 허용:
+ * 1) { surveyResult: SurveyResultDto }
+ * 2) { diagnosisId: number }
+ */
 type FinalResultRouteProp = RouteProp<
-  {[homeNavigations.FINAL_RESULT]: {diagnosisId: number}},
-  typeof homeNavigations.FINAL_RESULT
+  {
+    FINAL_RESULT: {surveyResult: SurveyResultDto} | {diagnosisId: number};
+  },
+  'FINAL_RESULT'
 >;
 
 export default function FinalResultScreen() {
-  // ▶ useRoute로 넘어온 diagnosisId를 꺼냅니다.
   const route = useRoute<FinalResultRouteProp>();
-  const {diagnosisId} = route.params;
+  const params = route.params;
 
-  // ▶ react-query 훅으로 진단 결과(fetch)
-  const {
-    data: surveyResult,
-    isLoading,
-    isError,
-  } = useDiagnosisById(diagnosisId);
+  // 1) 만약 surveyResult가 넘어왔다면 바로 사용하고,
+  // 2) 아니라면 diagnosisId로 fetch를 수행
+  const isDirectResult = 'surveyResult' in params;
 
-  if (isLoading) {
+  let surveyResult: SurveyResultDto | undefined;
+  let isLoading = false;
+  let isError = false;
+
+  if (isDirectResult) {
+    // LoadingScreen에서 넘긴 surveyResult 사용
+    surveyResult = params.surveyResult;
+  } else {
+    // 달력에서 넘어온 diagnosisId로 서버 조회
+    const {diagnosisId} = params as {diagnosisId: number};
+    const {
+      data,
+      isLoading: loadingFromServer,
+      isError: errorFromServer,
+    } = useDiagnosisById(diagnosisId);
+
+    surveyResult = data ?? undefined;
+    isLoading = loadingFromServer;
+    isError = errorFromServer;
+  }
+
+  // 로딩/에러 처리 (fetch 경로일 때만 적용)
+  if (!isDirectResult && isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.MAINBLUE} />
       </SafeAreaView>
     );
   }
-  if (isError || !surveyResult) {
+  if (!isDirectResult && (isError || !surveyResult)) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <Text>결과를 불러오는 중 오류가 발생했습니다.</Text>
@@ -50,7 +75,7 @@ export default function FinalResultScreen() {
     );
   }
 
-  // ▶ surveyResult가 정상적으로 내려왔을 때 UI 렌더링
+  // 이제 surveyResult 값이 항상 정의되어 있음
   const {
     face,
     speech,
@@ -58,8 +83,9 @@ export default function FinalResultScreen() {
     totalScorePercentage,
     llmResult,
     hospitalList,
-  } = surveyResult;
+  } = surveyResult!;
 
+  // AI 예측 메시지 분기
   let rawMessage = '';
   if (face && speech) {
     rawMessage =
@@ -77,7 +103,6 @@ export default function FinalResultScreen() {
   const [firstLine, secondLine] = rawMessage.split('\n');
 
   const screenWidth = Dimensions.get('window').width;
-  // 원형 크기를 약간 축소: 화면 너비의 50%
   const circleSize = screenWidth * 0.5;
 
   return (
@@ -85,14 +110,14 @@ export default function FinalResultScreen() {
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}>
-        {/* 1. 카드 형태로 감싼 최종 뇌졸중 위험도 & 원형 프로그래스 */}
+        {/* 1. 최종 뇌졸중 위험도 카드 + 원형 프로그래스 */}
         <View style={styles.cardContainer}>
           <Text style={styles.sectionTitle}>💡 최종 뇌졸중 위험도</Text>
           <View style={styles.progressWrapper}>
             <AnimatedCircularProgress
               size={circleSize}
               width={10}
-              fill={totalScorePercentage} // 0~100
+              fill={totalScorePercentage}
               tintColor={colors.MAINBLUE}
               backgroundColor={colors.LIGHTGRAY}
               rotation={0}
@@ -110,7 +135,7 @@ export default function FinalResultScreen() {
           </View>
         </View>
 
-        {/* 2. 최종 진단 결과 & LLM 텍스트 */}
+        {/* 2. 최종 진단 결과 LLM 텍스트 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🔎 최종 진단 결과</Text>
           <View style={styles.llmContainer}>
@@ -118,7 +143,7 @@ export default function FinalResultScreen() {
           </View>
         </View>
 
-        {/* 3. AI 예측 메시지 (face/speech) */}
+        {/* 3. AI 분석 결과 메시지 */}
         <View style={styles.topMessageContainer}>
           <Text style={styles.sectionTitle}>📍 AI 분석 결과</Text>
           <Text style={styles.topMessageFirst}>{firstLine}</Text>
@@ -160,7 +185,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     alignItems: 'center',
   },
-  // 카드처럼 감싼 컨테이너
   cardContainer: {
     width: SCREEN_W - 40,
     backgroundColor: colors.WHITE,
@@ -168,12 +192,12 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 16,
     marginBottom: 32,
-    // 그림자 (iOS)
+    // iOS 그림자
     shadowColor: colors.BLACK,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // 그림자 (Android)
+    // Android 그림자
     elevation: 3,
     alignItems: 'center',
   },
@@ -184,7 +208,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
-  // 원형 프로그래스 래퍼 (센터 정렬)
   progressWrapper: {
     alignItems: 'center',
     marginTop: 8,
@@ -214,10 +237,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.WHITE,
     borderRadius: 12,
     padding: 16,
+    // iOS 그림자
     shadowColor: colors.BLACK,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    // Android 그림자
     elevation: 3,
   },
   llmText: {
@@ -231,16 +256,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+    // iOS 그림자
     shadowColor: colors.BLACK,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    // Android 그림자
     elevation: 3,
   },
   topMessageFirst: {
     fontSize: 16,
     lineHeight: 24,
-    color: colors.RED,
+    color: colors.MAINBLUE,
     textAlign: 'center',
     fontWeight: '600',
   },

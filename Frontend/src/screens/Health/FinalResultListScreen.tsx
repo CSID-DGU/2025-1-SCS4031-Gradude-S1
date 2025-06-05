@@ -69,6 +69,8 @@ export default function FinalResultListScreen() {
     isError: historyError,
   } = useDiagnosisHistory();
 
+  console.log('[DEBUG] historyList:', historyList);
+
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -165,16 +167,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.SEMIWHITE,
-    paddingTop: 16,
+    padding: 16,
     paddingHorizontal: 16,
   },
   header: {
-    marginBottom: 12,
+    marginBottom: 22,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.SKYBLUE,
+    color: colors.BLACK,
   },
   calendar: {
     borderRadius: 12,
