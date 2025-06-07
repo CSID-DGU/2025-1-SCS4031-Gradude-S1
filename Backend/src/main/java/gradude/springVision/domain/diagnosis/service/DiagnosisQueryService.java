@@ -32,7 +32,7 @@ public class DiagnosisQueryService {
         Diagnosis diagnosis = diagnosisRepository.findById(diagnosisId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.DIAGNOSIS_NOT_FOUND));
 
-        List<Long> hospitalIds = List.of(241L, 671L);
+        List<Long> hospitalIds = List.of(332L, 61L);
 
         List<HospitalDetailResponseDTO> hospitalDetails = hospitalIds.stream()
                 .map(hospitalId -> {
@@ -43,7 +43,7 @@ public class DiagnosisQueryService {
                             || (hospital.getOpeningHour() != null && hospital.isOpenNow());
 
                     double distance = switch (hospitalId.intValue()) {
-                        case 241 -> 0.8;
+                        case 241 -> 1.2;
                         case 671 -> 1.2;
                         default -> 0.0; // 예외 처리용 기본값
                     };
