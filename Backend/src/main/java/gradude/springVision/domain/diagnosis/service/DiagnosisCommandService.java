@@ -256,8 +256,8 @@ public class DiagnosisCommandService {
                             || (hospital.getOpeningHour() != null && hospital.isOpenNow());
 
                     double distance = switch (hospitalId.intValue()) {
-                        case 241 -> 1.2;
-                        case 671 -> 1.2;
+                        case 332 -> 1.2;
+                        case 61 -> 1.2;
                         default -> 0.0; // 예외 처리용 기본값
                     };
 
