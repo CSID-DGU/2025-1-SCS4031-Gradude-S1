@@ -77,53 +77,8 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
 
 ## 팀원
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="#">
-        <img
-          src="https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/52be70e3-210d-48ad-958b-c8de45d3cdf1.png"
-          width="100"
-          alt="AI 팀장"
-        />
-        <br/>
-        <sub><b>AI 팀장</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="#">
-        <img
-          src="https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/67186447-53ae-4cbe-9652-b61bdea17e5b.png"
-          width="100"
-          alt="BE 팀원"
-        />
-        <br/>
-        <sub><b>BE 팀원</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="#">
-        <img
-          src="https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/272ca38a-6152-4f14-891a-d5ce96827f54.png"
-          width="100"
-          alt="FE 팀원"
-        />
-        <br/>
-        <sub><b>FE 팀원</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="#">
-        <img
-          src="https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/05761567-9ad0-4c7a-8f34-888e05c2dcce.png"
-          width="100"
-          alt="AI 팀원"
-        />
-        <br/>
-        <sub><b>AI 팀원</b></sub>
-      </a>
-    </td>
-  </tr>
-</table>
+| AI 팀장 | BE 팀원 | FE 팀원 | AI 팀원 |
+|:------:|:-------:|:-------:|:-------:|
+| ![AI 팀장](https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/52be70e3-210d-48ad-958b-c8de45d3cdf1.png =100x) | ![BE 팀원](https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/67186447-53ae-4cbe-9652-b61bdea17e5b.png =100x) | ![FE 팀원](https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/272ca38a-6152-4f14-891a-d5ce96827f54.png =100x) | ![AI 팀원](https://raw.githubusercontent.com/<YOUR_USER>/<YOUR_REPO>/main/assets/05761567-9ad0-4c7a-8f34-888e05c2dcce.png =100x) |
 
 
