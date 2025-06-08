@@ -39,3 +39,6 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
     - ⏱ 실시간 판단 및 피드백 제공
     - 🏥 응급 대응 타이밍 확보
     - 📝 매일 기록하는 건강 수첩으로 지키는 건강한 삶
+
+![Image](https://github.com/user-attachments/assets/2e5a99cf-6f7f-469f-8e76-94df09f381ff)
+
