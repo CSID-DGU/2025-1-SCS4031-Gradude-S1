@@ -65,19 +65,25 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
 
 ![Image](https://github.com/user-attachments/assets/0d961479-7092-4880-9589-e0b36704c741)
 
+## ERD
+![Image](https://github.com/user-attachments/assets/58d3f4b1-7737-4bc8-8b26-e7c73f113eb1)
+
+## 시스템 아키텍처
+![Image](https://github.com/user-attachments/assets/ec846c37-7a3a-43f4-975d-b50938b2359a)
+
+## 기술 스택
+![Image](https://github.com/user-attachments/assets/fb0fad8d-2be2-4810-a587-5c992d155128)
+
+
 ## 팀원
 
 <table>
   <tbody>
     <tr>
-      <td align="center"><a href=""><img src="width="100px;" alt=""/><br /><sub><b>FE 팀장 : </b></sub></a><br /></td>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>FE 팀원 : </b></sub></a><br /></td>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>FE 팀원 : </b></sub></a><br /></td>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>FE 팀원 : </b></sub></a><br /></td>
-     <tr/>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>BE 부팀장 : </b></sub></a><br /></td>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>BE 팀원 : </b></sub></a><br /></td>
-      <td align="center"><a href=""><img src="" width="100px;" alt=""/><br /><sub><b>BE 팀원 : </b></sub></a><br /></td>
+      <td align="center"><a href=""><img src="![Image](https://github.com/user-attachments/assets/52be70e3-210d-48ad-958b-c8de45d3cdf1)" width="100px;" alt=""/><br /><sub><b>AI 팀장 : </b></sub></a><br /></td>
+      <td align="center"><a href=""><img src="![Image](https://github.com/user-attachments/assets/67186447-53ae-4cbe-9652-b61bdea17e5b)" width="100px;" alt=""/><br /><sub><b>BE 팀원 : </b></sub></a><br /></td>
+      <td align="center"><a href=""><img src="![Image](https://github.com/user-attachments/assets/272ca38a-6152-4f14-891a-d5ce96827f54)" width="100px;" alt=""/><br /><sub><b>FE 팀원 : </b></sub></a><br /></td>
+      <td align="center"><a href=""><img src="![Image](https://github.com/user-attachments/assets/05761567-9ad0-4c7a-8f34-888e05c2dcce)" width="100px;" alt=""/><br /><sub><b>AI 팀원 : </b></sub></a><br /></td>
     </tr>
   </tbody>
 </table>
