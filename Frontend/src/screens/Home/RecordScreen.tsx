@@ -7,95 +7,98 @@ import {
   StyleSheet,
   SafeAreaView,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
-import {useAudioPlayer, useAudioPlayerStatus, AudioModule} from 'expo-audio';
-import {Asset} from 'expo-asset';
+import {
+  useAudioRecorder,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+  AudioModule,
+  IOSOutputFormat,
+  AudioQuality,
+} from 'expo-audio';
+import type {AndroidOutputFormat, AndroidAudioEncoder} from 'expo-audio';
+import {colors, homeNavigations} from '@/constants';
+import CustomButton from '@/components/commons/CustomButton';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import CustomButton from '@/components/commons/CustomButton';
-import {colors, homeNavigations} from '@/constants';
-import type {StackScreenProps} from '@react-navigation/stack';
-import type {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
+import {StackScreenProps} from '@react-navigation/stack';
+import {HomeStackParamList} from '@/navigations/stack/HomeStackNavigator';
 
 export default function RecordScreen({
   navigation,
   route,
 }: StackScreenProps<HomeStackParamList, typeof homeNavigations.RECORD>) {
   const {CameraUri} = route.params;
-  const insets = useSafeAreaInsets();
 
+  // WAV 파일을 위한 커스텀 녹음 옵션
+  const wavRecordingOptions = {
+    extension: '.wav',
+    sampleRate: 44100,
+    numberOfChannels: 1, // Mono
+    bitRate: 128000,
+    android: {
+      outputFormat: 'default' as AndroidOutputFormat,
+      audioEncoder: 'default' as AndroidAudioEncoder,
+    },
+    ios: {
+      outputFormat: IOSOutputFormat.LINEARPCM,
+      audioQuality: AudioQuality.HIGH,
+      linearPCMBitDepth: 16,
+      linearPCMIsBigEndian: false,
+      linearPCMIsFloat: false,
+    },
+    web: {
+      mimeType: 'audio/wav',
+      bitsPerSecond: 128000,
+    },
+  };
+
+  const insets = useSafeAreaInsets();
+  const audioRecorder = useAudioRecorder(wavRecordingOptions);
   const audioPlayer = useAudioPlayer();
   const audioPlayerStatus = useAudioPlayerStatus(audioPlayer);
 
-  // (1) 번들된 로컬 오디오 파일 URI
-  const [fileUri, setFileUri] = useState<string>();
-  // (2) “녹음 중” 상태를 보여주기 위한 플래그
-  const [isRecording, setIsRecording] = useState(false);
-  // (3) “녹음” 완료 후 다음 화면으로 넘길 때 사용할 URI
   const [recordingUri, setRecordingUri] = useState<string>();
-  // (4) 오디오 재생 상태
+  const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  // (5) asset 로딩 중 상태
-  const [isLoadingAsset, setIsLoadingAsset] = useState(true);
 
-  // 카드 등장 애니메이션
   const cardOpacity = useSharedValue(0);
   const btnScale = useSharedValue(1);
 
   useEffect(() => {
-    // 카드 Fade-in 애니메이션
     cardOpacity.value = withTiming(1, {duration: 500});
 
-    // (A) 마운트 시점에 오디오 권한 요청
+    // 권한 요청
     (async () => {
       const status = await AudioModule.requestRecordingPermissionsAsync();
       if (!status.granted) {
         Alert.alert(
           '권한 필요',
-          '오디오 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
+          '마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요.',
         );
       }
     })();
 
-    // (B) 번들된 sample.wav asset을 로드해서 실제 로컬 URI를 가져온다
-    (async () => {
-      try {
-        // 경로는 프로젝트 구조에 맞게 바꿔주세요.
-        const asset = Asset.fromModule(require('@/assets/audio/sample.wav'));
-        await asset.downloadAsync();
-        if (asset.localUri) {
-          setFileUri(asset.localUri);
-        } else {
-          throw new Error('로컬 오디오 URI를 찾을 수 없습니다.');
-        }
-      } catch (err: any) {
-        console.error('▶ asset 로드 오류:', err);
-        Alert.alert(
-          '파일 로드 오류',
-          '오디오 파일을 불러올 수 없습니다. 다시 시도해주세요.',
-        );
-      } finally {
-        setIsLoadingAsset(false);
-      }
-    })();
-
-    // 언마운트 시 클린업
+    // 컴포넌트 언마운트 시 정리
     return () => {
+      if (isRecording) {
+        audioRecorder.stop();
+      }
       if (isPlaying) {
         audioPlayer.pause();
       }
     };
-  }, [audioPlayer, cardOpacity, isPlaying]);
+  }, [cardOpacity, audioRecorder, audioPlayer, isRecording, isPlaying]);
 
-  // 재생 완료 감지: 재생이 끝나면 isPlaying을 false로
+  // 재생 완료 감지
   useEffect(() => {
     if (audioPlayerStatus?.didJustFinish && isPlaying) {
+      console.log('▶ 재생 완료 감지');
       setIsPlaying(false);
     }
   }, [audioPlayerStatus?.didJustFinish, isPlaying]);
@@ -108,59 +111,65 @@ export default function RecordScreen({
     transform: [{scale: btnScale.value}],
   }));
 
-  /**
-   * (C) “녹음” 버튼을 누르면:
-   * - isRecording이 false(녹음 대기)면, 녹음 시작 모드로 전환
-   * - isRecording이 true(녹음 중)면, 녹음 중지 및 recordingUri에 fileUri 세팅
-   */
-  const onRecordToggle = () => {
-    if (isLoadingAsset || !fileUri) return;
-
-    // 애니메이션
+  const onRecordToggle = async () => {
     btnScale.value = withTiming(0.9, {duration: 100});
-    setTimeout(() => {
-      btnScale.value = withTiming(1, {duration: 100});
-    }, 100);
 
-    if (!isRecording) {
-      // 녹음 시작
+    try {
+      if (isRecording) {
+        // ── 녹음 중지 ──
+        await audioRecorder.stop();
+        const uri = audioRecorder.uri;
+        console.log('▶ 녹음 중지, 파일 경로:', uri);
+        setRecordingUri(uri || undefined);
+        setIsRecording(false);
+        return;
+      }
+
+      // ── 녹음 시작 ──
+      console.log('▶ 녹음 준비 중...');
+      await audioRecorder.prepareToRecordAsync();
+      console.log('▶ 녹음 시작');
+
+      audioRecorder.record();
       setIsRecording(true);
-    } else {
-      // 녹음 중이던 상태 → 중지 후 녹음 완료
+    } catch (e) {
+      console.error('▶ 녹음 오류:', {
+        error: e,
+        message: e instanceof Error ? e.message : String(e),
+      });
+
+      Alert.alert(
+        '녹음 오류',
+        '녹음을 시작할 수 없습니다. 마이크 권한을 확인하고 다시 시도해주세요.',
+      );
       setIsRecording(false);
-      setRecordingUri(fileUri);
+    } finally {
+      setTimeout(() => (btnScale.value = withTiming(1, {duration: 100})), 100);
     }
   };
 
-  /**
-   * (D) 재생 버튼을 토글하면:
-   * - recordingUri를 audioPlayer에 로드 후 재생/일시정지
-   */
   const onPlayToggle = async () => {
     if (!recordingUri) return;
 
-    btnScale.value = withTiming(0.9, {duration: 100});
-    setTimeout(() => {
-      btnScale.value = withTiming(1, {duration: 100});
-    }, 100);
-
     try {
       if (isPlaying) {
-        await audioPlayer.pause();
+        audioPlayer.pause();
         setIsPlaying(false);
       } else {
-        await audioPlayer.replace(recordingUri);
-        await audioPlayer.play();
+        // 새로운 오디오 소스 로드
+        console.log('▶ 재생 준비 중...');
+        audioPlayer.replace(recordingUri);
+        console.log('▶ 재생 시작');
+        audioPlayer.play();
         setIsPlaying(true);
       }
-    } catch (e: any) {
-      console.error('▶ 재생 에러:', e);
+    } catch (e) {
+      console.error('재생 에러:', e);
       Alert.alert('재생 오류', e instanceof Error ? e.message : String(e));
       setIsPlaying(false);
     }
   };
 
-  // (E) 다시 녹음하기: 상태 초기화
   const onReRecord = () => {
     setRecordingUri(undefined);
     setIsPlaying(false);
@@ -169,9 +178,6 @@ export default function RecordScreen({
     }
   };
 
-  /**
-   * (F) “완료” 버튼: recordingUri가 있으면 다음 화면으로 네비게이션
-   */
   const goNext = () => {
     if (recordingUri) {
       navigation.navigate(homeNavigations.LOADING, {
@@ -181,7 +187,6 @@ export default function RecordScreen({
     }
   };
 
-  // ■ UI 렌더링 ■
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.card, cardStyle]}>
@@ -191,49 +196,33 @@ export default function RecordScreen({
         <Text style={styles.title}>"나는 바지를 입고 단추를 채웁니다."</Text>
         <Text style={styles.cautiontext}>
           ※ 주변 소음 줄이고 마이크 가까이 ※ {'\n'}
-          녹음을 중지하려면 버튼을 다시 눌러주세요
+          녹음이 끝나면 완료 버튼을 눌러주세요
         </Text>
       </Animated.View>
 
-      {/* 1) 아직 녹음 완료 전: 녹음 시작/중지 버튼 (isRecording 토글) */}
-      {!recordingUri && (
+      {!recordingUri ? (
         <View style={[styles.buttonWrapper, {bottom: insets.bottom + 10}]}>
-          {isLoadingAsset ? (
-            <View style={styles.loadingWrapper}>
-              <ActivityIndicator size="large" color={colors.MAINBLUE} />
-              <Text style={{marginTop: 8, color: colors.GRAY}}>
-                오디오 로딩 중...
-              </Text>
-            </View>
-          ) : (
-            <Animated.View style={buttonAnim}>
-              <Pressable
-                onPress={onRecordToggle}
-                style={[styles.recordBtn, isRecording && styles.recordActive]}>
-                <MaterialIcons
-                  name={isRecording ? 'mic-off' : 'mic'}
-                  size={50}
-                  color={colors.WHITE}
-                />
-              </Pressable>
-            </Animated.View>
-          )}
-        </View>
-      )}
-
-      {/* 2) 녹음 완료 후: 재생 버튼 + 다시 녹음 / 완료 버튼 */}
-      {recordingUri && (
-        <View style={[styles.controls, {bottom: insets.bottom + 10}]}>
           <Animated.View style={buttonAnim}>
-            {/* <Pressable onPress={onPlayToggle} style={styles.playBtn}>
+            <Pressable
+              onPress={onRecordToggle}
+              style={[styles.recordBtn, isRecording && styles.recordActive]}>
               <MaterialIcons
-                name={isPlaying ? 'pause-circle' : 'play-circle'}
-                size={62}
-                color={colors.MAINBLUE}
+                name={isRecording ? 'mic-off' : 'mic'}
+                size={50}
+                color={colors.WHITE}
               />
-            </Pressable> */}
+            </Pressable>
           </Animated.View>
-
+        </View>
+      ) : (
+        <View style={[styles.controls, {bottom: insets.bottom + 10}]}>
+          <Pressable onPress={onPlayToggle} style={styles.controlBtn}>
+            <MaterialIcons
+              name={isPlaying ? 'pause-circle' : 'play-circle'}
+              size={62}
+              color={colors.BLUE}
+            />
+          </Pressable>
           <CustomButton
             label="다시 녹음"
             variant="filled"
@@ -299,12 +288,6 @@ const styles = StyleSheet.create({
     color: colors.GRAY,
     textAlign: 'center',
   },
-  loadingWrapper: {
-    position: 'absolute',
-    alignSelf: 'center',
-    alignItems: 'center',
-    width: CARD_WIDTH,
-  },
   buttonWrapper: {
     position: 'absolute',
     alignSelf: 'center',
@@ -328,8 +311,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: CARD_WIDTH,
   },
-  playBtn: {
-    marginBottom: 20,
+  controlBtn: {
+    marginBottom: 12,
   },
   actionButton: {
     width: '100%',

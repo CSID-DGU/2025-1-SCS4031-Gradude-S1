@@ -33,33 +33,47 @@ type FinalResultRouteProp = RouteProp<
 export default function FinalResultScreen() {
   const route = useRoute<FinalResultRouteProp>();
   const params = route.params;
-
-  // 1) 만약 surveyResult가 넘어왔다면 바로 사용하고,
-  // 2) 아니라면 diagnosisId로 fetch를 수행
   const isDirectResult = 'surveyResult' in params;
 
+  // ── 1. diagnosisId를 미리 꺼내두고, 훅을 항상 호출하도록 한다 ──
+  //    isDirectResult=true일 때는 undefined를 넘겨주고,
+  //    false일 때만 실제 ID를 넘긴다.
+  const diagnosisId = isDirectResult
+    ? undefined
+    : (params as {diagnosisId: number}).diagnosisId;
+
+  /**
+   * useDiagnosisById 훅은 항상 호출되어야 한다.
+   * 여기에 진짜 데이터를 불러올지 여부는 내부적으로 React Query의 enabled 옵션을 통해
+   * (예: enabled: !!diagnosisId) 처리하도록 hook을 설계하는 것이 좋다.
+   *
+   * 여기서는 편의상, diagnosisId가 undefined일 경우 fetch를 건너뛴다고
+   * 가정하고, 호출만 무조건 해준다.
+   */
+  const {
+    data: fetchedResult,
+    isLoading: loadingFromServer,
+    isError: errorFromServer,
+  } = useDiagnosisById(diagnosisId!);
+
+  // ── 2. surveyResult, isLoading, isError 값을 분기 처리 ──
   let surveyResult: SurveyResultDto | undefined;
   let isLoading = false;
   let isError = false;
 
   if (isDirectResult) {
-    // LoadingScreen에서 넘긴 surveyResult 사용
-    surveyResult = params.surveyResult;
+    // 이전 화면에서 surveyResult를 바로 넘겨받은 경우
+    surveyResult = (params as {surveyResult: SurveyResultDto}).surveyResult;
+    isLoading = false;
+    isError = false;
   } else {
-    // 달력에서 넘어온 diagnosisId로 서버 조회
-    const {diagnosisId} = params as {diagnosisId: number};
-    const {
-      data,
-      isLoading: loadingFromServer,
-      isError: errorFromServer,
-    } = useDiagnosisById(diagnosisId);
-
-    surveyResult = data ?? undefined;
+    // 달력이나 다른 경로에서 diagnosisId로 넘어온 경우
+    surveyResult = fetchedResult ?? undefined;
     isLoading = loadingFromServer;
     isError = errorFromServer;
   }
 
-  // 로딩/에러 처리 (fetch 경로일 때만 적용)
+  // ── 3. 로딩/에러 처리 ──
   if (!isDirectResult && isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -75,7 +89,7 @@ export default function FinalResultScreen() {
     );
   }
 
-  // 이제 surveyResult 값이 항상 정의되어 있음
+  // ── 4. surveyResult가 항상 정의되어 있다고 가정하고, 화면 렌더링 ──
   const {
     face,
     speech,
@@ -151,7 +165,6 @@ export default function FinalResultScreen() {
         </View>
 
         {/* 4. 추천 병원 리스트 */}
-        {/* <View style={styles.section}> */}
         <Text style={styles.sectionTitle}>🏥 가장 가까운 병원</Text>
         {hospitalList.length === 0 ? (
           <Text style={styles.noHospitalText}>
@@ -162,7 +175,6 @@ export default function FinalResultScreen() {
             <HospitalCard key={hospital.hospitalId} data={hospital} />
           ))
         )}
-        {/* </View> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -176,6 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.SEMIWHITE,
   },
   container: {
+    paddingTop: 10,
     paddingHorizontal: 20,
     paddingBottom: 40,
     alignItems: 'center',
@@ -246,7 +259,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   llmText: {
-    fontSize: 16,
+    fontSize: 20,
     lineHeight: 24,
     color: colors.BLACK,
   },
@@ -265,14 +278,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   topMessageFirst: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 24,
     color: colors.MAINBLUE,
     textAlign: 'center',
     fontWeight: '600',
   },
   topMessageSecond: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 24,
     color: colors.BLACK,
     textAlign: 'center',

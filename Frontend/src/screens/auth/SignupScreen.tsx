@@ -1,5 +1,3 @@
-// src/screens/Auth/SignupScreen.tsx
-
 import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
@@ -30,6 +28,7 @@ import type {RootStackParamList} from '@/navigations/root/RootNavigator';
 import type {AuthStackParamList} from '@/navigations/stack/AuthStackNavigator';
 import CustomButton from '@/components/commons/CustomButton';
 import GenderToggle from '@/components/GenderToggle';
+import KakaoProfile from '@/assets/icons/KakaoProfile.svg';
 
 // 1) 네비게이션 타입 정의
 type RootNavProp = NativeStackNavigationProp<RootStackParamList>;

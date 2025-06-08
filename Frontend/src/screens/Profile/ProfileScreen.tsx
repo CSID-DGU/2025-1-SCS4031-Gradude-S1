@@ -69,14 +69,6 @@ export default function ProfileScreen({navigation}: Props) {
         style={styles.halfCircle}
       />
 
-      {/* 아바타 + 이름 */}
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={48} color={colors.WHITE} />
-        </View>
-        <Text style={styles.name}>양희진</Text>
-      </View>
-
       {/* 카드 메뉴 */}
       <View style={styles.card}>
         {menuItems.map((item, i, arr) => (
@@ -133,16 +125,16 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // width: 120,
+    // height: 120,
+    // borderRadius: 100,
+    // backgroundColor: 'rgba(255,255,255,0.3)',
+    // alignItems: 'center',
+    // justifyContent: 'center',
   },
   name: {
-    marginTop: 12,
-    fontSize: 18,
+    marginTop: 20,
+    fontSize: 22,
     fontWeight: '600',
     color: colors.WHITE,
   },

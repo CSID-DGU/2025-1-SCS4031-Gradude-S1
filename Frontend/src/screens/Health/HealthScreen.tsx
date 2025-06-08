@@ -46,55 +46,43 @@ export default function HealthScreen() {
       >
     >();
 
-  // 차트 데이터 가져오기
   const {data: response = [], isLoading, isError} = useGetHealthDiaryGraph();
 
-  // 디버깅: 서버에서 내려오는 데이터 확인
-  useEffect(() => {
-    console.log('🔽[HealthChart] fetched response:', response);
-  }, [response]);
+  // reverse data so newest is first
+  const reversedDataList = useMemo(() => [...response].reverse(), [response]);
 
-  // response 타입: Array<{ date: string; healthScore: number }>
+  // chart labels & data (newest on left)
   const labels = useMemo(
-    () =>
-      response.map(r =>
-        // "2025-06-01" → "06.01"
-        r.date.slice(5).replace('-', '.'),
-      ),
-    [response],
+    () => reversedDataList.map(r => r.date.slice(5).replace('-', '.')),
+    [reversedDataList],
   );
-  const data = useMemo(() => response.map(r => r.healthScore), [response]);
+  const data = useMemo(
+    () => reversedDataList.map(r => r.healthScore),
+    [reversedDataList],
+  );
 
-  // 차트와 날짜 바의 인덱스를 맞추기 위해 뒤집은 배열 생성
-  const reversed = useMemo(() => [...response].reverse(), [response]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const scrollRef = useRef<ScrollView>(null);
 
-  // 데이터가 바뀌면 항상 맨 뒤(최신) 인덱스로 초기화
+  // 초기: newest (idx 0) 선택 후 스크롤
   useEffect(() => {
     if (data.length > 0) {
-      setSelectedIndex(data.length - 1);
-      // 맨 뒤 날짜 박스가 중앙에 보이도록 스크롤 (옵션)
+      setSelectedIndex(0);
       setTimeout(() => {
-        const revIdx = 0; // 최신 날짜가 reversed[0]
-        const offsetX =
-          revIdx * (BOX_WIDTH + BOX_MARGIN * 2) -
-          (SCREEN_WIDTH - BOX_WIDTH) / 2;
+        const offsetX = 0 - (SCREEN_WIDTH - BOX_WIDTH) / 2;
         scrollRef.current?.scrollTo({x: offsetX, animated: true});
       }, 100);
     }
   }, [data]);
 
-  const scrollRef = useRef<ScrollView>(null);
-
-  const onSelect = (origIdx: number) => {
-    setSelectedIndex(origIdx);
-    const revIdx = data.length - 1 - origIdx;
+  const onSelect = (idx: number) => {
+    setSelectedIndex(idx);
     const offsetX =
-      revIdx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
+      idx * (BOX_WIDTH + BOX_MARGIN * 2) - (SCREEN_WIDTH - BOX_WIDTH) / 2;
     scrollRef.current?.scrollTo({x: offsetX, animated: true});
   };
 
-  // 로딩/에러 상태 처리
+  // 상태 처리
   if (isLoading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -109,8 +97,7 @@ export default function HealthScreen() {
       </SafeAreaView>
     );
   }
-  if (response.length === 0) {
-    // 기록이 하나도 없을 때 안내
+  if (reversedDataList.length === 0) {
     return (
       <SafeAreaView style={styles.center}>
         <Text>아직 건강 기록이 없습니다. 먼저 하루 기록을 눌러주세요.</Text>
@@ -118,7 +105,6 @@ export default function HealthScreen() {
     );
   }
 
-  // 버튼 목록
   const buttons = [
     {
       icon: 'calendar-check',
@@ -139,12 +125,10 @@ export default function HealthScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
       <View style={styles.header}>
         <Text style={styles.title}>나의 건강 수첩</Text>
       </View>
 
-      {/* 하루 확인 */}
       <View style={styles.row}>
         <MaterialCommunityIcons
           name="checkbox-marked-circle-outline"
@@ -154,7 +138,6 @@ export default function HealthScreen() {
         <Text style={styles.sectionTitle}>하루 한 번, 건강 확인</Text>
       </View>
 
-      {/* 버튼 액션 */}
       <View style={styles.actions}>
         {buttons.map(b => (
           <Pressable
@@ -181,7 +164,6 @@ export default function HealthScreen() {
         ))}
       </View>
 
-      {/* 차트 섹션 */}
       <View style={styles.sectionHeader}>
         <MaterialCommunityIcons
           name="chart-timeline-variant"
@@ -241,25 +223,22 @@ export default function HealthScreen() {
         />
       </View>
 
-      {/* 날짜 리스트 바 */}
       <ScrollView
         horizontal
         ref={scrollRef}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.infoContainer}>
-        {reversed.map((item, revIdx) => {
-          const origIdx = data.length - 1 - revIdx;
-          const active = origIdx === selectedIndex;
+        {reversedDataList.map((item, idx) => {
+          const active = idx === selectedIndex;
           const d = new Date(item.date);
-          const dateLabel = `${d.getFullYear().toString().slice(-2)}.${(
-            d.getMonth() + 1
-          )
-            .toString()
-            .padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`;
+          const dateLabel = `${String(d.getFullYear()).slice(-2)}.${String(
+            d.getMonth() + 1,
+          ).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+
           return (
             <Pressable
-              key={origIdx}
-              onPress={() => onSelect(origIdx)}
+              key={idx}
+              onPress={() => onSelect(idx)}
               style={[
                 styles.infoBox,
                 {width: BOX_WIDTH, marginHorizontal: BOX_MARGIN},
@@ -280,11 +259,7 @@ export default function HealthScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  center: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   container: {
     flex: 1,
     backgroundColor: colors.SEMIWHITE,
@@ -294,11 +269,7 @@ const styles = StyleSheet.create({
   header: {marginBottom: 16},
   title: {fontSize: 20, fontWeight: 'bold'},
   row: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  sectionHeader: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
   sectionTitle: {marginLeft: 8, fontSize: 18},
   actions: {
     flexDirection: 'row',
@@ -307,12 +278,10 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     marginHorizontal: BUTTON_MARGIN,
-    // iOS 그림자
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    // Android elevation
     elevation: 4,
   },
   gradient: {

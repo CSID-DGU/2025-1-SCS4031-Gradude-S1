@@ -2,20 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-	<key>NSExceptionDomains</key>
-	<dict>
-		<key>43.201.159.48.nip.io</key>
-		<dict>
-		<key>NSIncludesSubdomains</key><true/>
-		<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key><true/>
-		<key>NSExceptionRequiresForwardSecrecy</key><false/>
-		<key>NSTemporaryExceptionMinimumTLSVersion</key><string>TLSv1.0</string>
-		<key>NSAllowsArbitraryLoadsInWebContent</key><true/>
-		</dict>
-	</dict>
-	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -34,21 +20,19 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kakao84b5df970223608644ac8c121c96135e</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>KAKAO_APP_KEY</key>
 	<string>84b5df970223608644ac8c121c96135e</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-	<dict>
-		<key>CFBundleURLSchemes</key>
-		<array>
-		<!-- kakao + 네이티브키 (카카오문서 고정 규칙) -->
-		<string>kakao84b5df970223608644ac8c121c96135e</string>
-		</array>
-	</dict>
-	</array>
-	
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kakaokompassauth</string>
@@ -59,14 +43,33 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>43.201.159.48.nip.io</key>
+			<dict>
+				<key>NSAllowsArbitraryLoadsInWebContent</key>
+				<true/>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.0</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>&apos;다시 봄&apos;이 카메라를 사용하여 사진을 촬영하기 위해 필요합니다.</string>
+	<string>'다시 봄'이 카메라를 사용하여 사진을 촬영하기 위해 필요합니다.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>백그라운드에서도 위치 업데이트를 위해 필요합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>위치 확인을 위해서 위치 접근 권한 동의가 필요합니다. 동의하면, 현재 위치의 장소를 등록하는데 사용됩니다. 설정에서 이를 변경할 수 있습니다. 위치는 서버에 전송되지 않습니다.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>&apos;다시 봄&apos;이 음성 녹음을 위해 마이크 접근이 필요합니다.</string>
+	<string>'다시 봄'이 음성 녹음을 위해 마이크 접근이 필요합니다.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>위치 확인을 위해서 위치 접근 권한 동의가 필요합니다. 동의하면, 현재 위치의 장소를 등록하는데 사용됩니다. 설정에서 이를 변경할 수 있습니다. 위치는 서버에 전송되지 않습니다.</string>
 	<key>NSUserNotificationUsageDescription</key>

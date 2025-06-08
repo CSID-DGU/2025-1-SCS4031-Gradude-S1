@@ -1,6 +1,6 @@
 // src/screens/Health/FinalResultListScreen.tsx
 
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -70,60 +70,42 @@ export default function FinalResultListScreen() {
     isError: historyError,
   } = useDiagnosisHistory();
 
-  console.log('[DEBUG] raw historyList:', historyList);
-  // 예: [{ date: '2025-06-05T00:00:00.000Z', diagnosisId: 14 }, ...]
+  // 콘솔에서 historyList 전체 확인
+  useEffect(() => {
+    if (historyList.length > 0) {
+      console.log('📋 historyList 상세:', JSON.stringify(historyList, null, 2));
+    }
+  }, [historyList]);
 
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
-
-  // 2) markedDates를 “서버가 준 date에 하루를 더한 뒤 한국 시간 기준 YYYY-MM-DD”로 변환
+  // 2) markedDates 생성: CalendarScreen과 동일하게 처리
   const markedDates = useMemo(() => {
-    const obj: Record<string, {marked: boolean; dotColor: string}> = {};
+    const obj: Record<
+      string,
+      {
+        marked: boolean;
+        dotColor: string;
+        selected?: boolean;
+        selectedColor?: string;
+      }
+    > = {};
     historyList.forEach(item => {
-      const raw = item.date;
-      let dt = new Date(raw);
-
-      // **하루 보정**: 서버에서 내려준 날짜에 하루 더하기
-      dt.setDate(dt.getDate() + 1);
-
-      const y = dt.getFullYear();
-      const m = dt.getMonth() + 1;
-      const d = dt.getDate();
-
-      // “YYYY-MM-DD” 형태로 포맷
-      const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(
-        2,
-        '0',
-      )}`;
-      obj[dateKey] = {
-        marked: true,
-        dotColor: colors.SKYBLUE,
-      };
+      const dateOnly = item.date.includes('T')
+        ? item.date.split('T')[0]
+        : item.date;
+      obj[dateOnly] = {marked: true, dotColor: colors.SKYBLUE};
     });
     return obj;
   }, [historyList]);
 
-  // 3) onDayPress에서 눌린 날짜(dateString)와 비교할 때도 “하루를 더한 날짜”로 검사
+  // 3) 날짜 선택 핸들러: CalendarScreen과 동일하게 처리
   const onDayPress = (day: DateData) => {
-    const {dateString} = day; // ex) "2025-06-05"
-
+    const {dateString} = day; // "YYYY-MM-DD"
     const found = historyList.find(item => {
-      let dt = new Date(item.date);
-
-      // **하루 보정**
-      dt.setDate(dt.getDate() + 1);
-
-      const y = dt.getFullYear();
-      const m = dt.getMonth() + 1;
-      const d = dt.getDate();
-      const itemKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(
-        2,
-        '0',
-      )}`;
-      return itemKey === dateString;
+      const dateOnly = item.date.includes('T')
+        ? item.date.split('T')[0]
+        : item.date;
+      return dateOnly === dateString;
     });
-
     if (found) {
       navigation.navigate(mainTabNavigations.HOME, {
         screen: homeNavigations.FINAL_RESULT,
@@ -136,12 +118,7 @@ export default function FinalResultListScreen() {
     }
   };
 
-  // 4) 월 변경 시 상태 업데이트 (필요 시 refetch 로직 추가)
-  const onMonthChange = (date: {year: number; month: number}) => {
-    setYear(date.year);
-    setMonth(date.month);
-  };
-
+  // 4) 로딩/에러 처리
   if (loadingHistory) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -157,6 +134,7 @@ export default function FinalResultListScreen() {
     );
   }
 
+  // 5) 렌더링
   return (
     <SafeAreaView style={styles.container}>
       {/* 헤더 */}
@@ -164,16 +142,15 @@ export default function FinalResultListScreen() {
         <Text style={styles.title}>🧠 뇌졸중 자가진단 내역</Text>
       </View>
 
-      {/* 달력 카드를 Animatable.View로 감싸서 fadeInUp 애니메이션 적용 */}
+      {/* 달력 카드 */}
       <Animatable.View
         animation="fadeInUp"
         duration={600}
         useNativeDriver
         style={styles.calendarCard}>
         <Calendar
-          monthFormat={'yyyy년 M월'}
+          monthFormat="yyyy년 M월"
           onDayPress={onDayPress}
-          onMonthChange={onMonthChange}
           markingType="dot"
           markedDates={markedDates}
           theme={{
@@ -220,12 +197,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.WHITE,
     borderRadius: 16,
     padding: 12,
-    // iOS 그림자
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // Android 그림자
     elevation: 3,
   },
   calendar: {
