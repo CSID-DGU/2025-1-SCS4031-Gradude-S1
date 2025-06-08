@@ -50,17 +50,21 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
 
 ### 이런 알고리즘으로 증상을 진단합니다
 
-** 📹안면마비 **
+**📹안면마비**
 ![Image](https://github.com/user-attachments/assets/f2fe5e16-e7f6-4051-a4cb-b0366bc33361)
 
-** 🔊 구음 장애 ** 
+**🔊 구음 장애** 
 ![Image](https://github.com/user-attachments/assets/dc23da63-8a2c-400e-b645-20d333a04538)
 
 ### 판단의 근거는 다음을 통해 이루어집니다
 
 ![Image](https://github.com/user-attachments/assets/a4836f87-dafc-4763-a46d-5e893546c67a)
 
-** 진단지는 LLM을 통해서 이해하기 쉽게 설명합니다 ** 
+**진단지는 LLM을 통해서 이해하기 쉽게 설명합니다** 
 ![Image](https://github.com/user-attachments/assets/0d961479-7092-4880-9589-e0b36704c741)
+
+## 팀원
+![Image](https://github.com/user-attachments/assets/54742d26-8082-4a91-afff-8bb7a5d3cbf8)
+
 
 
