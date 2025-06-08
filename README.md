@@ -20,14 +20,14 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
     - 뇌졸중은 더 이상 노인층만의 문제가 아닙니다.
       스트레스, 과로, 불규칙한 생활습관 등으로 인해 청년층을 포함한 전 연령대에서 발병 위험이 커지고 있어요.
         
-## ❗ 이런 문제가 있어요
+## ❗ 이런 문제가 있습니다!
     뇌졸중의 전조 증상인 안면 마비와 발음 이상(구음 장애)는
     비전문가가 스스로 판단하기는 쉽지 않습니다.
     
     따라서 증상이 나타나도 병원에 가기까지 시간이 지체되는 경우가 많고,
     이로 인해 골든타임을 놓칠 위험도 있습니다.
     
-## ✅ 그래서 저희가 만들었어요!
+## ✅ 그래서 저희가 만들었어습니다!
     
 **AI 기반 뇌졸중 자가진단 애플리케이션**
     
@@ -41,4 +41,26 @@ AI가 뇌졸중 전조 증상을 실시간 분석하고,
     - 📝 매일 기록하는 건강 수첩으로 지키는 건강한 삶
 
 ![Image](https://github.com/user-attachments/assets/2e5a99cf-6f7f-469f-8e76-94df09f381ff)
+
+
+## 자가진단 프로세스는 다음과 같습니다!
+
+
+![Image](https://github.com/user-attachments/assets/6c85efce-3f20-41a4-bc1a-d6e1bb63c2ac)
+
+### 이런 알고리즘으로 증상을 진단합니다
+
+** 📹안면마비 **
+![Image](https://github.com/user-attachments/assets/f2fe5e16-e7f6-4051-a4cb-b0366bc33361)
+
+** 🔊 구음 장애 ** 
+![Image](https://github.com/user-attachments/assets/dc23da63-8a2c-400e-b645-20d333a04538)
+
+### 판단의 근거는 다음을 통해 이루어집니다
+
+![Image](https://github.com/user-attachments/assets/a4836f87-dafc-4763-a46d-5e893546c67a)
+
+** 진단지는 LLM을 통해서 이해하기 쉽게 설명합니다 ** 
+![Image](https://github.com/user-attachments/assets/0d961479-7092-4880-9589-e0b36704c741)
+
 
