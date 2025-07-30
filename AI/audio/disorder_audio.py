@@ -7,17 +7,17 @@ import soundfile as sf
 import librosa
 from transformers import WhisperProcessor, WhisperModel
 
-# ✅ 로깅 설정
+# 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-# ✅ 글로벌 캐싱 변수
+# 글로벌 캐싱 변수
 _cached_scaler = None
 _cached_classifier = None
 _cached_processor = None
 _cached_whisper_model = None
 _cached_device = None
 
-# ✅ 모델 및 스케일러 로드 (최초 1회만)
+# 모델 및 스케일러 로드 (최초 1회만)
 def load_model(model_path="svm_model.pkl"):
     global _cached_scaler, _cached_classifier
 
@@ -34,7 +34,7 @@ def load_model(model_path="svm_model.pkl"):
         logging.error(f"모델 로딩 실패: {e}")
         raise
 
-# ✅ Whisper 모델 로드 (최초 1회만)
+# Whisper 모델 로드 (최초 1회만)
 def load_whisper_model():
     global _cached_processor, _cached_whisper_model, _cached_device
 
@@ -51,7 +51,7 @@ def load_whisper_model():
         logging.error(f"Whisper 모델 로딩 실패: {e}")
         raise
 
-# ✅ 오디오 파일 로딩 (librosa + soundfile 기반)
+# 오디오 파일 로딩 (librosa + soundfile 기반)
 def load_audio(path, target_sr=16000):
     if not os.path.exists(path):
         logging.error(f"파일 경로 없음: {path}")
@@ -74,7 +74,7 @@ def load_audio(path, target_sr=16000):
         logging.error(f"오디오 로딩 실패: {e}")
         raise
 
-# ✅ Whisper 임베딩 추출
+# Whisper 임베딩 추출
 def extract_embedding(path, processor, model, device):
     waveform = load_audio(path)
     try:
@@ -88,7 +88,7 @@ def extract_embedding(path, processor, model, device):
         logging.error(f"임베딩 추출 실패: {e}")
         raise
 
-# ✅ 예측 수행 함수
+# 예측 수행 함수
 def predict(path, model_path="svm_model.pkl"):
     try:
         scaler, classifier = load_model(model_path)
@@ -109,7 +109,7 @@ def predict(path, model_path="svm_model.pkl"):
         logging.error(f"예측 실패: {e}")
         raise
 
-# ✅ 커맨드라인 실행용 main
+# 커맨드라인 실행용 main
 def main():
     import argparse
 
